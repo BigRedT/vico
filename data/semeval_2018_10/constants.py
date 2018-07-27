@@ -27,3 +27,22 @@ class SemEval201810Constants(io.JsonSerializableClass):
         self.truth_txt = os.path.join(
             self.raw_dir,
             'test/ref/truth.txt')
+
+        self.train_json = os.path.join(
+            self.proc_dir,
+            'train.json')
+        self.val_json = os.path.join(
+            self.proc_dir,
+            'val.json')
+        self.test_json = os.path.join(
+            self.proc_dir,
+            'test.json')
+        self.truth_json = os.path.join(
+            self.proc_dir,
+            'truth.json')
+        self.word_freqs = os.path.join(
+            self.proc_dir,
+            'word_freqs.json')
+        self.feature_freqs = os.path.join(
+            self.proc_dir,
+            'feature_freqs.json')

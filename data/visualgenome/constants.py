@@ -50,4 +50,10 @@ class VisualGenomeConstants(io.JsonSerializableClass):
         self.attribute_freqs_json = os.path.join(
             self.proc_dir,
             'attribute_freqs.json')
+        self.object_synset_freqs_json = os.path.join(
+            self.proc_dir,
+            'object_synset_freqs.json')
+        self.attribute_synset_freqs_json = os.path.join(
+            self.proc_dir,
+            'attribute_synset_freqs.json')
 
