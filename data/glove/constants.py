@@ -3,7 +3,7 @@ import os
 import utils.io as io
 
 
-class Glove_6B_300d(io.JsonSerializableClass):
+class Glove6B300dConstants(io.JsonSerializableClass):
     def __init__(
             self,
             proc_dir=os.path.join(
@@ -18,7 +18,7 @@ class Glove_6B_300d(io.JsonSerializableClass):
             'glove_6B_300d_word_to_idx.json')
         
 
-class GloveFactory():
+class GloveConstantsFactory():
     @staticmethod
     def create(
             proc_dir=os.path.join(
@@ -29,7 +29,7 @@ class GloveFactory():
         
         if tokens=='6B':
             if dim=='300':
-                glove_cls = Glove_6B_300d
+                glove_cls = Glove6B300dConstants
             else:
                 msg = f'dim {dim} unavailable'
                 assert(False), msg
@@ -41,5 +41,5 @@ class GloveFactory():
 
 
 if __name__=='__main__':
-    glove_const = GloveFactory.create()
+    glove_const = GloveConstantsFactory.create()
     import pdb; pdb.set_trace()
