@@ -41,7 +41,7 @@ def main():
         word_to_idx[word] = i
     embeddings = np.stack(embeddings)
     mean = np.mean(embeddings,axis=0)
-    std = np.mean(embeddings,axis=0)
+    std = np.std(embeddings,axis=0)
     min_ = np.min(embeddings,axis=0)
     max_ = np.max(embeddings,axis=0)
 
