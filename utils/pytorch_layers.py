@@ -36,6 +36,11 @@ def create_mlp(const):
     else:
         drop_prob = 0
 
+    if 'out_drop_prob' in const:
+        out_drop_prob = const['out_drop_prob']
+    else:
+        out_drop_prob = 0
+
     mlp = MLP(
         in_dim=const['in_dim'],
         out_dim=const['out_dim'],
@@ -44,7 +49,8 @@ def create_mlp(const):
         layer_units=const['layer_units'],
         use_out_bn=const['use_out_bn'],
         use_bn=const['use_bn'],
-        drop_prob=drop_prob)
+        drop_prob=drop_prob,
+        out_drop_prob=out_drop_prob)
     return mlp
 
 
@@ -58,7 +64,8 @@ class MLP(nn.Module):
             activation=nn.ReLU(inplace=True),
             use_out_bn=True,
             use_bn=True,
-            drop_prob=0):
+            drop_prob=0,
+            out_drop_prob=0):
         super(MLP,self).__init__()
         self.layers = nn.ModuleList()
         in_units = in_dim 
@@ -80,6 +87,8 @@ class MLP(nn.Module):
             out_activation,
             use_out_bn)
         self.layers.append(fc_layer)
+        if out_drop_prob > 0:
+            self.layers.append(nn.Dropout(p=out_drop_prob))
 
     def linear_with_bn_and_activations(
             self,
