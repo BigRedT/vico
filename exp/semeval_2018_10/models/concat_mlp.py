@@ -11,6 +11,9 @@ class ConcatMLPConstants(io.JsonSerializableClass):
     def __init__(self):
         self.embedding_dim = 300
         self.layer_units = []
+        self.drop_prob = 0
+        self.out_drop_prob = 0
+        self.use_bn = True
         
     @property
     def mlp_const(self):
@@ -21,8 +24,9 @@ class ConcatMLPConstants(io.JsonSerializableClass):
             'layer_units': self.layer_units,
             'activation': 'ReLU',
             'use_out_bn': False,
-            'use_bn': True,
-            'drop_prob': 0,
+            'use_bn': self.use_bn,
+            'drop_prob': self.drop_prob,
+            'out_drop_prob': self.out_drop_prob,
         }
         return factor_const
 
@@ -39,7 +43,8 @@ class ConcatMLP(nn.Module,io.WritableToFile):
             word2_embedding,
             feature_embedding):
         x = torch.cat((
-            word1_embedding,
-            word2_embedding,
-            feature_embedding),1)
-        return self.mlp(x)
+            word1_embedding*feature_embedding,
+            word2_embedding*feature_embedding,
+            feature_embedding*feature_embedding),1)
+        prob = self.mlp(x)[:,0] # Convert Bx1 to B
+        return prob
