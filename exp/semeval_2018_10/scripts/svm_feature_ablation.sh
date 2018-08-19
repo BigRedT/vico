@@ -13,7 +13,6 @@ if [ "${SELECT_EXP}" = "all_features" ]
 then
     EXP_NAME="embed_linear_quad_distance_linear_quad"
     
-
 elif [ "${SELECT_EXP}" = "no_embed_linear" ]
 then
     EXP_NAME="embed_quad_distance_linear_quad"
