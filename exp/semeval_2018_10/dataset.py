@@ -19,7 +19,7 @@ class SemEval201810DatasetConstants(SemEval201810Constants):
                 os.getcwd(),
                 'symlinks/data/semeval_2018_10/proc')):
         super(SemEval201810DatasetConstants,self).__init__(raw_dir,proc_dir)
-        self.subset = 'train'
+        self.subset = ''
         self.embeddings_h5py = None
         self.word_to_idx_json = None
 
@@ -62,7 +62,7 @@ class SemEval201810Dataset(Dataset):
         to_return = {
             'word1': word1,
             'word2': word2,
-            'feture': feature,
+            'feature': feature,
             'label': np.float32(label),
             'word1_embedding': self.get_embedding(word1),
             'word2_embedding': self.get_embedding(word2),
