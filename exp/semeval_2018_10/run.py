@@ -1,4 +1,5 @@
 import os
+import h5py
 
 from exp.experimenter import *
 from utils.argparse_utils import manage_required_args, str_to_bool
@@ -66,6 +67,11 @@ parser.add_argument(
     default=None,
     type=str,
     help='Path to word_to_idx.json file')
+parser.add_argument(
+    '--batch_size',
+    default=2560,
+    type=float,
+    help='Embedding dimension')
 
 def exp_train_concat_mlp():
     args = parser.parse_args()
@@ -148,7 +154,7 @@ def exp_train_concat_svm():
         required_args=[
             'lr',
             'l2_weight',
-            'embed_dim',
+            'batch_size',
             'embed_linear_feat',
             'embed_quadratic_feat',
             'distance_linear_feat',
@@ -190,10 +196,14 @@ def exp_train_concat_svm():
         data_const.embeddings_h5py = args.embeddings_h5py
         data_const.word_to_idx_json = args.word_to_idx_json
     
+    embed_dim = h5py.File(
+        data_const.embeddings_h5py,
+        'r')['embeddings'].shape[1]
+
     model_const = Constants()
     model_const.concat_svm = ConcatSVMConstants()
-    model_const.concat_svm.l2_weight = args.l2_weight
-    model_const.concat_svm.embedding_dim = args.embed_dim
+    model_const.concat_svm.l2_weight = 0.01*args.l2_weight
+    model_const.concat_svm.embedding_dim = embed_dim
     model_const.concat_svm.layer_units = []
     model_const.concat_svm.use_embedding_linear_feats = args.embed_linear_feat
     model_const.concat_svm.use_embedding_quadratic_feats = \
@@ -211,7 +221,7 @@ def exp_eval_concat_svm():
         args,
         parser,
         required_args=[
-            'embed_dim',
+            'batch_size',
             'embed_linear_feat',
             'embed_quadratic_feat',
             'distance_linear_feat',
@@ -251,9 +261,13 @@ def exp_eval_concat_svm():
         data_const.embeddings_h5py = args.embeddings_h5py
         data_const.word_to_idx_json = args.word_to_idx_json
     
+    embed_dim = h5py.File(
+        data_const.embeddings_h5py,
+        'r')['embeddings'].shape[1]
+
     model_const = Constants()
     model_const.concat_svm = ConcatSVMConstants()
-    model_const.concat_svm.embedding_dim = args.embed_dim
+    model_const.concat_svm.embedding_dim = embed_dim
     model_const.concat_svm.layer_units = []
     model_const.concat_svm.use_embedding_linear_feats = args.embed_linear_feat
     model_const.concat_svm.use_embedding_quadratic_feats = \
