@@ -15,6 +15,8 @@ class VisualGenomeConstants(io.JsonSerializableClass):
         self.raw_dir = raw_dir
         self.proc_dir = proc_dir
         
+        self.img_dir1 = os.path.join(self.raw_dir,'VG_100K')
+        self.img_dir2 = os.path.join(self.raw_dir,'VG_100K_2')
         self.objects_json = os.path.join(self.raw_dir,'objects.json')
         self.attributes_json = os.path.join(self.raw_dir,'attributes.json')
         self.relationships_json = os.path.join(
