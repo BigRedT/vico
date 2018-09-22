@@ -81,13 +81,14 @@ class ImageRegionsDataset(Dataset):
     def create_object_label(self,object_synsets):
         num_objects = len(self.sorted_object_synsets)
         label = np.zeros([num_objects])
+        idx = -1
         for synset in object_synsets:
-            if synset in self.object_synset_to_idx:
-                idx = self.object_synset_to_idx[synset]
-                label[idx] = 1.0
-            else:
-                import pdb; pdb.set_trace()
-        return label
+            #if synset in self.object_synset_to_idx:
+            idx = self.object_synset_to_idx[synset]
+            label[idx] = 1.0
+            # else:
+            #     import pdb; pdb.set_trace()
+        return label, idx
 
     def create_attribute_label(self,attribute_synsets):
         num_attributes = len(self.sorted_attribute_synsets)
@@ -120,6 +121,7 @@ class ImageRegionsDataset(Dataset):
         attribute_synsets = []
         object_labels = []
         attribute_labels = []
+        object_labels_idx = []
         boxes = []
         img_size = []
         for object_id in object_ids:
@@ -134,8 +136,10 @@ class ImageRegionsDataset(Dataset):
             object_synsets.append(object_anno['object_synsets'])
             attribute_synsets.append(
                 object_anno['attribute_synsets'])
-            object_labels.append(
-                self.create_object_label(object_anno['object_synsets']))
+            object_label, object_label_idx = self.create_object_label(
+                object_anno['object_synsets'])
+            object_labels.append(object_label)
+            object_labels_idx.append(object_label_idx)
             attribute_labels.append(
                 self.create_attribute_label(object_anno['attribute_synsets']))
         to_return = {
@@ -148,7 +152,9 @@ class ImageRegionsDataset(Dataset):
             'object_synsets': object_synsets,
             'attribute_synsets': attribute_synsets,
             'object_labels': object_labels,
-            'attribute_labels': attribute_labels 
+            'object_labels_idx': object_labels_idx,
+            'attribute_labels': attribute_labels,
+            'object_labels_idx': object_labels_idx
         }
         return to_return
 
