@@ -23,7 +23,7 @@ class ConcatSVMConstants(io.JsonSerializableClass):
     @property
     def mlp_const(self):
         factor_const = {
-            'in_dim': 6*7 + 6*self.embedding_dim,
+            'in_dim': 6*7 + 0*6*self.embedding_dim,
             'out_dim': 1,
             'out_activation': 'Identity',
             'layer_units': self.layer_units,
@@ -41,6 +41,7 @@ class ConcatSVM(nn.Module,io.WritableToFile):
         super(ConcatSVM,self).__init__()
         self.const = copy.deepcopy(const)
         self.mlp = pytorch_layers.create_mlp(self.const.mlp_const)
+        self.bn = nn.BatchNorm1d(6)
 
     def forward(
             self,
@@ -54,13 +55,14 @@ class ConcatSVM(nn.Module,io.WritableToFile):
         l1_word1_feat = self.l1_norm(word1_embedding-feature_embedding)
         l1_word2_feat = self.l1_norm(word2_embedding-feature_embedding)
         l1_word1_word2 = self.l1_norm(word1_embedding-word2_embedding)
-        distance_feats = 10*torch.cat((
+        distance_feats = 1*torch.cat((
             cs_word1_feat,
             cs_word2_feat,
             cs_word1_word2,
-            l1_word1_feat/150,
-            l1_word2_feat/150,
-            l1_word1_word2/150),1)
+            l1_word1_feat/(1*self.const.embedding_dim),
+            l1_word2_feat/(1*self.const.embedding_dim),
+            l1_word1_word2/(1*self.const.embedding_dim)),1)
+        #distance_feats = self.bn(distance_feats)
         distance_quadratic_feats = \
             torch.unsqueeze(distance_feats,1) * \
             torch.unsqueeze(distance_feats,2)
@@ -74,8 +76,8 @@ class ConcatSVM(nn.Module,io.WritableToFile):
             word2_embedding*feature_embedding,
             word1_embedding*word2_embedding),1)
         x = torch.cat((
-            self.const.use_embedding_linear_feats*embedding_feats,
-            self.const.use_embedding_quadratic_feats*embedding_quadratic_feats,
+            # self.const.use_embedding_linear_feats*embedding_feats,
+            # self.const.use_embedding_quadratic_feats*embedding_quadratic_feats,
             self.const.use_distance_linear_feats*distance_feats,
             self.const.use_distance_quadratic_feats*distance_quadratic_feats),1)
         score = self.mlp(x)[:,0] # Convert Bx1 to B
@@ -89,6 +91,8 @@ class ConcatSVM(nn.Module,io.WritableToFile):
         l2_reg = None
         for name, W in self.named_parameters():
             if 'bias' in name:
+                continue
+            if 'embedding' in name:
                 continue
             if l2_reg is None:
                 l2_reg = W.pow(2).sum()
