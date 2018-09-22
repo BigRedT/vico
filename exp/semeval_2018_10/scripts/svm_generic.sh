@@ -1,15 +1,26 @@
 ACTION=$1
 GPU=$2
 
-EXP_NAME='glove_rerun3'
-OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/concat_svm_random_embeddings"
+EXP_NAME=$3
+OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/finetuned_normalized_visual_word_vecs"
 
+LR=0.01
+L2_WEIGHT=0.001
+BATCH_SIZE=2560
 EMBED_LINEAR_FEAT=False
-EMBED_QUADRATIC_FEAT=True
+EMBED_QUADRATIC_FEAT=False
 DISTANCE_LINEAR_FEAT=True
 DISTANCE_QUADRATIC_FEAT=True
-EMBEDDINGS_H5PY="${PWD}/symlinks/data/glove/proc/glove_6B_300d.h5py"
-WORD_TO_IDX_JSON="${PWD}/symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json"
+USE_GLOVE_ONLY=False
+
+if [[ "${USE_GLOVE_ONLY}" = "True" ]]
+then
+    EMBEDDINGS_H5PY="${PWD}/symlinks/data/glove/proc/glove_6B_300d.h5py"
+    WORD_TO_IDX_JSON="${PWD}/symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json"
+else
+    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/visualgenome/finetuned_resnet_normalized_embeddings/concat_glove_and_visual/visual_word_vecs.h5py"
+    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/visualgenome/finetuned_resnet_normalized_embeddings/concat_glove_and_visual/visual_word_vecs_idx.json"
+fi
 
 echo "Running experiment ${EXP_NAME} ..."
 
@@ -25,7 +36,10 @@ then
         --distance_linear_feat $DISTANCE_LINEAR_FEAT \
         --distance_quadratic_feat $DISTANCE_QUADRATIC_FEAT \
         --embeddings_h5py $EMBEDDINGS_H5PY \
-        --word_to_idx_json $WORD_TO_IDX_JSON
+        --word_to_idx_json $WORD_TO_IDX_JSON \
+        --batch_size $BATCH_SIZE \
+        --lr $LR \
+        --l2_weight $L2_WEIGHT
 fi
 
 if [[ "${ACTION}" = *"eval"* ]]
@@ -40,5 +54,6 @@ then
         --distance_linear_feat $DISTANCE_LINEAR_FEAT \
         --distance_quadratic_feat $DISTANCE_QUADRATIC_FEAT \
         --embeddings_h5py $EMBEDDINGS_H5PY \
-        --word_to_idx_json $WORD_TO_IDX_JSON
+        --word_to_idx_json $WORD_TO_IDX_JSON \
+        --batch_size $BATCH_SIZE
 fi
