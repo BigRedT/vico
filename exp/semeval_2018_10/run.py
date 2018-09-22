@@ -5,11 +5,8 @@ from exp.experimenter import *
 from utils.argparse_utils import manage_required_args, str_to_bool
 from utils.constants import Constants, ExpConstants
 from exp.semeval_2018_10.dataset import SemEval201810DatasetConstants
-from exp.semeval_2018_10.models.concat_mlp import ConcatMLPConstants
-from exp.semeval_2018_10.models.concat_svm import ConcatSVMConstants
+from exp.semeval_2018_10.models.concat_svm_simple import ConcatSVMConstants
 from data.glove.constants import GloveConstantsFactory
-import exp.semeval_2018_10.train_concat_mlp as train_concat_mlp
-import exp.semeval_2018_10.eval_concat_mlp as eval_concat_mlp
 import exp.semeval_2018_10.train_concat_svm as train_concat_svm
 import exp.semeval_2018_10.eval_concat_svm as eval_concat_svm
 
@@ -73,78 +70,6 @@ parser.add_argument(
     type=float,
     help='Embedding dimension')
 
-def exp_train_concat_mlp():
-    args = parser.parse_args()
-    not_specified_args = manage_required_args(
-        args,
-        parser,
-        required_args=[],
-        optional_args=[])
-
-    exp_name = 'trial'
-    out_base_dir = os.path.join(
-        os.getcwd(),
-        'symlinks/exp/semeval_2018_10/concat_mlp')
-    exp_const = ExpConstants(
-        exp_name=exp_name,
-        out_base_dir=out_base_dir)
-    exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
-    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
-    exp_const.num_epochs = 10
-    exp_const.batch_size = 128
-    exp_const.lr = 1e-3
-
-    data_const = SemEval201810DatasetConstants()
-    glove_const = GloveConstantsFactory.create()
-    data_const.embeddings_h5py = glove_const.embeddings_h5py
-    data_const.word_to_idx_json = glove_const.word_to_idx_json
-    
-    model_const = Constants()
-    model_const.concat_mlp = ConcatMLPConstants()
-    model_const.concat_mlp.layer_units = []
-    model_const.concat_mlp.drop_prob = 0.5
-    model_const.concat_mlp.out_drop_prob = 0
-    model_const.concat_mlp.use_bn = False
-
-    train_concat_mlp.main(exp_const,data_const,model_const)
-
-
-def exp_eval_concat_mlp():
-    args = parser.parse_args()
-    not_specified_args = manage_required_args(
-        args,
-        parser,
-        required_args=['exp_name'],
-        optional_args=['out_base_dir'])
-
-    if args.out_base_dir is None:
-        out_base_dir = os.path.join(
-            os.getcwd(),
-            'symlinks/exp/semeval_2018_10/concat_mlp')
-    else:
-        out_base_dir = args.out_base_dir
-
-    exp_const = ExpConstants(
-        exp_name=args.exp_name,
-        out_base_dir=out_base_dir)
-    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
-    exp_const.batch_size = 128
-    
-    data_const = SemEval201810DatasetConstants()
-    glove_const = GloveConstantsFactory.create()
-    data_const.embeddings_h5py = glove_const.embeddings_h5py
-    data_const.word_to_idx_json = glove_const.word_to_idx_json
-    data_const.subset = 'test'
-    
-    model_const = Constants()
-    model_const.concat_mlp = ConcatMLPConstants()
-    model_const.concat_mlp.layer_units = []
-    model_const.concat_mlp.drop_prob = 0.5
-    model_const.concat_mlp.out_drop_prob = 0
-    model_const.concat_mlp.use_bn = False
-
-    eval_concat_mlp.main(exp_const,data_const,model_const)
-
 
 def exp_train_concat_svm():
     args = parser.parse_args()
@@ -183,7 +108,7 @@ def exp_train_concat_svm():
         out_base_dir=out_base_dir)
     exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
-    exp_const.num_epochs = 20
+    exp_const.num_epochs = 30
     exp_const.batch_size = 2560
     exp_const.lr = args.lr
 
@@ -202,7 +127,7 @@ def exp_train_concat_svm():
 
     model_const = Constants()
     model_const.concat_svm = ConcatSVMConstants()
-    model_const.concat_svm.l2_weight = 0.01*args.l2_weight
+    model_const.concat_svm.l2_weight = args.l2_weight
     model_const.concat_svm.embedding_dim = embed_dim
     model_const.concat_svm.layer_units = []
     model_const.concat_svm.use_embedding_linear_feats = args.embed_linear_feat
@@ -260,7 +185,13 @@ def exp_eval_concat_svm():
     else:
         data_const.embeddings_h5py = args.embeddings_h5py
         data_const.word_to_idx_json = args.word_to_idx_json
-    
+    data_const.object_freqs_json = os.path.join(
+        os.getcwd(),
+        'symlinks/data/visualgenome/proc/object_freqs.json')
+    data_const.attribute_freqs_json = os.path.join(
+        os.getcwd(),
+        'symlinks/data/visualgenome/proc/attribute_freqs.json')
+
     embed_dim = h5py.File(
         data_const.embeddings_h5py,
         'r')['embeddings'].shape[1]
