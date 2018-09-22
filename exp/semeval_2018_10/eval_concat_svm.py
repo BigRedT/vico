@@ -16,22 +16,30 @@ from torch.utils.data.sampler import RandomSampler, SequentialSampler
 import utils.io as io
 from utils.model import Model
 from utils.constants import save_constants
-from exp.semeval_2018_10.models.concat_svm import ConcatSVM
+from exp.semeval_2018_10.models.concat_svm_simple import ConcatSVM
 from exp.semeval_2018_10.dataset import SemEval201810Dataset
 from exp.semeval_2018_10.f1_computer import compute_f1
 from exp.semeval_2018_10.model_selection import select_best_concat_svm
 
 
 def eval_model(model,data_loader,exp_const):
+    object_freqs = io.load_json_object(
+        data_loader.dataset.const.object_freqs_json) 
+    attribute_freqs = io.load_json_object(
+        data_loader.dataset.const.attribute_freqs_json) 
+    visual_vocab = set(object_freqs.keys()) | set(attribute_freqs.keys())
     model.concat_svm.eval()
     pred_score = []
     gt_label = []
+    pred_score_visual = []
+    gt_label_visual = []
+    pred_score_non_visual = []
+    gt_label_non_visual = []
     correct_preds = []
     incorrect_preds = []
     loss = 0
     count = 0
     for i, data in enumerate(tqdm(data_loader)):
-        model.concat_svm.train()
         score = model.concat_svm(
             Variable(data['word1_embedding']).cuda(),
             Variable(data['word2_embedding']).cuda(),
@@ -59,6 +67,15 @@ def eval_model(model,data_loader,exp_const):
                  correct_preds.append(sample)
             else:
                 incorrect_preds.append(sample)
+
+            if (sample['word1'] in visual_vocab) and \
+                (sample['word2'] in visual_vocab) and \
+                    (sample['feature'] in visual_vocab):
+                pred_score_visual.append(score[j])
+                gt_label_visual.append(label[j])
+            else:
+                pred_score_non_visual.append(score[j])
+                gt_label_non_visual.append(label[j])
     
     loss = loss / count
     pred_score = np.concatenate(pred_score)
@@ -67,13 +84,30 @@ def eval_model(model,data_loader,exp_const):
         pred_score,
         gt_label,
         np.array([model.concat_svm.const.thresh]))
+
+    pred_score_visual = np.array(pred_score_visual)
+    gt_label_visual = np.array(gt_label_visual)
+    _, best_scores_tuple_visual = compute_f1(
+        pred_score_visual,
+        gt_label_visual,
+        np.array([model.concat_svm.const.thresh]))
+    
+    pred_score_non_visual = np.array(pred_score_non_visual)
+    gt_label_non_visual = np.array(gt_label_non_visual)
+    _, best_scores_tuple_non_visual = compute_f1(
+        pred_score_non_visual,
+        gt_label_non_visual,
+        np.array([model.concat_svm.const.thresh]))
+    
     result = {
         'loss': loss,
         'avg_f1': best_scores_tuple[0],
         'pos_f1': best_scores_tuple[1],
         'neg_f1': best_scores_tuple[2],
         'acc': best_scores_tuple[3],
-        'thresh': best_scores_tuple[4]
+        'thresh': best_scores_tuple[4],
+        'avg_f1_visual': best_scores_tuple_visual[0],
+        'avg_f1_non_visual': best_scores_tuple_non_visual[0],
     }
     return result, correct_preds, incorrect_preds
         
