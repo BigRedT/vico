@@ -58,7 +58,7 @@ def main(exp_const,data_const):
             feature = mean_visual_feature
         visual_word_vec = np.concatenate((
             glove_vec,
-            0.1*(feature-mean_visual_feature)))
+            (feature-mean_visual_feature)))
         visual_word_vecs[glove_id] = visual_word_vec
     
     visual_word_vecs_h5py.create_dataset(
