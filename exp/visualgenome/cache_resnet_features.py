@@ -12,6 +12,7 @@ import utils.io as io
 from utils.constants import save_constants
 from exp.visualgenome.image_regions_dataset import ImageRegionsDataset
 from exp.visualgenome.models.resnet import resnet152
+from exp.visualgenome.models.resnet_normalized import resnet152_normalized
 
 
 def estimate_num_objects(image_id_to_object_id):
@@ -26,7 +27,17 @@ def main(exp_const,data_const):
     save_constants({'exp': exp_const,'data': data_const},exp_const.exp_dir)
     
     print('Creating network ...')
-    net = resnet152(pretrained=True).cuda()
+    if exp_const.model_path is None:
+        print('Loading imagenet pretrained model ...')
+        net = resnet152(pretrained=True)
+    else:
+        print('Loading finetuned model ...')
+        if exp_const.use_resnet_normalized==True:
+            net = resnet152_normalized(pretrained=False)
+        else:
+            net = resnet152(pretrained=False)
+        net.load_state_dict(torch.load(exp_const.model_path))
+    net.cuda()
     net.eval()
     imagenet_labels = io.load_json_object(data_const.imagenet_labels_json)
 
@@ -75,7 +86,11 @@ def main(exp_const,data_const):
         for i in range(math.ceil(B/256)):
             r = min(i*256+256,B)
             try:
-                out_, last_layer_features_ = net(regions[i*256:r])
+                if exp_const.use_resnet_normalized==True:
+                    out_, last_layer_features_, _ = \
+                            net(regions[i*256:r])
+                else:
+                    out_, last_layer_features_ = net(regions[i*256:r])
             except: 
                 import pdb; pdb.set_trace()
             out.append(out_)
