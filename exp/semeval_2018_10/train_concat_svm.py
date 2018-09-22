@@ -16,7 +16,7 @@ from torch.utils.data.sampler import RandomSampler, SequentialSampler
 import utils.io as io
 from utils.model import Model
 from utils.constants import save_constants
-from exp.semeval_2018_10.models.concat_svm import ConcatSVM
+from exp.semeval_2018_10.models.concat_svm_simple import ConcatSVM
 from exp.semeval_2018_10.dataset import SemEval201810Dataset
 from exp.semeval_2018_10.f1_computer import compute_f1
 
@@ -138,7 +138,6 @@ def eval_model(model,data_loader,exp_const):
     hinge_loss = 0
     count = 0
     for i, data in enumerate(tqdm(data_loader)):
-        model.concat_svm.train()
         score = model.concat_svm(
             Variable(data['word1_embedding']).cuda(),
             Variable(data['word2_embedding']).cuda(),
