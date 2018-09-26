@@ -8,4 +8,4 @@ GLOVE_ZIP="${OUT_DIR}/glove.6B.zip"
 GLOVE_DIR="${OUT_DIR}/glove.6B"
 mkdir $GLOVE_DIR
 unzip $GLOVE_ZIP -d $GLOVE_DIR
-rm GLOVE_ZIP
+rm $GLOVE_ZIP
