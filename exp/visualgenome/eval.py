@@ -52,7 +52,7 @@ def eval_model(exp_const,dataloader,model):
     object_accuracy = 0
     attribute_accuracy = 0
     total_samples = 0
-    for data in dataloader:
+    for data in tqdm(dataloader):
         if k >= exp_const.num_eval_iters:
             break
         if data is None:
@@ -149,4 +149,5 @@ def main(exp_const,data_const,model_const):
         num_workers=exp_const.num_workers,
         collate_fn=collate_fn)
 
+    print('Evaluating model ...')
     eval_model(exp_const,dataloader,model)
