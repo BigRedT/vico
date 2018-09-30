@@ -127,7 +127,7 @@ def train_model(exp_const,dataloader,model):
                     log_value('Attribute Loss',attribute_loss.data[0],step)
                     log_value('Feat L2 Sq Loss',feat_l2_norm_sq.data[0],step)
                 
-                if step%500==0:
+                if step%1000==0:
                     net_path = os.path.join(
                         exp_const.model_dir,
                         f'net_{step}')
@@ -148,7 +148,7 @@ def train_model(exp_const,dataloader,model):
 
 
 def main(exp_const,data_const,model_const):
-    io.mkdir_if_not_exists(exp_const.exp_dir)
+    io.mkdir_if_not_exists(exp_const.exp_dir,recursive=True)
     io.mkdir_if_not_exists(exp_const.log_dir)
     io.mkdir_if_not_exists(exp_const.model_dir)
     configure(exp_const.log_dir)

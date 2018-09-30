@@ -98,7 +98,7 @@ def exp_combine_glove_with_visual_features():
 
 
 def exp_train_resnet():
-    exp_name = 'train_resnet_normalized_sgd_finetune_260500'
+    exp_name = 'train_resnet_normalized_finetune_249k'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/visualgenome')
@@ -119,10 +119,10 @@ def exp_train_resnet():
     data_const = ImageRegionsDatasetConstants()
 
     model_const = Constants()
-    model_const.model_num = 260500
+    model_const.model_num = 249000
     model_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/visualgenome/train_resnet_normalized_sgd/models')
+        'symlinks/exp/visualgenome/train_resnet_normalized/models')
     model_const.net_path = os.path.join(
         model_dir,
         f'net_{model_const.model_num}')
@@ -143,7 +143,7 @@ def exp_train_resnet():
 
 
 def exp_eval_resnet():
-    exp_name = 'train_resnet_normalized_sgd_finetune_260500'
+    exp_name = 'train_resnet_normalized'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/visualgenome')
@@ -158,7 +158,7 @@ def exp_eval_resnet():
     data_const = ImageRegionsDatasetConstants()
 
     model_const = Constants()
-    model_const.model_num = 1244500
+    model_const.model_num = 249000
     model_dir = exp_const.model_dir
     model_const.net_path = os.path.join(
         model_dir,
