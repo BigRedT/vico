@@ -25,7 +25,7 @@ class ImageRegionsDatasetConstants(VisualGenomeConstants):
 class ImageRegionsDataset(Dataset):
     def __init__(self,const):
         super(ImageRegionsDataset,self).__init__()
-        self.const = const
+        self.const = copy.deepcopy(const)
         self.object_synset_freqs = io.load_json_object(
             self.const.object_synset_freqs_json)
         self.attribute_synset_freqs = io.load_json_object(
