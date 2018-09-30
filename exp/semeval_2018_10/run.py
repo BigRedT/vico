@@ -185,12 +185,15 @@ def exp_eval_concat_svm():
     else:
         data_const.embeddings_h5py = args.embeddings_h5py
         data_const.word_to_idx_json = args.word_to_idx_json
-    data_const.object_freqs_json = os.path.join(
+    # data_const.object_freqs_json = os.path.join(
+    #     os.getcwd(),
+    #     'symlinks/data/visualgenome/proc/object_freqs.json')
+    # data_const.attribute_freqs_json = os.path.join(
+    #     os.getcwd(),
+    #     'symlinks/data/visualgenome/proc/attribute_freqs.json')
+    data_const.vocab_json = os.path.join(
         os.getcwd(),
-        'symlinks/data/visualgenome/proc/object_freqs.json')
-    data_const.attribute_freqs_json = os.path.join(
-        os.getcwd(),
-        'symlinks/data/visualgenome/proc/attribute_freqs.json')
+        'symlinks/exp/google_images/normalized_resnet_features/word_to_idx.json')
 
     embed_dim = h5py.File(
         data_const.embeddings_h5py,

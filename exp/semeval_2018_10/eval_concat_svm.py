@@ -23,11 +23,12 @@ from exp.semeval_2018_10.model_selection import select_best_concat_svm
 
 
 def eval_model(model,data_loader,exp_const):
-    object_freqs = io.load_json_object(
-        data_loader.dataset.const.object_freqs_json) 
-    attribute_freqs = io.load_json_object(
-        data_loader.dataset.const.attribute_freqs_json) 
-    visual_vocab = set(object_freqs.keys()) | set(attribute_freqs.keys())
+    # object_freqs = io.load_json_object(
+    #     data_loader.dataset.const.object_freqs_json) 
+    # attribute_freqs = io.load_json_object(
+    #     data_loader.dataset.const.attribute_freqs_json) 
+    # visual_vocab = set(object_freqs.keys()) | set(attribute_freqs.keys())
+    visual_vocab = io.load_json_object(data_loader.dataset.const.vocab_json)
     model.concat_svm.eval()
     pred_score = []
     gt_label = []
@@ -74,6 +75,7 @@ def eval_model(model,data_loader,exp_const):
                 pred_score_visual.append(score[j])
                 gt_label_visual.append(label[j])
             else:
+                import pdb; pdb.set_trace()
                 pred_score_non_visual.append(score[j])
                 gt_label_non_visual.append(label[j])
     
@@ -85,20 +87,26 @@ def eval_model(model,data_loader,exp_const):
         gt_label,
         np.array([model.concat_svm.const.thresh]))
 
-    pred_score_visual = np.array(pred_score_visual)
-    gt_label_visual = np.array(gt_label_visual)
-    _, best_scores_tuple_visual = compute_f1(
-        pred_score_visual,
-        gt_label_visual,
-        np.array([model.concat_svm.const.thresh]))
+    if not (len(pred_score_visual)==0):
+        pred_score_visual = np.array(pred_score_visual)
+        gt_label_visual = np.array(gt_label_visual)
+        _, best_scores_tuple_visual = compute_f1(
+            pred_score_visual,
+            gt_label_visual,
+            np.array([model.concat_svm.const.thresh]))
+    else:
+        best_scores_tuple_visual = tuple(['n.a.']*len(best_scores_tuple))
     
-    pred_score_non_visual = np.array(pred_score_non_visual)
-    gt_label_non_visual = np.array(gt_label_non_visual)
-    _, best_scores_tuple_non_visual = compute_f1(
-        pred_score_non_visual,
-        gt_label_non_visual,
-        np.array([model.concat_svm.const.thresh]))
-    
+    if not (len(pred_score_non_visual)==0):
+        pred_score_non_visual = np.array(pred_score_non_visual)
+        gt_label_non_visual = np.array(gt_label_non_visual)
+        _, best_scores_tuple_non_visual = compute_f1(
+            pred_score_non_visual,
+            gt_label_non_visual,
+            np.array([model.concat_svm.const.thresh]))
+    else:
+        best_scores_tuple_non_visual = tuple(['n.a.']*len(best_scores_tuple))
+
     result = {
         'loss': loss,
         'avg_f1': best_scores_tuple[0],
