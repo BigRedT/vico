@@ -46,3 +46,6 @@ class SemEval201810Constants(io.JsonSerializableClass):
         self.feature_freqs = os.path.join(
             self.proc_dir,
             'feature_freqs.json')
+        self.all_word_freqs = os.path.join(
+            self.proc_dir,
+            'all_words.json')
