@@ -108,7 +108,7 @@ def exp_train_concat_svm():
         out_base_dir=out_base_dir)
     exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
-    exp_const.num_epochs = 30
+    exp_const.num_epochs = 20
     exp_const.batch_size = 2560
     exp_const.lr = args.lr
 
@@ -185,15 +185,12 @@ def exp_eval_concat_svm():
     else:
         data_const.embeddings_h5py = args.embeddings_h5py
         data_const.word_to_idx_json = args.word_to_idx_json
-    # data_const.object_freqs_json = os.path.join(
-    #     os.getcwd(),
-    #     'symlinks/data/visualgenome/proc/object_freqs.json')
-    # data_const.attribute_freqs_json = os.path.join(
-    #     os.getcwd(),
-    #     'symlinks/data/visualgenome/proc/attribute_freqs.json')
     data_const.vocab_json = os.path.join(
         os.getcwd(),
-        'symlinks/exp/google_images/normalized_resnet_features/word_to_idx.json')
+        'symlinks/data/visualgenome/proc/all_word_freqs.json')
+    # data_const.vocab_json = os.path.join(
+    #     os.getcwd(),
+    #     'symlinks/exp/google_images/normalized_resnet_features/word_to_idx.json')
 
     embed_dim = h5py.File(
         data_const.embeddings_h5py,
