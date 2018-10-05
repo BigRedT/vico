@@ -12,12 +12,12 @@ def exp_combine_glove_with_visual_features():
     exp_name = 'concat_glove_and_visual'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/google_images/normalized_resnet_embeddings_trained_on_google')
+        'symlinks/exp/google_images/normalized_resnet_embeddings_recon_loss_trained_on_google')
     exp_const = ExpConstants(exp_name,out_base_dir)
 
     visual_feat_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/google_images/normalized_resnet_features_trained_on_google')
+        'symlinks/exp/google_images/normalized_resnet_features_recon_loss_trained_on_google')
     data_const = Constants()
     data_const.visual_features_idx = os.path.join(
         visual_feat_dir,
