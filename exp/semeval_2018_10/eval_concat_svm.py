@@ -75,7 +75,6 @@ def eval_model(model,data_loader,exp_const):
                 pred_score_visual.append(score[j])
                 gt_label_visual.append(label[j])
             else:
-                import pdb; pdb.set_trace()
                 pred_score_non_visual.append(score[j])
                 gt_label_non_visual.append(label[j])
     
@@ -86,8 +85,9 @@ def eval_model(model,data_loader,exp_const):
         pred_score,
         gt_label,
         np.array([model.concat_svm.const.thresh]))
-
+    print('Num samples: ' + str(len(pred_score)))
     if not (len(pred_score_visual)==0):
+        print('Num visual: ' + str(len(pred_score_visual)))
         pred_score_visual = np.array(pred_score_visual)
         gt_label_visual = np.array(gt_label_visual)
         _, best_scores_tuple_visual = compute_f1(
@@ -98,6 +98,7 @@ def eval_model(model,data_loader,exp_const):
         best_scores_tuple_visual = tuple(['n.a.']*len(best_scores_tuple))
     
     if not (len(pred_score_non_visual)==0):
+        print('Num non-visual: ' + str(len(pred_score_visual)))
         pred_score_non_visual = np.array(pred_score_non_visual)
         gt_label_non_visual = np.array(gt_label_non_visual)
         _, best_scores_tuple_non_visual = compute_f1(
@@ -152,7 +153,7 @@ def main(exp_const,data_const,model_const):
     result, correct_preds, incorrect_preds = eval_model(model,data_loader,exp_const)
     result_json = os.path.join(
         exp_const.exp_dir,
-        f'results_{data_const.subset}.json')
+        f'results_{data_const.subset}_old_split.json')
     io.dump_json_object(result,result_json)
     print(io.dumps_json_object(result))
 
