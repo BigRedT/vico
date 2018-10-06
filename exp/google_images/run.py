@@ -14,6 +14,7 @@ from exp.google_images.models.word_classification_mlp import \
 from exp.google_images.models.decoder import DecoderConstants
 import exp.google_images.train as train
 import exp.google_images.eval as evaluator
+import exp.google_images.vis_feature_content as vis_feature_content
 from data.semeval_2018_10.constants import SemEval201810Constants
 import utils.io as io
 
@@ -114,6 +115,45 @@ def exp_eval_resnet():
     model_const.word_classifier_layers.layer_units = []
 
     evaluator.main(exp_const,data_const,model_const)
+
+
+def exp_vis_feature_content_resnet():
+    exp_name = 'train_resnet_normalized_recon_loss_google_images'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
+    exp_const.deepdream_dir = os.path.join(exp_const.exp_dir,'deepdream')
+    exp_const.batch_size = 8
+    exp_const.num_workers = 5
+    exp_const.use_resnet_normalized = True
+    exp_const.num_gen_imgs = 8
+    exp_const.max_inner_iter = 1
+    exp_const.lr = 1e6 #1e-3
+    exp_const.momentum = 0.9
+
+    semeval_const = SemEval201810Constants()
+    data_const = GoogleImagesImageLevelDatasetConstants()
+    data_const.vocab_json = semeval_const.all_word_freqs
+    num_words = len(io.load_json_object(data_const.vocab_json))
+
+    model_const = Constants()
+    model_const.model_num = 122000
+    model_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images/train_resnet_normalized_recon_loss_google_images/models')
+    model_const.net_path = os.path.join(
+        model_dir,
+        f'net_{model_const.model_num}')
+    model_const.word_classifier_layers_path = os.path.join(
+        model_dir,
+        f'word_classifier_layers_{model_const.model_num}')
+    model_const.word_classifier_layers = WordClassifierLayerConstants()
+    model_const.word_classifier_layers.num_classes = num_words
+    model_const.word_classifier_layers.layer_units = []
+
+    vis_feature_content.main(exp_const,data_const,model_const)
 
 
 def exp_delete_models():
