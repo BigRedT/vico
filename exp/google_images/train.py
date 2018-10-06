@@ -99,16 +99,12 @@ def train_model(exp_const,dataloader,model):
                 loss = loss + (1e-6)*feat_l2_norm_sq
             
             recon_loss = Variable(torch.FloatTensor([0])).cuda()
-            recon_loss_high_freq = Variable(torch.FloatTensor([0])).cuda()
             if exp_const.use_recon_loss == True:
                 recon_output = model.decoder(last_layer_features)
                 recon_loss = model.decoder.recon_loss(
                         0.5*(recon_output+1),
                         regions_unnormalized/255.)
-                recon_loss_high_freq = model.decoder.high_freq_recon_loss(
-                        0.5*(recon_output+1),
-                        regions_unnormalized/255.)
-                loss = loss + recon_loss + recon_loss_high_freq
+                loss = loss + recon_loss
             
             opt.zero_grad()
             loss.backward()
@@ -122,7 +118,6 @@ def train_model(exp_const,dataloader,model):
                     'Total Loss: {:.4f} | ' + \
                     'Word Loss: {:.4f} | ' + \
                     'Recon Loss: {:.4f} | ' + \
-                    'Recon Loss HF: {:.4f} | ' + \
                     'Feat L2: {:.4f}'
                 log_str = log_str.format(
                     epoch,
@@ -131,13 +126,11 @@ def train_model(exp_const,dataloader,model):
                     loss.data[0],
                     word_loss.data[0],
                     recon_loss.data[0],
-                    recon_loss_high_freq.data[0],
                     feat_l2_norm_sq.data[0])
                 print(log_str)
                 log_value('Total Loss',loss.data[0],step)
                 log_value('Word Loss',word_loss.data[0],step)
                 log_value('Recon Loss',recon_loss.data[0],step)
-                log_value('Recon Loss HF',recon_loss_high_freq.data[0],step)
                 log_value('Feat L2 Sq Loss',feat_l2_norm_sq.data[0],step)
 
             if step%100==0:
