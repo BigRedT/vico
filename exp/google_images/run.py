@@ -12,8 +12,17 @@ from exp.google_images.dataset_image_level import \
 from exp.google_images.models.word_classification_mlp import \
     WordClassifierLayerConstants
 from exp.google_images.models.decoder import DecoderConstants
+from exp.google_images.models.resnet_encoder_inner import \
+    ResnetEncoderInnerConstants
+from exp.google_images.models.resnet_decoder_outer import \
+    ResnetDecoderOuterConstants
+from exp.google_images.models.resnet_decoder_inner import \
+    ResnetDecoderInnerConstants
 import exp.google_images.train as train
+import exp.google_images.train_stacked_ae as train_stacked_ae
 import exp.google_images.eval as evaluator
+import exp.google_images.eval_stacked_ae as evaluator_stacked_ae
+import exp.google_images.vis_stacked_ae_recon as vis_stacked_ae_recon
 import exp.google_images.vis_feature_content as vis_feature_content
 from data.semeval_2018_10.constants import SemEval201810Constants
 import utils.io as io
@@ -117,6 +126,139 @@ def exp_eval_resnet():
     evaluator.main(exp_const,data_const,model_const)
 
 
+def exp_train_stacked_ae():
+    exp_name = 'train_stacked_ae_loss_recon_1x1_convs'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
+    exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
+    exp_const.batch_size = 32
+    exp_const.num_epochs = 10000
+    exp_const.lr = 0.1 #1e-3
+    exp_const.momentum = 0.9
+    exp_const.num_workers = 5
+    exp_const.load_finetuned = False
+    exp_const.optimizer = 'SGD'
+
+    semeval_const = SemEval201810Constants()
+    data_const = GoogleImagesImageLevelDatasetConstants()
+    data_const.vocab_json = semeval_const.all_word_freqs
+    num_words = len(io.load_json_object(data_const.vocab_json))
+
+    model_const = Constants()
+    model_const.model_num = 1000
+    model_dir = os.path.join(
+        os.getcwd(),
+        f'symlinks/exp/google_images/{exp_const.exp_name}/models')
+    model_const.encoder_inner = ResnetEncoderInnerConstants()
+    model_const.decoder_inner = ResnetDecoderInnerConstants()
+    model_const.decoder_outer = ResnetDecoderOuterConstants()
+    model_const.encoder_outer_path = os.path.join(
+        model_dir,
+        f'encoder_outer_{model_const.model_num}')
+    model_const.encoder_inner_path = os.path.join(
+        model_dir,
+        f'encoder_inner_{model_const.model_num}')
+    model_const.decoder_outer_path = os.path.join(
+        model_dir,
+        f'decoder_outer_{model_const.model_num}')
+    model_const.decoder_inner_path = os.path.join(
+        model_dir,
+        f'decoder_inner_{model_const.model_num}')
+    model_const.word_classifier_layers_path = os.path.join(
+        model_dir,
+        f'word_classifier_layers_{model_const.model_num}')
+    model_const.word_classifier_layers = WordClassifierLayerConstants()
+    model_const.word_classifier_layers.num_classes = num_words
+    model_const.word_classifier_layers.layer_units = []
+    train_stacked_ae.main(exp_const,data_const,model_const)
+
+
+def exp_eval_stacked_ae():
+    exp_name = 'train_stacked_ae_loss_recon'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
+    exp_const.batch_size = 64
+    exp_const.num_workers = 5
+    exp_const.use_resnet_normalized = True
+
+    semeval_const = SemEval201810Constants()
+    data_const = GoogleImagesImageLevelDatasetConstants()
+    data_const.vocab_json = semeval_const.all_word_freqs
+    num_words = len(io.load_json_object(data_const.vocab_json))
+
+    model_const = Constants()
+    model_const.model_num = 250000
+    model_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images/train_stacked_ae_loss_recon/models')
+    model_const.encoder_inner = ResnetEncoderInnerConstants()
+    model_const.decoder_inner = ResnetDecoderInnerConstants()
+    model_const.decoder_outer = ResnetDecoderOuterConstants()
+    model_const.encoder_outer_path = os.path.join(
+        model_dir,
+        f'encoder_outer_{model_const.model_num}')
+    model_const.encoder_inner_path = os.path.join(
+        model_dir,
+        f'encoder_inner_{model_const.model_num}')
+    model_const.word_classifier_layers_path = os.path.join(
+        model_dir,
+        f'word_classifier_layers_{model_const.model_num}')
+    model_const.word_classifier_layers = WordClassifierLayerConstants()
+    model_const.word_classifier_layers.num_classes = num_words
+    model_const.word_classifier_layers.layer_units = []
+
+    evaluator_stacked_ae.main(exp_const,data_const,model_const)
+
+
+def exp_vis_stacked_ae_recon():
+    exp_name = 'train_stacked_ae_loss_recon_class_1x1_convs'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
+    exp_const.recon_vis_dir = os.path.join(exp_const.exp_dir,'recon_vis')
+    exp_const.batch_size = 64
+    exp_const.num_workers = 5
+    exp_const.use_resnet_normalized = True
+    exp_const.max_iter = 2
+
+    semeval_const = SemEval201810Constants()
+    data_const = GoogleImagesImageLevelDatasetConstants()
+    data_const.vocab_json = semeval_const.all_word_freqs
+    num_words = len(io.load_json_object(data_const.vocab_json))
+
+    model_const = Constants()
+    model_const.model_num = 258000
+    model_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images/train_stacked_ae_loss_recon_class/models')
+    model_const.encoder_inner = ResnetEncoderInnerConstants()
+    model_const.decoder_inner = ResnetDecoderInnerConstants()
+    model_const.decoder_outer = ResnetDecoderOuterConstants()
+    model_const.encoder_outer_path = os.path.join(
+        model_dir,
+        f'encoder_outer_{model_const.model_num}')
+    model_const.encoder_inner_path = os.path.join(
+        model_dir,
+        f'encoder_inner_{model_const.model_num}')
+    model_const.decoder_outer_path = os.path.join(
+        model_dir,
+        f'decoder_outer_{model_const.model_num}')
+    model_const.decoder_inner_path = os.path.join(
+        model_dir,
+        f'decoder_inner_{model_const.model_num}')
+
+    vis_stacked_ae_recon.main(exp_const,data_const,model_const)
+
+
 def exp_vis_feature_content_resnet():
     exp_name = 'train_resnet_normalized_recon_loss_google_images'
     out_base_dir = os.path.join(
@@ -157,10 +299,16 @@ def exp_vis_feature_content_resnet():
 
 
 def exp_delete_models():
-    models_dir = '/data/tanmay/visual_word_vecs/exp/google_images/train_resnet_normalized_google_images/models'
-    until_model = 60000
+    models_dir = '/data/tanmay/visual_word_vecs/exp/google_images/train_stacked_ae_loss_recon/models'
+    until_model = 240000
+    model_names = [
+        'encoder_outer',
+        'encoder_inner',
+        'decoder_outer',
+        'decoder_inner',
+        'word_classifier_layers']
     for model_num in tqdm(range(0,until_model)):
-        for name in ['net','word_classifier_layers']:
+        for name in model_names:
             model_file = os.path.join(models_dir,f'{name}_{model_num}')
             if os.path.exists(model_file):
                 os.remove(model_file)
