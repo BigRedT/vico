@@ -22,6 +22,8 @@ from exp.semeval_2018_10.f1_computer import compute_f1
 
 
 def train_model(model,train_data_loader,val_data_loader,exp_const):
+    model.concat_svm.mlp.layers[0][0].weight = nn.Parameter(
+        0*model.concat_svm.mlp.layers[0][0].weight.data)
     params = model.concat_svm.parameters()
     optimizer = optim.Adam(params,lr=exp_const.lr)
 
