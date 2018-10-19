@@ -6,6 +6,7 @@ from exp.experimenter import *
 from utils.argparse_utils import manage_required_args, str_to_bool
 from utils.constants import Constants, ExpConstants
 import exp.google_images.cache_resnet_features as cache_resnet_features
+import exp.google_images.cache_stacked_ae_features as cache_stacked_ae_features
 from exp.google_images.dataset import GoogleImagesDatasetConstants
 from exp.google_images.dataset_image_level import \
     GoogleImagesImageLevelDatasetConstants
@@ -26,26 +27,6 @@ import exp.google_images.vis_stacked_ae_recon as vis_stacked_ae_recon
 import exp.google_images.vis_feature_content as vis_feature_content
 from data.semeval_2018_10.constants import SemEval201810Constants
 import utils.io as io
-
-
-def exp_cache_resnet_features():
-    exp_name = 'normalized_resnet_features_recon_loss_trained_on_google'
-    out_base_dir = os.path.join(
-        os.getcwd(),
-        'symlinks/exp/google_images')
-    exp_const = ExpConstants(exp_name=exp_name,out_base_dir=out_base_dir)
-    exp_const.use_resnet_normalized=True
-    exp_const.model_path = os.path.join(
-        os.getcwd(),
-        'symlinks/exp/google_images/train_resnet_normalized_recon_loss_google_images/models/net_122000')
-    exp_const.feature_dim = 2048
-    
-    # Compute vocabulary for semeval2018
-    semeval_const = SemEval201810Constants()
-    data_const = GoogleImagesDatasetConstants()
-    data_const.vocab_json = semeval_const.all_word_freqs
-
-    cache_resnet_features.main(exp_const,data_const)
 
 
 def exp_train_resnet():
@@ -124,6 +105,65 @@ def exp_eval_resnet():
     model_const.word_classifier_layers.layer_units = []
 
     evaluator.main(exp_const,data_const,model_const)
+
+
+def exp_cache_resnet_features():
+    exp_name = 'normalized_resnet_features_recon_loss_trained_on_google'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images')
+    exp_const = ExpConstants(exp_name=exp_name,out_base_dir=out_base_dir)
+    exp_const.use_resnet_normalized=True
+    exp_const.model_path = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images/train_resnet_normalized_recon_loss_google_images/models/net_122000')
+    exp_const.feature_dim = 2048
+    
+    # Compute vocabulary for semeval2018
+    semeval_const = SemEval201810Constants()
+    data_const = GoogleImagesDatasetConstants()
+    data_const.vocab_json = semeval_const.all_word_freqs
+
+    cache_resnet_features.main(exp_const,data_const)
+
+
+def exp_vis_feature_content_resnet():
+    exp_name = 'train_resnet_normalized_recon_loss_google_images'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
+    exp_const.deepdream_dir = os.path.join(exp_const.exp_dir,'deepdream')
+    exp_const.batch_size = 8
+    exp_const.num_workers = 5
+    exp_const.use_resnet_normalized = True
+    exp_const.num_gen_imgs = 8
+    exp_const.max_inner_iter = 100
+    exp_const.lr = 1e6 #1e-3
+    exp_const.momentum = 0.9
+
+    semeval_const = SemEval201810Constants()
+    data_const = GoogleImagesImageLevelDatasetConstants()
+    data_const.vocab_json = semeval_const.all_word_freqs
+    num_words = len(io.load_json_object(data_const.vocab_json))
+
+    model_const = Constants()
+    model_const.model_num = 122000
+    model_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images/train_resnet_normalized_recon_loss_google_images/models')
+    model_const.net_path = os.path.join(
+        model_dir,
+        f'net_{model_const.model_num}')
+    model_const.word_classifier_layers_path = os.path.join(
+        model_dir,
+        f'word_classifier_layers_{model_const.model_num}')
+    model_const.word_classifier_layers = WordClassifierLayerConstants()
+    model_const.word_classifier_layers.num_classes = num_words
+    model_const.word_classifier_layers.layer_units = []
+
+    vis_feature_content.main(exp_const,data_const,model_const)
 
 
 def exp_train_stacked_ae():
@@ -259,43 +299,33 @@ def exp_vis_stacked_ae_recon():
     vis_stacked_ae_recon.main(exp_const,data_const,model_const)
 
 
-def exp_vis_feature_content_resnet():
-    exp_name = 'train_resnet_normalized_recon_loss_google_images'
+def exp_cache_stacked_ae_features():
+    exp_name = 'stacked_ae_features_recon_class'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/google_images')
-    exp_const = ExpConstants(exp_name,out_base_dir)
-    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
-    exp_const.deepdream_dir = os.path.join(exp_const.exp_dir,'deepdream')
-    exp_const.batch_size = 8
-    exp_const.num_workers = 5
-    exp_const.use_resnet_normalized = True
-    exp_const.num_gen_imgs = 8
-    exp_const.max_inner_iter = 1
-    exp_const.lr = 1e6 #1e-3
-    exp_const.momentum = 0.9
-
+    exp_const = ExpConstants(exp_name=exp_name,out_base_dir=out_base_dir)
+    exp_const.feature_dim = 2048
+    
+    # Compute vocabulary for semeval2018
     semeval_const = SemEval201810Constants()
-    data_const = GoogleImagesImageLevelDatasetConstants()
+    data_const = GoogleImagesDatasetConstants()
     data_const.vocab_json = semeval_const.all_word_freqs
-    num_words = len(io.load_json_object(data_const.vocab_json))
 
     model_const = Constants()
-    model_const.model_num = 122000
+    model_const.model_num = 242000
     model_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/google_images/train_resnet_normalized_recon_loss_google_images/models')
-    model_const.net_path = os.path.join(
+        'symlinks/exp/google_images/train_stacked_ae_loss_recon_class_1x1_convs/models')
+    model_const.encoder_inner = ResnetEncoderInnerConstants()
+    model_const.encoder_outer_path = os.path.join(
         model_dir,
-        f'net_{model_const.model_num}')
-    model_const.word_classifier_layers_path = os.path.join(
+        f'encoder_outer_{model_const.model_num}')
+    model_const.encoder_inner_path = os.path.join(
         model_dir,
-        f'word_classifier_layers_{model_const.model_num}')
-    model_const.word_classifier_layers = WordClassifierLayerConstants()
-    model_const.word_classifier_layers.num_classes = num_words
-    model_const.word_classifier_layers.layer_units = []
-
-    vis_feature_content.main(exp_const,data_const,model_const)
+        f'encoder_inner_{model_const.model_num}')
+        
+    cache_stacked_ae_features.main(exp_const,model_const,data_const)
 
 
 def exp_delete_models():
