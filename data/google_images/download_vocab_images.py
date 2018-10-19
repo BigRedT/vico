@@ -1,10 +1,13 @@
 import os
+import time
 import glob
 import nltk
+from itertools import product
 from nltk.stem import WordNetLemmatizer
 import argparse
 from PIL import Image
 from tqdm import tqdm
+from multiprocessing import Pool
 from google_images_download import google_images_download
 
 import utils.io as io
@@ -63,14 +66,46 @@ def scale_and_pad(img,longer_size,pad=True,pad_value=128):
         return img
 
 
+def downloader(word,args):
+    response = google_images_download.googleimagesdownload()
+    search_arguments = {
+        'keywords': None,
+        'limit': args.images_per_word,
+        'safe_search': True,
+        'output_directory': args.outdir,
+        'usage_rights': 'labeled-for-noncommercial-reuse-with-modification',
+        'color_type': 'full-color',
+        'type': 'photo',
+    }
+    print('-'*80)
+    print(f'Downloading images for word: {word})')
+    print('-'*80)
+    search_arguments['keywords'] = word
+    absolute_image_paths = response.download(search_arguments)[word]
+    for j,path in enumerate(absolute_image_paths):
+        if not os.path.exists(path):
+            continue
+        
+        try:
+            img = Image.open(path)
+            img = scale_and_pad(img,args.longer_size,pad=False)
+            filename = os.path.join(args.outdir,f'{word}/{j}.png')
+            img.save(filename)
+        except:
+            print(f'Could not read {path}')
+        
+        os.remove(path)
+    
+
 def main():
     args = parser.parse_args()
 
     io.mkdir_if_not_exists(args.outdir)
+    print(args.outdir)
 
     vocab = io.load_json_object(args.vocab_json)
 
-    # Setup google downloaded
+    # Setup google download
     response = google_images_download.googleimagesdownload()
     search_arguments = {
         'keywords': None,
@@ -82,33 +117,53 @@ def main():
         'type': 'photo',
     }
 
+    vocab_list = []
+    num_words_to_skip = 0
+    for word in vocab.keys():
+        word_dir = os.path.join(
+            args.outdir,
+            f'{word}/10.png')
+        if not os.path.exists(word_dir):
+            vocab_list.append(word)
+        else:
+            num_words_to_skip += 1
+
+    print(f'Words already downloaded: {str(num_words_to_skip)}')
+
+    start = time.time()
+    with Pool(40) as p:
+        p.starmap(downloader, product(vocab_list,[args]))
+    end = time.time()
+    print(end-start)
+
     # Download images for words
-    num_words = len(vocab)
-    for i, word in enumerate(vocab.keys()):
-        print('-'*80)
-        print(f'Downloading images for word: {word} ({i+1} / {num_words})')
-        print('-'*80)
+    # num_words = len(vocab)
+    # for i, word in enumerate(vocab.keys()):
+    #     print('-'*80)
+    #     print(f'Downloading images for word: {word} ({i+1} / {num_words})')
+    #     print('-'*80)
         
-        search_arguments['keywords'] = word
+        #search_arguments['keywords'] = word
         
         # dirname = os.path.join(args.outdir,word)
         # if os.path.exists(dirname):
         #     continue
         
-        absolute_image_paths = response.download(search_arguments)[word]
-        for j,path in enumerate(absolute_image_paths):
-            if not os.path.exists(path):
-                continue
+        #absolute_image_paths = response.download(search_arguments)[word]
+    
+        # for j,path in enumerate(absolute_image_paths):
+        #     if not os.path.exists(path):
+        #         continue
             
-            try:
-                img = Image.open(path)
-                img = scale_and_pad(img,args.longer_size,pad=False)
-                filename = os.path.join(args.outdir,f'{word}/{j}.png')
-                img.save(filename)
-            except:
-                print(f'Could not read {path}')
+        #     try:
+        #         img = Image.open(path)
+        #         img = scale_and_pad(img,args.longer_size,pad=False)
+        #         filename = os.path.join(args.outdir,f'{word}/{j}.png')
+        #         img.save(filename)
+        #     except:
+        #         print(f'Could not read {path}')
             
-            os.remove(path)
+        #     os.remove(path)
 
 
 if __name__=='__main__':
