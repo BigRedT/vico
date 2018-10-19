@@ -67,6 +67,7 @@ class ConcatSVM(nn.Module,io.WritableToFile):
                 distance_feats_visual),1)
         else:
             distance_feats = distance_feats_glove
+            
         x = self.bn(distance_feats)
         score = self.mlp(x)[:,0] # Convert Bx1 to B
         return score
@@ -100,16 +101,20 @@ class ConcatSVM(nn.Module,io.WritableToFile):
         return torch.mean(torch.max(0*score,1-scaled_label*score))
 
     def compute_l2_loss(self):
-        l2_reg = None
-        for name, W in self.named_parameters():
-            if 'bias' in name:
-                continue
-            if 'embedding' in name:
-                continue
-            if l2_reg is None:
-                l2_reg = W.pow(2).sum()
-            else:
-                l2_reg = l2_reg + W.pow(2).sum()
+        # l2_reg = None
+        # for name, W in self.named_parameters():
+        #     if 'bias' in name:
+        #         continue
+        #     if 'embedding' in name:
+        #         continue
+        #     if l2_reg is None:
+        #         l2_reg = W.pow(2).sum()
+        #     else:
+        #         l2_reg = l2_reg + W.pow(2).sum()
+        #     import pdb; pdb.set_trace()
+        # return l2_reg
+        W = self.mlp.layers[0][0].weight
+        l2_reg = W.pow(2).sum()
         return l2_reg
 
     def compute_loss(self,score,label):
