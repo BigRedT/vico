@@ -117,3 +117,9 @@ def adjust_learning_rate(optimizer, init_lr, epoch, decay_by=0.2, decay_every=10
     lr = init_lr * (decay_by ** (epoch // decay_every))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
+
+
+def set_learning_rate(optimizer, lr):
+    """Sets the new learning rate"""
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
