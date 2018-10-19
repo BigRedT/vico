@@ -50,10 +50,10 @@ parser.add_argument(
     type=float,
     help='Learning rate')
 parser.add_argument(
-    '--embed_dim',
+    '--glove_dim',
     default=300,
-    type=float,
-    help='Embedding dimension')
+    type=int,
+    help='Glove dimension')
 parser.add_argument(
     '--embeddings_h5py',
     default=None,
@@ -80,6 +80,7 @@ def exp_train_concat_svm():
             'lr',
             'l2_weight',
             'batch_size',
+            'glove_dim',
             'embed_linear_feat',
             'embed_quadratic_feat',
             'distance_linear_feat',
@@ -109,7 +110,7 @@ def exp_train_concat_svm():
     exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.num_epochs = 20
-    exp_const.batch_size = 2560
+    exp_const.batch_size = args.batch_size
     exp_const.lr = args.lr
 
     data_const = SemEval201810DatasetConstants()
@@ -129,6 +130,7 @@ def exp_train_concat_svm():
     model_const.concat_svm = ConcatSVMConstants()
     model_const.concat_svm.l2_weight = args.l2_weight
     model_const.concat_svm.embedding_dim = embed_dim
+    model_const.concat_svm.glove_dim = args.glove_dim
     model_const.concat_svm.layer_units = []
     model_const.concat_svm.use_embedding_linear_feats = args.embed_linear_feat
     model_const.concat_svm.use_embedding_quadratic_feats = \
@@ -147,6 +149,7 @@ def exp_eval_concat_svm():
         parser,
         required_args=[
             'batch_size',
+            'glove_dim',
             'embed_linear_feat',
             'embed_quadratic_feat',
             'distance_linear_feat',
@@ -185,12 +188,12 @@ def exp_eval_concat_svm():
     else:
         data_const.embeddings_h5py = args.embeddings_h5py
         data_const.word_to_idx_json = args.word_to_idx_json
-    data_const.vocab_json = os.path.join(
-        os.getcwd(),
-        'symlinks/data/visualgenome/proc/all_word_freqs.json')
     # data_const.vocab_json = os.path.join(
     #     os.getcwd(),
-    #     'symlinks/exp/google_images/normalized_resnet_features/word_to_idx.json')
+    #     'symlinks/data/visualgenome/proc/all_word_freqs.json')
+    data_const.vocab_json = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/google_images/normalized_resnet_features/word_to_idx.json')
 
     embed_dim = h5py.File(
         data_const.embeddings_h5py,
@@ -199,6 +202,7 @@ def exp_eval_concat_svm():
     model_const = Constants()
     model_const.concat_svm = ConcatSVMConstants()
     model_const.concat_svm.embedding_dim = embed_dim
+    model_const.concat_svm.glove_dim = args.glove_dim
     model_const.concat_svm.layer_units = []
     model_const.concat_svm.use_embedding_linear_feats = args.embed_linear_feat
     model_const.concat_svm.use_embedding_quadratic_feats = \
