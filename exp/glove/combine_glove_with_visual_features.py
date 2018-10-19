@@ -7,6 +7,14 @@ import utils.io as io
 from utils.constants import save_constants
 
 
+def compute_norm(x):
+    return np.linalg.norm(x,2)
+
+
+def normalize(x):
+    return x / (1e-6 + compute_norm(x))
+
+
 def main(exp_const,data_const):
     io.mkdir_if_not_exists(exp_const.exp_dir,recursive=True)
     save_constants(
@@ -59,6 +67,9 @@ def main(exp_const,data_const):
         visual_word_vec = np.concatenate((
             glove_vec,
             (feature-mean_visual_feature)))
+        # visual_word_vec = np.concatenate((
+        #     normalize(glove_vec),
+        #     normalize(feature)))
         visual_word_vecs[glove_id] = visual_word_vec
     
     visual_word_vecs_h5py.create_dataset(
