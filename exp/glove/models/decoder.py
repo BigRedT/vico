@@ -9,10 +9,8 @@ import utils.pytorch_layers as pytorch_layers
 
 class DecoderConstants(io.JsonSerializableClass):
     def __init__(self):
-        self.input_dims = 1024
-        self.glove_dims = 300
-        self.middle_dims = 600
-        self.output_dims = 300 + 2048
+        self.input_dims = 300
+        self.output_dims = 2048
 
 
 class Decoder(nn.Module,io.WritableToFile):
@@ -20,13 +18,7 @@ class Decoder(nn.Module,io.WritableToFile):
         super(Decoder,self).__init__()
         self.const = copy.deepcopy(const)
         self.layers = nn.Sequential(
-            # nn.Linear(self.const.input_dims,self.const.middle_dims),
-            # nn.BatchNorm1d(self.const.middle_dims),
-            # nn.ReLU(),
-            # nn.Linear(self.const.middle_dims,self.const.middle_dims),
-            # nn.BatchNorm1d(self.const.middle_dims),
-            # nn.ReLU(),
-            nn.Linear(self.const.middle_dims,self.const.output_dims))
+            nn.Linear(self.const.input_dims,self.const.output_dims))
         self.l1_criterion = nn.L1Loss()
         self.l2_criterion = nn.MSELoss()
 
