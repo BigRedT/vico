@@ -7,7 +7,7 @@ OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/normalized_google_images_recon
 LR=0.01
 L2_WEIGHT=0.001
 BATCH_SIZE=2560
-GLOVE_DIM=300 #600
+GLOVE_DIM=300
 EMBED_LINEAR_FEAT=False
 EMBED_QUADRATIC_FEAT=False
 DISTANCE_LINEAR_FEAT=True
@@ -20,8 +20,8 @@ then
     EMBEDDINGS_H5PY="${PWD}/symlinks/data/glove/proc/glove_6B_300d.h5py"
     WORD_TO_IDX_JSON="${PWD}/symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json"
 else
-    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/google_images/normalized_resnet_embeddings_recon_loss_trained_on_google/concat_glove_and_visual/visual_word_vecs.h5py"
-    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/google_images/normalized_resnet_embeddings_recon_loss_trained_on_google/concat_glove_and_visual/visual_word_vecs_idx.json"
+    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/google_images/normalized_resnet_embeddings_recon_loss_trained_on_google/concat_glove_and_ae_visual/visual_word_vecs.h5py"
+    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/google_images/normalized_resnet_embeddings_recon_loss_trained_on_google/concat_glove_and_ae_visual/visual_word_vecs_idx.json"
 fi
 
 echo "Running experiment ${EXP_NAME} ..."
