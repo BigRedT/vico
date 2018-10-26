@@ -35,7 +35,7 @@ def train_model(model,dataloader,exp_const):
         model.encoder.parameters(),
         model.decoder.parameters())
     opt = optim.Adam(params,lr=exp_const.lr)
-    glove_dims = model.encoder.const.glove_dims
+    glove_dim = dataloader.dataset.const.glove_dim
     step = -1
     for epoch in range(exp_const.num_epochs):
         # adjust_learning_rate(
@@ -58,8 +58,8 @@ def train_model(model,dataloader,exp_const):
                 recon_concat_embeddings,
                 concat_embeddings)
 
-            glove = normalize(concat_embeddings[:,:glove_dims])
-            visual = normalize(concat_embeddings[:,glove_dims:])
+            glove = normalize(concat_embeddings[:,:glove_dim])
+            visual = normalize(concat_embeddings[:,glove_dim:])
             glove_dot = torch.mm(glove,torch.transpose(glove,0,1))
             visual_dot = torch.mm(visual,torch.transpose(visual,0,1))
             embedding_dot = torch.mm(embedding,torch.transpose(embedding,0,1))
