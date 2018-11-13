@@ -4,9 +4,9 @@ import itertools
 import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
+from torch.utils.data.dataloader import default_collate
 
 import utils.io as io
-from torch.utils.data.dataloader import default_collate
 from data.visualgenome.constants import VisualGenomeConstants
 
 class ImageRegionsDatasetConstants(VisualGenomeConstants):
