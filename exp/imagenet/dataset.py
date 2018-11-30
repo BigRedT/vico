@@ -87,7 +87,7 @@ class ImagenetDataset(Dataset):
         for wnid in on_wnids:
             i = self.wnid_to_idx[wnid]
             label_vec[i] = 1
-        return label_vec
+        return label_vec, on_wnids
 
     def get_weight_vec(self,wnid):
         weight_vec = np.ones([len(self.wordnet.nodes)],dtype=np.uint8)
@@ -107,19 +107,21 @@ class ImagenetDataset(Dataset):
 
     def __getitem__(self,i):
         wnid, img_path = self.wnid_and_img_paths[i]
-        label_vec = self.get_label_vec(wnid)
+        label_vec, on_wnids = self.get_label_vec(wnid)
         weight_vec = self.get_weight_vec(wnid)
         try:
             img = self.get_image(img_path)
+            img = self.transforms(img)
         except:
             return None
-        img = self.transforms(img)
+        
         to_return = {
             'wnid': wnid,
             'img_path': img_path,
             'label_vec': label_vec,
             'weight_vec': weight_vec,
-            'img': np.array(img)
+            'img': np.array(img),
+            'on_wnids': on_wnids,
         }
         return to_return
 
@@ -132,7 +134,10 @@ class ImagenetDataset(Dataset):
             batch_ = {}
             for k in batch[0].keys():
                 batch_[k] = [sample[k] for sample in batch]
-                batch_[k] = default_collate(batch_[k])
+                if k=='on_wnids':
+                    pass
+                else:
+                    batch_[k] = default_collate(batch_[k])
 
             return batch_
 
@@ -141,6 +146,7 @@ class ImagenetDataset(Dataset):
 if __name__=='__main__':
     const = ImagenetDatasetConstants()
     dataset = ImagenetDataset(const)
+    import pdb; pdb.set_trace()
     collate_fn = dataset.create_collate_fn()
     dataloader = DataLoader(
         dataset,
