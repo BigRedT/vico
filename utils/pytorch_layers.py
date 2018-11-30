@@ -112,6 +112,42 @@ class MLP(nn.Module):
         return x
 
 
+class LossProgressMonitor():
+    def __init__(self,window=1000,delta=1e-4,smoothness=0.9):
+        assert(window >= 2)
+        self.window = window
+        self.delta = delta
+        self.smoothness = smoothness
+        self.ema = None
+        self.deque = deque()
+
+    def add_loss(self,loss):
+        if self.ema is None:
+            self.ema = loss
+        else:
+            self.ema = self.smoothness*self.ema + \
+                (1-self.smoothness)*loss 
+        
+        self.deque.append(self.ema)
+        if len(self.deque) > self.window:
+            self.deque.popleft()
+
+    def measure_progress(self):
+        if len(self.deque) < 2:
+            return np.Inf
+        else:
+            return self.deque[0]-self.deque[-1]
+
+    def sufficient_progress(self):
+        progress = self.measure_progress()
+        is_sufficient = False
+        if len(self.deque) < self.window:
+            is_sufficient = True 
+        else:
+            is_sufficient = progress > self.delta
+        return is_sufficient, progress
+
+
 def adjust_learning_rate(optimizer, init_lr, epoch, decay_by=0.2, decay_every=10):
     """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
     lr = init_lr * (decay_by ** (epoch // decay_every))
