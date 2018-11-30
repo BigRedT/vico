@@ -24,7 +24,7 @@ class WordNetConstants(io.JsonSerializableClass):
 class WordNetNode():
     def __init__(self,wnid,words):
         self.wnid = wnid
-        self.words = words
+        self.words = [w.lower() for w in words]
         self.parent = None
         self.children = []
 
