@@ -169,8 +169,8 @@ def train_model(model,dataloader,exp_const):
                 sim_mat_sm,rows,cols = compute_classifier_sim_mat(model)
                 wordnet = dataloader.dataset.wordnet
                 wnids = dataloader.dataset.wnids
-                xlabels = [wordnet.wnid_to_words[wnids[i]][0] for i in rows]
-                ylabels = [wordnet.wnid_to_words[wnids[i]][0] for i in cols]
+                xlabels = [wordnet.wnid_to_words[wnids[i]][0] for i in cols]
+                ylabels = [wordnet.wnid_to_words[wnids[i]][0] for i in rows]
                 sim_mat_html = os.path.join(
                     sim_mat_vis_dir,
                     f'{step}.html')
