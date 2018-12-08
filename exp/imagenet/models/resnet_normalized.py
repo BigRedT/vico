@@ -2,6 +2,7 @@ import math
 import copy
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 import torch.utils.model_zoo as model_zoo
 
 import utils.io as io
@@ -112,6 +113,7 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(7, stride=1)
+        self.register_buffer('running_mean', torch.zeros(512 * block.expansion))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
@@ -152,6 +154,11 @@ class ResNet(nn.Module):
 
         x = self.avgpool(x)
         last_layer_features = x.view(x.size(0), -1)
+        if self.training:
+            mean = torch.mean(last_layer_features.data,0)
+            self.running_mean = 0.8*mean + 0.2*self.running_mean
+        last_layer_features = last_layer_features - \
+            Variable(self.running_mean,requires_grad=False)
         feat_norm = torch.norm(
             last_layer_features,
             p=2,
@@ -161,6 +168,32 @@ class ResNet(nn.Module):
         x = self.fc(last_layer_features_normalized)
 
         return x, last_layer_features_normalized, last_layer_features
+
+    def forward_features_only(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        last_layer_features = x.view(x.size(0), -1)
+        if self.training:
+            mean = torch.mean(last_layer_features.data,0)
+            self.running_mean = 0.8*mean + 0.2*self.running_mean
+        last_layer_features = last_layer_features - \
+            Variable(self.running_mean,requires_grad=False)
+        feat_norm = torch.norm(
+            last_layer_features,
+            p=2,
+            dim=1,
+            keepdim=True)
+        last_layer_features_normalized = last_layer_features/(feat_norm+1e-6)
+        return last_layer_features_normalized, last_layer_features
 
 
 def resnet18(pretrained=False, **kwargs):
@@ -280,6 +313,9 @@ class ResnetNormalizedModel(io.WritableToFile,nn.Module):
 
     def forward(self,x):
         return self.resnet_layers(x)
+
+    def forward_features_only(self,x):
+        return self.resnet_layers.forward_features_only(x)
 
 
 if __name__=='__main__':
