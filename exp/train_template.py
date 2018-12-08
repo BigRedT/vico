@@ -70,7 +70,10 @@ def train_model(model,dataloaders,exp_const):
                     log_value(name,value,step)
 
                 print(log_str)
-
+            
+            if step%(100*exp_const.log_step)==0:
+                print(f'Experiment: {exp_const.exp_name}')
+                
             if step%exp_const.model_save_step==0:
                 save_items = {
                     'net': model.net,
