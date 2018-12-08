@@ -8,11 +8,13 @@ from .models.resnet_normalized import ResnetNormalizedConstants
 from .dataset import ImagenetDatasetConstants
 from . import train
 from . import entity_entity_reps
+from . import entity_attr_reps
+from . import find_nn
 #from . import eval as evaluation
 
 
 def exp_train():
-    exp_name = 'multilabel_resnet_50_normalized_adam'
+    exp_name = 'multilabel_resnet_18_fc_center_normalized_adam'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
@@ -37,7 +39,7 @@ def exp_train():
     model_const = Constants()
     model_const.model_num = None
     model_const.net = ResnetNormalizedConstants()
-    model_const.net.num_layers = 50
+    model_const.net.num_layers = 18
     model_const.net.num_classes = 21841
     model_const.net_path = os.path.join(
         exp_const.model_dir,
@@ -47,7 +49,7 @@ def exp_train():
 
 
 def exp_compute_entity_entity_reps():
-    exp_name = 'multilabel_resnet_18_normalized_adam_entity_entity_reps'
+    exp_name = 'multilabel_resnet_50_normalized_adam_entity_entity_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
@@ -60,14 +62,66 @@ def exp_compute_entity_entity_reps():
     model_const = Constants()
     model_const.model_num = 930000
     model_const.net = ResnetNormalizedConstants()
-    model_const.net.num_layers = 18
+    model_const.net.num_layers = 50
     model_const.net.num_classes = 21841
     model_const.net_path = os.path.join(
         os.getcwd(),
-        'symlinks/exp/imagenet/multilabel_resnet_18_normalized_adam/' + \
+        'symlinks/exp/imagenet/multilabel_resnet_50_normalized_adam/' + \
         f'models/net_{model_const.model_num}')
 
     entity_entity_reps.main(exp_const,data_const,model_const)
+
+
+def exp_compute_entity_attr_reps():
+    exp_name = 'resnet_18_normalized_adam_loss_bce_entity_attr_reps'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/imagenet')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = ImagenetDatasetConstants()
+
+    model_const = Constants()
+    model_const.model_num = 170000
+    model_const.net = ResnetNormalizedConstants()
+    model_const.net.num_layers = 18
+    model_const.net.num_classes = 6497
+    model_const.net_path = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes/resnet_18_normalized_adam_loss_bce/' + \
+        f'models/net_{model_const.model_num}')
+
+    entity_attr_reps.main(exp_const,data_const,model_const)
+
+
+def exp_find_nn():
+    exp_name = 'multilabel_resnet_18_normalized_adam_entity_entity_reps'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/imagenet')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.num_nbrs = 5
+    exp_const.min_freq = 500
+
+    data_const = Constants()
+    data_const.reps_npy = os.path.join(exp_const.exp_dir,'reps.npy')
+    data_const.wnid_to_idx_json = os.path.join(
+        exp_const.exp_dir,
+        'wnid_to_idx.json')
+    data_const.num_imgs_per_class_npy = os.path.join(
+        exp_const.exp_dir,
+        'num_imgs_per_class.npy')
+    data_const.wnid_to_words_json = os.path.join(
+        os.getcwd(),
+        'symlinks/data/imagenet/wnid_to_words.json')
+    data_const.knn_html = os.path.join(
+        exp_const.exp_dir,
+        'reps_knn.html')
+
+    find_nn.main(exp_const,data_const)
+
 
 # def exp_eval():
 #     exp_name = 'EXP_NAME'
