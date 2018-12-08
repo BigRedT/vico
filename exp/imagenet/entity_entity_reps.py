@@ -106,8 +106,8 @@ def main(exp_const,data_const,model_const):
         num_workers=exp_const.num_workers,
         collate_fn=collate_fn)
 
-    #print('Mean Image Features Based Entity-Entity Reps ...')
-    #compute_entity_entity_reps(model,dataloader,exp_const)
+    print('Mean Image Features Based Entity-Entity Reps ...')
+    compute_entity_entity_reps(model,dataloader,exp_const)
 
     print('Classifier Based Entity-Entity Reps ...')
     classifier_entity_entity_reps(model,exp_const)
