@@ -65,6 +65,11 @@ parser.add_argument(
     type=str,
     help='Path to word_to_idx.json file')
 parser.add_argument(
+    '--visual_vocab_json',
+    default=None,
+    type=str,
+    help='Path to visual vocab')
+parser.add_argument(
     '--batch_size',
     default=2560,
     type=float,
@@ -153,7 +158,8 @@ def exp_eval_concat_svm():
             'embed_linear_feat',
             'embed_quadratic_feat',
             'distance_linear_feat',
-            'distance_quadratic_feat'
+            'distance_quadratic_feat',
+            'visual_vocab_json',
         ],
         optional_args=[
             'exp_name',
@@ -185,15 +191,17 @@ def exp_eval_concat_svm():
         glove_const = GloveConstantsFactory.create()
         data_const.embeddings_h5py = glove_const.embeddings_h5py
         data_const.word_to_idx_json = glove_const.word_to_idx_json
+        data_const.visual_vocab_json = data_const.word_to_idx_json
     else:
         data_const.embeddings_h5py = args.embeddings_h5py
         data_const.word_to_idx_json = args.word_to_idx_json
+        data_const.visual_vocab_json = args.visual_vocab_json
     # data_const.vocab_json = os.path.join(
     #     os.getcwd(),
     #     'symlinks/data/visualgenome/proc/all_word_freqs.json')
-    data_const.vocab_json = os.path.join(
-        os.getcwd(),
-        'symlinks/exp/google_images/normalized_resnet_features/word_to_idx.json')
+    # data_const.visual_vocab_json = os.path.join(
+    #     os.getcwd(),
+    #     'symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps/visual_words.json')
 
     embed_dim = h5py.File(
         data_const.embeddings_h5py,
