@@ -8,7 +8,7 @@ from . import concat_glove_and_visual_reps
 
 
 def exp_concat_glove_visual():
-    exp_name = 'concat_glove_visual_avg_rep'
+    exp_name = 'concat_glove_visual_avg_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/combine_glove_visual_reps')
@@ -25,7 +25,7 @@ def exp_concat_glove_visual():
     data_const.entity_entity_reps_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet/' + \
-        'multilabel_resnet_18_normalized_adam_entity_entity_reps')
+        'multilabel_resnet_18_fc_center_normalized_adam_entity_entity_reps')
     data_const.entity_entity_reps_npy = os.path.join(
         data_const.entity_entity_reps_dir,
         'reps.npy')
@@ -33,16 +33,38 @@ def exp_concat_glove_visual():
         data_const.entity_entity_reps_dir,
         'wnid_to_idx.json')
 
+    data_const.entity_attr_reps_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/imagenet/' + \
+        'resnet_18_fc_center_normalized_adam_loss_bce_entity_attr_reps')
+    data_const.entity_attr_reps_npy = os.path.join(
+        data_const.entity_attr_reps_dir,
+        'reps.npy')
+    data_const.entity_wnid_offset_to_idx_json = os.path.join(
+        data_const.entity_attr_reps_dir,
+        'wnid_to_idx.json')
+
     # Attr Reps
     data_const.attr_attr_reps_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes/' + \
-        'resnet_18_normalized_adam_loss_bce_attr_attr_reps')
+        'resnet_18_fc_center_normalized_adam_loss_bce_attr_attr_reps')
     data_const.attr_attr_reps_npy = os.path.join(
         data_const.attr_attr_reps_dir,
         'reps.npy')
     data_const.attr_wnid_to_idx_json = os.path.join(
         data_const.attr_attr_reps_dir,
+        'wnid_to_idx.json')
+
+    data_const.attr_entity_reps_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes/' + \
+        'multilabel_resnet_18_fc_center_normalized_adam_attr_entity_reps')
+    data_const.attr_entity_reps_npy = os.path.join(
+        data_const.attr_entity_reps_dir,
+        'reps.npy')
+    data_const.attr_wnid_to_idx_json = os.path.join(
+        data_const.attr_entity_reps_dir,
         'wnid_to_idx.json')
 
     concat_glove_and_visual_reps.main(exp_const,data_const)
