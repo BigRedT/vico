@@ -22,15 +22,6 @@ from .dataset import ImagenetDataset
 from .vis.vis_sim_mat import create_sim_heatmap
 
 
-def classifier_entity_attr_reps(model,exp_const):
-    classifier_reps = model.net.resnet_layers.fc.weight.data.cpu().numpy()
-    classifier_reps = classifier_reps / \
-        (np.linalg.norm(classifier_reps,ord=2,axis=1,keepdims=True)+1e-6)
-    np.save(
-        os.path.join(exp_const.exp_dir,'classifier_reps.npy'),
-        classifier_reps)
-
-
 def compute_entity_attr_reps(model,dataloader,exp_const):
     num_classes = len(dataloader.dataset.wnids)
     rep_dim = model.net.resnet_layers.fc.weight.size(1)
@@ -107,6 +98,3 @@ def main(exp_const,data_const,model_const):
 
     print('Mean Image Features Based Entity-Attr Reps ...')
     compute_entity_attr_reps(model,dataloader,exp_const)
-
-    # print('Classifier Based Entity-Entity Reps ...')
-    # classifier_entity_attr_reps(model,exp_const)
