@@ -20,8 +20,9 @@ then
     EMBEDDINGS_H5PY="${PWD}/symlinks/data/glove/proc/glove_6B_300d.h5py"
     WORD_TO_IDX_JSON="${PWD}/symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json"
 else
-    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_rep/visual_word_vecs.h5py"
-    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_rep/visual_word_vecs_idx.json"
+    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps/visual_word_vecs.h5py"
+    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps/visual_word_vecs_idx.json"
+    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps/visual_words.json"
 fi
 
 echo "Running experiment ${EXP_NAME} ..."
@@ -58,6 +59,7 @@ then
         --distance_quadratic_feat $DISTANCE_QUADRATIC_FEAT \
         --embeddings_h5py $EMBEDDINGS_H5PY \
         --word_to_idx_json $WORD_TO_IDX_JSON \
+        --visual_vocab_json $VISUAL_VOCAB_JSON \
         --glove_dim $GLOVE_DIM \
         --batch_size $BATCH_SIZE
 fi
