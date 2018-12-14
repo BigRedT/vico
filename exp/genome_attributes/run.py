@@ -59,7 +59,7 @@ def exp_compute_attr_attr_reps():
     data_const = GenomeAttributesDatasetConstants()
 
     model_const = Constants()
-    model_const.model_num = 110000
+    model_const.model_num = 210000
     model_const.net = ResnetNormalizedConstants()
     model_const.net.num_layers = 18
     model_const.net.num_classes = 6497
@@ -72,7 +72,7 @@ def exp_compute_attr_attr_reps():
 
 
 def exp_compute_attr_entity_reps():
-    exp_name = 'multilabel_resnet_18_normalized_adam_attr_entity_reps'
+    exp_name = 'multilabel_resnet_18_fc_center_normalized_adam_attr_entity_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -83,20 +83,20 @@ def exp_compute_attr_entity_reps():
     data_const = GenomeAttributesDatasetConstants()
 
     model_const = Constants()
-    model_const.model_num = 930000
+    model_const.model_num = 1160000
     model_const.net = ResnetNormalizedConstants()
     model_const.net.num_layers = 18
     model_const.net.num_classes = 21841
     model_const.net_path = os.path.join(
         os.getcwd(),
-        'symlinks/exp/imagenet/multilabel_resnet_18_normalized_adam/' + \
+        'symlinks/exp/imagenet/multilabel_resnet_18_fc_center_normalized_adam/' + \
         f'models/net_{model_const.model_num}')
 
-    attr_attr_reps.main(exp_const,data_const,model_const)
+    attr_entity_reps.main(exp_const,data_const,model_const)
 
 
 def exp_find_nn():
-    exp_name = 'resnet_18_fc_center_normalized_adam_loss_bce_attr_attr_reps'
+    exp_name = 'multilabel_resnet_18_fc_center_normalized_adam_attr_entity_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
