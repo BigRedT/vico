@@ -39,8 +39,8 @@ def compute_entity_entity_reps(model,dataloader,exp_const):
     reps = np.zeros([num_classes,rep_dim],dtype=np.float32)
     num_imgs_per_class = np.zeros([num_classes],dtype=np.int32)
     
-    img_mean = Variable(torch.cuda.FloatTensor(model.img_mean))
-    img_std = Variable(torch.cuda.FloatTensor(model.img_std))
+    img_mean = Variable(torch.cuda.FloatTensor(model.img_mean),volatile=True)
+    img_std = Variable(torch.cuda.FloatTensor(model.img_std),volatile=True)
     
     # Set mode
     model.net.eval()
