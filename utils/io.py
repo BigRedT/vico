@@ -1,6 +1,7 @@
 import os
 import pickle
 import json
+import h5py
 import yaml
 import numpy as np
 import gzip
@@ -52,6 +53,10 @@ def load_mat_object(file_name):
 
 def load_yaml_object(file_name):
     return yaml.load(read(file_name, 'r'))
+
+
+def load_h5py_object(file_name):
+    return h5py.File(file_name,'r')
 
 
 def read(file_name, mode='rb'):
