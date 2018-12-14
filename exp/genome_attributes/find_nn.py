@@ -29,7 +29,6 @@ def main(exp_const,data_const):
     # reps: num_classes x dim
     sim = np.matmul(select_reps,np.transpose(select_reps))
     print('Sim Range: {:.4f} - {:.4f}'.format(np.min(sim),np.max(sim)))
-    import pdb; pdb.set_trace()
     nn_idx = np.argsort(sim,1)[:,-2:-exp_const.num_nbrs-2:-1]
     nbrs = {}
     for i in range(sim.shape[0]):
