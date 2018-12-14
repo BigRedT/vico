@@ -28,7 +28,8 @@ def eval_model(model,data_loader,exp_const):
     # attribute_freqs = io.load_json_object(
     #     data_loader.dataset.const.attribute_freqs_json) 
     # visual_vocab = set(object_freqs.keys()) | set(attribute_freqs.keys())
-    visual_vocab = io.load_json_object(data_loader.dataset.const.vocab_json)
+    visual_vocab = io.load_json_object(
+        data_loader.dataset.const.visual_vocab_json)
     model.concat_svm.eval()
     pred_score = []
     gt_label = []
@@ -153,7 +154,7 @@ def main(exp_const,data_const,model_const):
     result, correct_preds, incorrect_preds = eval_model(model,data_loader,exp_const)
     result_json = os.path.join(
         exp_const.exp_dir,
-        f'results_{data_const.subset}_old_split.json')
+        f'results_{data_const.subset}.json')
     io.dump_json_object(result,result_json)
     print(io.dumps_json_object(result))
 
