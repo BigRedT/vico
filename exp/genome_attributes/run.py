@@ -12,7 +12,7 @@ from . import find_nn
 
 
 def exp_train():
-    exp_name = 'resnet_18_fc_center_normalized_adam_loss_bce'
+    exp_name = 'resnet_18_bn_adam_loss_bce_norm1'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -48,7 +48,7 @@ def exp_train():
 
 
 def exp_compute_attr_attr_reps():
-    exp_name = 'resnet_18_fc_center_normalized_adam_loss_bce_attr_attr_reps'
+    exp_name = 'resnet_18_fc_center_normalized_adam_loss_bce_norm1_attr_attr_reps_trial'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -65,14 +65,14 @@ def exp_compute_attr_attr_reps():
     model_const.net.num_classes = 6497
     model_const.net_path = os.path.join(
         os.getcwd(),
-        'symlinks/exp/genome_attributes/resnet_18_fc_center_normalized_adam_loss_bce/' + \
+        'symlinks/exp/genome_attributes/resnet_18_fc_center_normalized_adam_loss_bce_norm1/' + \
         f'models/net_{model_const.model_num}')
 
     attr_attr_reps.main(exp_const,data_const,model_const)
 
 
 def exp_compute_attr_entity_reps():
-    exp_name = 'multilabel_resnet_18_fc_center_normalized_adam_attr_entity_reps'
+    exp_name = 'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_attr_entity_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -83,25 +83,25 @@ def exp_compute_attr_entity_reps():
     data_const = GenomeAttributesDatasetConstants()
 
     model_const = Constants()
-    model_const.model_num = 1160000
+    model_const.model_num = 490000
     model_const.net = ResnetNormalizedConstants()
     model_const.net.num_layers = 18
     model_const.net.num_classes = 21841
     model_const.net_path = os.path.join(
         os.getcwd(),
-        'symlinks/exp/imagenet/multilabel_resnet_18_fc_center_normalized_adam/' + \
+        'symlinks/exp/imagenet/multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1/' + \
         f'models/net_{model_const.model_num}')
 
     attr_entity_reps.main(exp_const,data_const,model_const)
 
 
 def exp_find_nn():
-    exp_name = 'multilabel_resnet_18_fc_center_normalized_adam_attr_entity_reps'
+    exp_name = 'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_attr_entity_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
     exp_const = ExpConstants(exp_name,out_base_dir)
-    exp_const.num_nbrs = 5
+    exp_const.num_nbrs = 10
     exp_const.min_freq = 100
 
     data_const = Constants()
@@ -117,6 +117,14 @@ def exp_find_nn():
         'reps_knn.html')
 
     find_nn.main(exp_const,data_const)
+
+    if 'attr_attr' in exp_const.exp_name:
+        data_const.reps_npy = os.path.join(exp_const.exp_dir,'classifier_reps.npy')
+        data_const.knn_html = os.path.join(
+            exp_const.exp_dir,
+            'classifier_reps_knn.html')
+
+        find_nn.main(exp_const,data_const)
 
 # def exp_eval():
 #     exp_name = 'EXP_NAME'
