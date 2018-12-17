@@ -29,6 +29,16 @@ class L2RegLoss(nn.Module):
         return torch.mean(torch.sum(x*x,1))
 
 
+class Norm1Loss(nn.Module):
+    def __init__(self):
+        super(Norm1Loss,self).__init__()
+        
+    def forward(self,x):
+        norm_sq = torch.sum(x*x,1)
+        loss = torch.mean((norm_sq-1.0)*(norm_sq-1.0))
+        return loss
+
+
 class PosNllLoss(nn.Module):
     def __init__(self):
         super(PosNllLoss,self).__init__()
@@ -112,7 +122,8 @@ def train_model(model,dataloader,exp_const):
 
     pos_nll_criterion = PosNllLoss()
     margin_criterion = MarginLoss(margin=exp_const.margin)
-    l2_reg_criterion = L2RegLoss()
+    l2_reg_criterion = Norm1Loss()
+    #l2_reg_criterion = L2RegLoss()
     bce_criterion = nn.BCELoss()
 
     sigmoid = nn.Sigmoid()
@@ -146,11 +157,11 @@ def train_model(model,dataloader,exp_const):
             # Computer loss
             attr_labels = Variable(data['attribute_labels'].cuda())
             attr_labels_idxs = data['attribute_labels_idxs']
-            pos_nll_loss = 0*pos_nll_criterion(prob,attr_labels)
-            margin_loss = 0*margin_criterion(prob,attr_labels,attr_labels_idxs)
+            # pos_nll_loss = 0*pos_nll_criterion(prob,attr_labels)
+            # margin_loss = 0*margin_criterion(prob,attr_labels,attr_labels_idxs)
             l2_reg_loss = l2_reg_criterion(last_layer_feats)
             bce_loss = bce_criterion(prob,attr_labels)
-            loss = bce_loss + pos_nll_loss + margin_loss + 1e-6*l2_reg_loss
+            loss = bce_loss + 1e-6*l2_reg_loss #+ pos_nll_loss + margin_loss
             
             # Backward pass
             opt.zero_grad()
@@ -160,8 +171,8 @@ def train_model(model,dataloader,exp_const):
             if step%exp_const.log_step==0:
                 log_items = {
                     'Loss': loss.data[0],
-                    'Pos NLL Loss': pos_nll_loss.data[0],
-                    'Margin Loss': margin_loss.data[0],
+                    # 'Pos NLL Loss': pos_nll_loss.data[0],
+                    # 'Margin Loss': margin_loss.data[0],
                     'BCE Loss': bce_loss.data[0],
                     'L2 Reg': l2_reg_loss.data[0],
                     'LR': lr,
