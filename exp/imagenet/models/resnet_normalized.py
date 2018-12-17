@@ -34,7 +34,8 @@ class BasicBlock(nn.Module):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ELU(inplace=True)
+        #self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = nn.BatchNorm2d(planes)
         self.downsample = downsample
@@ -71,7 +72,8 @@ class Bottleneck(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes * 4)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ELU(inplace=True)
+        #self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
 
@@ -106,7 +108,8 @@ class ResNet(nn.Module):
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
         self.bn1 = nn.BatchNorm2d(64)
-        self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ELU(inplace=True)
+        #self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
@@ -114,6 +117,7 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AvgPool2d(7, stride=1)
         self.register_buffer('running_mean', torch.zeros(512 * block.expansion))
+        #self.bn_last_layer = nn.BatchNorm1d(512 * block.expansion,affine=False)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
@@ -155,10 +159,18 @@ class ResNet(nn.Module):
         x = self.avgpool(x)
         last_layer_features = x.view(x.size(0), -1)
         if self.training:
-            mean = torch.mean(last_layer_features.data,0)
-            self.running_mean = 0.8*mean + 0.2*self.running_mean
-        last_layer_features = last_layer_features - \
-            Variable(self.running_mean,requires_grad=False)
+            mean = torch.mean(last_layer_features,0)
+            self.running_mean = 0.1*mean.data + 0.9*self.running_mean
+            last_layer_features = last_layer_features - mean
+        else:
+            last_layer_features = last_layer_features - \
+                Variable(self.running_mean,requires_grad=False)
+        #last_layer_features = self.bn_last_layer(last_layer_features)
+        # if self.training:
+        #     mean = torch.mean(last_layer_features.data,0)
+        #     self.running_mean = 0.8*mean + 0.2*self.running_mean
+        # last_layer_features = last_layer_features - \
+        #     Variable(self.running_mean,requires_grad=False)
         feat_norm = torch.norm(
             last_layer_features,
             p=2,
@@ -183,10 +195,12 @@ class ResNet(nn.Module):
         x = self.avgpool(x)
         last_layer_features = x.view(x.size(0), -1)
         if self.training:
-            mean = torch.mean(last_layer_features.data,0)
-            self.running_mean = 0.8*mean + 0.2*self.running_mean
-        last_layer_features = last_layer_features - \
-            Variable(self.running_mean,requires_grad=False)
+            mean = torch.mean(last_layer_features,0)
+            self.running_mean = 0.1*mean.data + 0.9*self.running_mean
+            last_layer_features = last_layer_features - mean
+        else:
+            last_layer_features = last_layer_features - \
+                Variable(self.running_mean,requires_grad=False)
         feat_norm = torch.norm(
             last_layer_features,
             p=2,
