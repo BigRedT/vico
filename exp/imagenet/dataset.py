@@ -143,10 +143,25 @@ class ImagenetDataset(Dataset):
 
         return collate_fn
 
+
+class ImagenetNoImgsDataset(ImagenetDataset):
+    def __getitem__(self,i):
+        wnid, img_path = self.wnid_and_img_paths[i]
+        label_vec, on_wnids = self.get_label_vec(wnid)
+        weight_vec = self.get_weight_vec(wnid)
+        to_return = {
+            'wnid': wnid,
+            'img_path': img_path,
+            'label_vec': label_vec,
+            'weight_vec': weight_vec,
+            'on_wnids': on_wnids,
+        }
+        return to_return
+
+
 if __name__=='__main__':
     const = ImagenetDatasetConstants()
-    dataset = ImagenetDataset(const)
-    import pdb; pdb.set_trace()
+    dataset = ImagenetNoImgsDataset(const)
     collate_fn = dataset.create_collate_fn()
     dataloader = DataLoader(
         dataset,
@@ -155,5 +170,4 @@ if __name__=='__main__':
         collate_fn=collate_fn,
         num_workers=5)
     for data in tqdm(dataloader):
-        pass
-        #import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()
