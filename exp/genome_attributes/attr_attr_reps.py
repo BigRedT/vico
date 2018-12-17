@@ -63,7 +63,8 @@ def compute_attr_attr_reps(model,dataloader,exp_const):
                 i = dataloader.dataset.attribute_synset_to_idx[attr]
                 num_imgs_per_class[i] = num_imgs_per_class[i] + 1
                 reps[i] = reps[i] + last_layer_feats_normalized[b]
-
+        
+    import pdb; pdb.set_trace()
     reps = reps / (num_imgs_per_class[:,None]+1e-6)
     reps = reps / (np.linalg.norm(reps,ord=2,axis=1,keepdims=True)+1e-6)
 
