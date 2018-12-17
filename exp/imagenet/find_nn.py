@@ -4,6 +4,14 @@ import utils.io as io
 from utils.html_writer import HtmlWriter
 
 
+def normalize(reps):
+    mean = np.mean(reps,0,keepdims=True)
+    reps = reps - mean
+    norm = np.linalg.norm(reps,2,1,keepdims=True)
+    reps = reps/(norm+1e-6)
+    return reps
+
+    
 def main(exp_const,data_const):
     print('Loading reps ...')
     reps = np.load(data_const.reps_npy)
@@ -21,6 +29,7 @@ def main(exp_const,data_const):
     print('Computing similarity ...')
     # reps: num_classes x dim
     sim = np.matmul(select_reps,np.transpose(select_reps))
+    print('Sim Range: {:.4f} - {:.4f}'.format(np.min(sim),np.max(sim)))
     nn_idx = np.argsort(sim,1)[:,-2:-exp_const.num_nbrs-2:-1]
     nbrs = {}
     for i in range(sim.shape[0]):
