@@ -35,12 +35,45 @@ class WeightedBCEWithLogitsLoss(nn.Module):
         return loss
 
 
+class NegWeightedBCEWithLogitsLoss(nn.Module):
+    def __init__(self,class_weights,min_weight=1e-4):
+        super(NegWeightedBCEWithLogitsLoss,self).__init__()
+        self.min_weight = min_weight
+        self.sig = nn.Sigmoid()
+        self.class_weights = class_weights
+        self.neg_weights = self.compute_neg_weights()
+
+    def compute_neg_weights(self):
+        neg_weights = self.class_weights[:,1] / (self.class_weights[:,0]+1e-6)
+        neg_weights = torch.max(0*neg_weights + self.min_weight,neg_weights)
+        return neg_weights.view(1,-1)
+
+    def forward(self,logits,label_vec,weight_vec):
+        prob = self.sig(logits)
+        loss = -1*(
+            label_vec*torch.log(prob+1e-6) + \
+            self.neg_weights*(1-label_vec)*torch.log(1-prob+1e-6))
+        loss = loss*weight_vec
+        loss = torch.mean(loss)
+        return loss
+
+
 class L2RegLoss(nn.Module):
     def __init__(self):
         super(L2RegLoss,self).__init__()
         
     def forward(self,x):
         return torch.mean(torch.sum(x*x,1))
+
+
+class Norm1Loss(nn.Module):
+    def __init__(self):
+        super(Norm1Loss,self).__init__()
+        
+    def forward(self,x):
+        norm_sq = torch.sum(x*x,1)
+        loss = torch.mean((norm_sq-1.0)*(norm_sq-1.0))
+        return loss
 
 
 def vecidx2matidx(idx,C):
@@ -96,8 +129,15 @@ def train_model(model,dataloader,exp_const):
     else:
         assert(False), 'optimizer not implemented'
 
-    bce_criterion = WeightedBCEWithLogitsLoss()
-    l2_reg_criterion = L2RegLoss()
+    class_weights_npy = dataloader.dataset.const.class_weights_npy
+    if class_weights_npy is not None:
+        class_weights = Variable(
+            torch.cuda.FloatTensor(np.load(class_weights_npy)),
+            requires_grad=False)
+        bce_criterion = NegWeightedBCEWithLogitsLoss(class_weights)   
+    #bce_criterion = WeightedBCEWithLogitsLoss()
+    l2_reg_criterion = Norm1Loss()
+    #l2_reg_criterion = L2RegLoss()
 
     step = 0
     if model.const.model_num is not None:
