@@ -272,7 +272,6 @@ def main(exp_const,data_const):
         'attr_attr': attr_attr_reps,
     }
     combined_reps = combine_reps(reps)
-    import pdb; pdb.set_trace()
     print('Saving combined reps to h5py file ...')
     visual_word_vecs_h5py =  h5py.File(
         os.path.join(exp_const.exp_dir,'visual_word_vecs.h5py'),
