@@ -20,9 +20,9 @@ then
     EMBEDDINGS_H5PY="${PWD}/symlinks/data/glove/proc/glove_6B_300d.h5py"
     WORD_TO_IDX_JSON="${PWD}/symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json"
 else
-    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps/visual_word_vecs.h5py"
-    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps/visual_word_vecs_idx.json"
-    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps/visual_words.json"
+    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_elu/visual_word_vecs.h5py"
+    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_elu/visual_word_vecs_idx.json"
+    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_elu/visual_words.json"
 fi
 
 echo "Running experiment ${EXP_NAME} ..."
