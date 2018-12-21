@@ -297,3 +297,21 @@ def main(exp_const,data_const):
     visual_words_json = os.path.join(exp_const.exp_dir,'visual_words.json')
     io.dump_json_object(list(visual_words),visual_words_json)
     print(f'Number of visual words: {len(visual_words)}')
+
+    freq = None
+    for rep_type in reps.keys():
+        if rep_type=='glove':
+            continue
+        
+        if freq is None:
+            freq = reps[rep_type].freq
+        else:
+            freq += reps[rep_type].freq
+
+    visual_freq = {}
+    for word,idx in glove_reps.word_to_glove_idx.items():
+        if freq[idx] > 0:
+            visual_freq[word] = freq[idx]
+
+    visual_freq_json = os.path.join(exp_const.exp_dir,'visual_freq.json')
+    io.dump_json_object(visual_freq,visual_freq_json)
