@@ -30,16 +30,16 @@ def conv3x3(in_planes, out_planes, stride=1):
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
+    def __init__(self, inplanes, planes, stride=1, downsample=None, last_relu=True):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.relu = nn.ELU(inplace=True)
-        #self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = nn.BatchNorm2d(planes)
         self.downsample = downsample
         self.stride = stride
+        self.last_relu = last_relu
 
     def forward(self, x):
         residual = x
@@ -55,7 +55,9 @@ class BasicBlock(nn.Module):
             residual = self.downsample(x)
 
         out += residual
-        out = self.relu(out)
+        
+        if self.last_relu==True:
+            out = self.relu(out)
 
         return out
 
@@ -63,7 +65,7 @@ class BasicBlock(nn.Module):
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
+    def __init__(self, inplanes, planes, stride=1, downsample=None, last_relu=True):
         super(Bottleneck, self).__init__()
         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
@@ -72,10 +74,10 @@ class Bottleneck(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes)
         self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=False)
         self.bn3 = nn.BatchNorm2d(planes * 4)
-        self.relu = nn.ELU(inplace=True)
-        #self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
+        self.last_relu = True
 
     def forward(self, x):
         residual = x
@@ -95,7 +97,9 @@ class Bottleneck(nn.Module):
             residual = self.downsample(x)
 
         out += residual
-        out = self.relu(out)
+
+        if self.last_relu==True:
+            out = self.relu(out)
 
         return out
 
@@ -108,16 +112,16 @@ class ResNet(nn.Module):
         self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3,
                                bias=False)
         self.bn1 = nn.BatchNorm2d(64)
-        self.relu = nn.ELU(inplace=True)
-        #self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        self.layer4 = \
+            self._make_layer(block, 512, layers[3], stride=2, last_relu=False)
         self.avgpool = nn.AvgPool2d(7, stride=1)
         self.register_buffer('running_mean', torch.zeros(512 * block.expansion))
-        #self.bn_last_layer = nn.BatchNorm1d(512 * block.expansion,affine=False)
+        self.bn_last_layer = nn.BatchNorm1d(512 * block.expansion,affine=False)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
         for m in self.modules():
@@ -128,7 +132,7 @@ class ResNet(nn.Module):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
 
-    def _make_layer(self, block, planes, blocks, stride=1):
+    def _make_layer(self, block, planes, blocks, stride=1, last_relu=True):
         downsample = None
         if stride != 1 or self.inplanes != planes * block.expansion:
             downsample = nn.Sequential(
@@ -141,7 +145,7 @@ class ResNet(nn.Module):
         layers.append(block(self.inplanes, planes, stride, downsample))
         self.inplanes = planes * block.expansion
         for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes))
+            layers.append(block(self.inplanes, planes, last_relu=last_relu))
 
         return nn.Sequential(*layers)
 
@@ -157,6 +161,7 @@ class ResNet(nn.Module):
         x = self.layer4(x)
 
         x = self.avgpool(x)
+        
         last_layer_features = x.view(x.size(0), -1)
         if self.training:
             mean = torch.mean(last_layer_features,0)
@@ -165,18 +170,14 @@ class ResNet(nn.Module):
         else:
             last_layer_features = last_layer_features - \
                 Variable(self.running_mean,requires_grad=False)
-        #last_layer_features = self.bn_last_layer(last_layer_features)
-        # if self.training:
-        #     mean = torch.mean(last_layer_features.data,0)
-        #     self.running_mean = 0.8*mean + 0.2*self.running_mean
-        # last_layer_features = last_layer_features - \
-        #     Variable(self.running_mean,requires_grad=False)
+        
         feat_norm = torch.norm(
             last_layer_features,
             p=2,
             dim=1,
             keepdim=True)
         last_layer_features_normalized = last_layer_features/(feat_norm+1e-6)
+        
         x = self.fc(last_layer_features_normalized)
 
         return x, last_layer_features_normalized, last_layer_features
@@ -193,6 +194,7 @@ class ResNet(nn.Module):
         x = self.layer4(x)
 
         x = self.avgpool(x)
+        
         last_layer_features = x.view(x.size(0), -1)
         if self.training:
             mean = torch.mean(last_layer_features,0)
@@ -201,12 +203,14 @@ class ResNet(nn.Module):
         else:
             last_layer_features = last_layer_features - \
                 Variable(self.running_mean,requires_grad=False)
+        
         feat_norm = torch.norm(
             last_layer_features,
             p=2,
             dim=1,
             keepdim=True)
         last_layer_features_normalized = last_layer_features/(feat_norm+1e-6)
+        
         return last_layer_features_normalized, last_layer_features
 
 
