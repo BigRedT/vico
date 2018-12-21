@@ -187,6 +187,59 @@ class GenomeAttributesDataset(Dataset):
         return collate_fn
 
 
+class GenomeAttributesNoImgsDataset(GenomeAttributesDataset):
+    def __getitem__(self,i):
+        image_id = self.image_ids[i]
+        object_ids = self.image_id_to_object_id[image_id]
+        num_regions = len(object_ids)
+        if num_regions==0:
+            return None
+
+        regions = []
+        object_synsets = []
+        attribute_synsets = []
+        object_labels = []
+        attribute_labels = []
+        object_labels_idx = []
+        attribute_labels_idxs = []
+        boxes = []
+        img_size = []
+        for object_id in object_ids:
+            object_anno = self.object_annos[object_id]
+            
+            if len(object_anno['attribute_synsets'])==0:
+                continue
+            
+            boxes.append(object_anno['attribute_box'])
+            
+            object_synsets.append(object_anno['object_synsets'])
+            object_label, object_label_idx = self.create_object_label(
+                object_anno['object_synsets'])
+            object_labels.append(object_label)
+            object_labels_idx.append(object_label_idx)
+            
+            attribute_synsets.append(object_anno['attribute_synsets'])
+            attribute_label, attribute_pos_idxs = self.create_attribute_label(
+                object_anno['attribute_synsets'])
+            attribute_labels.append(attribute_label)
+            attribute_labels_idxs.append(attribute_pos_idxs)
+        
+        to_return = {
+            #'image': [np.array(img).astype(np.float32)],
+            'image_ids': [image_id]*num_regions,
+            'object_ids': object_ids,
+            'boxes': boxes, # coordinates in int
+            #'image_sizes': [[img_h,img_w]]*num_regions, # dimensions in int
+            'object_synsets': object_synsets,
+            'attribute_synsets': attribute_synsets,
+            'object_labels': object_labels,
+            'object_labels_idx': object_labels_idx,
+            'attribute_labels': attribute_labels,
+            'attribute_labels_idxs': attribute_labels_idxs,
+        }
+        return to_return
+
+
 if __name__=='__main__':
     const = GenomeAttributesDatasetConstants()
     dataset = GenomeAttributesDataset(const)
