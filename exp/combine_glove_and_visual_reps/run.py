@@ -5,10 +5,12 @@ from utils.argparse_utils import manage_required_args, str_to_bool
 from utils.constants import Constants, ExpConstants
 from data.glove.constants import GloveConstantsFactory
 from . import concat_glove_and_visual_reps
+from . import concat_glove_and_visual_reps_mean_sub
+from . import concat_glove_and_visual_reps_mean_sub_norm
 
 
 def exp_concat_glove_visual():
-    exp_name = 'concat_glove_visual_avg_reps_elu_norm1'
+    exp_name = 'concat_glove_visual_avg_reps_balanced_bce_norm1'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/combine_glove_visual_reps')
@@ -25,7 +27,7 @@ def exp_concat_glove_visual():
     data_const.entity_entity_reps_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet/' + \
-        'multilabel_resnet_18_fc_center_normalized_adam_norm1loss_entity_entity_reps')
+        'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_entity_entity_reps')
     data_const.entity_entity_reps_npy = os.path.join(
         data_const.entity_entity_reps_dir,
         'reps.npy')
@@ -36,7 +38,7 @@ def exp_concat_glove_visual():
     data_const.entity_attr_reps_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet/' + \
-        'resnet_18_fc_center_normalized_adam_loss_bce_norm1_entity_attr_reps')
+        'resnet_18_mean_adam_loss_balanced_bce_norm1_entity_attr_reps')
     data_const.entity_attr_reps_npy = os.path.join(
         data_const.entity_attr_reps_dir,
         'reps.npy')
@@ -48,7 +50,7 @@ def exp_concat_glove_visual():
     data_const.attr_attr_reps_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes/' + \
-        'resnet_18_fc_center_normalized_adam_loss_bce_norm1_attr_attr_reps')
+        'resnet_18_mean_adam_loss_balanced_bce_norm1_attr_attr_reps')
     data_const.attr_attr_reps_npy = os.path.join(
         data_const.attr_attr_reps_dir,
         'reps.npy')
@@ -59,7 +61,7 @@ def exp_concat_glove_visual():
     data_const.attr_entity_reps_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes/' + \
-        'multilabel_resnet_18_fc_center_normalized_adam_norm1loss_attr_entity_reps')
+        'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_attr_entity_reps')
     data_const.attr_entity_reps_npy = os.path.join(
         data_const.attr_entity_reps_dir,
         'reps.npy')
@@ -68,8 +70,8 @@ def exp_concat_glove_visual():
         'wnid_to_idx.json')
 
     concat_glove_and_visual_reps.main(exp_const,data_const)
-
-
+    #concat_glove_and_visual_reps_mean_sub.main(exp_const,data_const)
+    #concat_glove_and_visual_reps_mean_sub_norm.main(exp_const,data_const)
 
 
 
