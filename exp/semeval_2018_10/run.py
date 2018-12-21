@@ -40,6 +40,11 @@ parser.add_argument(
     type=str_to_bool,
     help='Set flag to use distance quadratic features')
 parser.add_argument(
+    '--visual_only',
+    default=False,
+    type=str_to_bool,
+    help='Set flag to use distance quadratic features')
+parser.add_argument(
     '--l2_weight',
     default=1e-3,
     type=float,
@@ -89,7 +94,8 @@ def exp_train_concat_svm():
             'embed_linear_feat',
             'embed_quadratic_feat',
             'distance_linear_feat',
-            'distance_quadratic_feat'
+            'distance_quadratic_feat',
+            'visual_only',
         ],
         optional_args=[
             'exp_name',
@@ -143,6 +149,7 @@ def exp_train_concat_svm():
     model_const.concat_svm.use_distance_linear_feats = args.distance_linear_feat
     model_const.concat_svm.use_distance_quadratic_feats = \
         args.distance_quadratic_feat
+    model_const.concat_svm.visual_only = args.visual_only
 
     train_concat_svm.main(exp_const,data_const,model_const)
 
@@ -159,6 +166,7 @@ def exp_eval_concat_svm():
             'embed_quadratic_feat',
             'distance_linear_feat',
             'distance_quadratic_feat',
+            'visual_only',
             'visual_vocab_json',
         ],
         optional_args=[
@@ -218,6 +226,7 @@ def exp_eval_concat_svm():
     model_const.concat_svm.use_distance_linear_feats = args.distance_linear_feat
     model_const.concat_svm.use_distance_quadratic_feats = \
         args.distance_quadratic_feat
+    model_const.concat_svm.visual_only = args.visual_only
 
     eval_concat_svm.main(exp_const,data_const,model_const)
 
