@@ -19,6 +19,7 @@ class ConcatSVMConstants(io.JsonSerializableClass):
         self.l2_weight = 0 
         self.use_distance_linear_feats = True
         self.use_distance_quadratic_feats = True
+        self.visual_only = False
         
     @property
     def mlp_const(self):
@@ -62,9 +63,14 @@ class ConcatSVM(nn.Module,io.WritableToFile):
                 word1_embedding[:,self.const.glove_dim:],
                 word2_embedding[:,self.const.glove_dim:],
                 feature_embedding[:,self.const.glove_dim:])
-            distance_feats = torch.cat((
-                distance_feats_glove,
-                distance_feats_visual),1)
+            if self.const.visual_only==True:
+                distance_feats = torch.cat((
+                    0*distance_feats_glove,
+                    distance_feats_visual),1)
+            else:
+                distance_feats = torch.cat((
+                    distance_feats_glove,
+                    distance_feats_visual),1)
         else:
             distance_feats = distance_feats_glove
             
