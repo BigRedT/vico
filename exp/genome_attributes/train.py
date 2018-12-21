@@ -39,6 +39,26 @@ class Norm1Loss(nn.Module):
         return loss
 
 
+class NegWeightedBCELoss(nn.Module):
+    def __init__(self,class_weights,min_weight=1e-4):
+        super(NegWeightedBCELoss,self).__init__()
+        self.min_weight = min_weight
+        self.class_weights = class_weights
+        self.neg_weights = self.compute_neg_weights()
+
+    def compute_neg_weights(self):
+        neg_weights = self.class_weights[:,1] / (self.class_weights[:,0]+1e-6)
+        neg_weights = torch.max(0*neg_weights + self.min_weight,neg_weights)
+        return neg_weights.view(1,-1)
+
+    def forward(self,prob,label_vec):
+        loss = -1*(
+            label_vec*torch.log(prob+1e-6) + \
+            self.neg_weights*(1-label_vec)*torch.log(1-prob+1e-6))
+        loss = torch.mean(loss)
+        return loss
+
+
 class PosNllLoss(nn.Module):
     def __init__(self):
         super(PosNllLoss,self).__init__()
@@ -120,11 +140,17 @@ def train_model(model,dataloader,exp_const):
     else:
         assert(False), 'optimizer not implemented'
 
+    class_weights_npy = dataloader.dataset.const.class_weights_npy
+    if class_weights_npy is not None:
+        class_weights = Variable(
+            torch.cuda.FloatTensor(np.load(class_weights_npy)),
+            requires_grad=False)
+        bce_criterion = NegWeightedBCELoss(class_weights)
     pos_nll_criterion = PosNllLoss()
     margin_criterion = MarginLoss(margin=exp_const.margin)
     l2_reg_criterion = Norm1Loss()
     #l2_reg_criterion = L2RegLoss()
-    bce_criterion = nn.BCELoss()
+    #bce_criterion = nn.BCELoss()
 
     sigmoid = nn.Sigmoid()
 
@@ -215,7 +241,7 @@ def train_model(model,dataloader,exp_const):
 
             step += 1
 
-        lr = 0.5*lr
+        lr = 0.7*lr
         pytorch_layers.set_learning_rate(opt,lr)
 
 
