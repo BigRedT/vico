@@ -13,16 +13,18 @@ EMBED_QUADRATIC_FEAT=False
 DISTANCE_LINEAR_FEAT=True
 DISTANCE_QUADRATIC_FEAT=True
 USE_GLOVE_ONLY=False
+USE_VISUAL_ONLY=False
 
 if [[ "${USE_GLOVE_ONLY}" = "True" ]]
 then
     GLOVE_DIM=300
     EMBEDDINGS_H5PY="${PWD}/symlinks/data/glove/proc/glove_6B_300d.h5py"
     WORD_TO_IDX_JSON="${PWD}/symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json"
+    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_balanced_bce_norm1/visual_words.json"
 else
-    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_elu/visual_word_vecs.h5py"
-    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_elu/visual_word_vecs_idx.json"
-    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_elu/visual_words.json"
+    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_balanced_bce_norm1/visual_word_vecs.h5py"
+    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_balanced_bce_norm1/visual_word_vecs_idx.json"
+    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_balanced_bce_norm1/visual_words.json"
 fi
 
 echo "Running experiment ${EXP_NAME} ..."
@@ -38,6 +40,7 @@ then
         --embed_quadratic_feat $EMBED_QUADRATIC_FEAT \
         --distance_linear_feat $DISTANCE_LINEAR_FEAT \
         --distance_quadratic_feat $DISTANCE_QUADRATIC_FEAT \
+        --visual_only $USE_VISUAL_ONLY \
         --embeddings_h5py $EMBEDDINGS_H5PY \
         --word_to_idx_json $WORD_TO_IDX_JSON \
         --glove_dim $GLOVE_DIM \
@@ -57,6 +60,7 @@ then
         --embed_quadratic_feat $EMBED_QUADRATIC_FEAT \
         --distance_linear_feat $DISTANCE_LINEAR_FEAT \
         --distance_quadratic_feat $DISTANCE_QUADRATIC_FEAT \
+        --visual_only $USE_VISUAL_ONLY \
         --embeddings_h5py $EMBEDDINGS_H5PY \
         --word_to_idx_json $WORD_TO_IDX_JSON \
         --visual_vocab_json $VISUAL_VOCAB_JSON \
