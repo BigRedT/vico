@@ -27,7 +27,7 @@ def exp_compute_class_weights():
 
 
 def exp_train():
-    exp_name = 'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1'
+    exp_name = 'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_relu'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
@@ -65,7 +65,7 @@ def exp_train():
 
 
 def exp_compute_entity_entity_reps():
-    exp_name = 'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_entity_entity_reps'
+    exp_name = 'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_relu_entity_entity_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
@@ -76,20 +76,20 @@ def exp_compute_entity_entity_reps():
     data_const = ImagenetDatasetConstants()
 
     model_const = Constants()
-    model_const.model_num = 490000
+    model_const.model_num = 700000
     model_const.net = ResnetNormalizedConstants()
     model_const.net.num_layers = 18
     model_const.net.num_classes = 21841
     model_const.net_path = os.path.join(
         os.getcwd(),
-        'symlinks/exp/imagenet/multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1/' + \
+        'symlinks/exp/imagenet/multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_relu/' + \
         f'models/net_{model_const.model_num}')
 
     entity_entity_reps.main(exp_const,data_const,model_const)
 
 
 def exp_compute_entity_attr_reps():
-    exp_name = 'resnet_18_fc_center_normalized_adam_loss_bce_norm1_entity_attr_reps'
+    exp_name = 'resnet_18_mean_adam_loss_balanced_bce_norm1_entity_attr_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
@@ -106,14 +106,14 @@ def exp_compute_entity_attr_reps():
     model_const.net.num_classes = 6497
     model_const.net_path = os.path.join(
         os.getcwd(),
-        'symlinks/exp/genome_attributes/resnet_18_fc_center_normalized_adam_loss_bce_norm1/' + \
+        'symlinks/exp/genome_attributes/resnet_18_mean_adam_loss_balanced_bce_norm1/' + \
         f'models/net_{model_const.model_num}')
 
     entity_attr_reps.main(exp_const,data_const,model_const)
 
 
 def exp_find_nn():
-    exp_name = 'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1_entity_entity_reps'
+    exp_name = 'resnet_18_mean_adam_loss_balanced_bce_norm1_entity_attr_reps'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
@@ -134,7 +134,7 @@ def exp_find_nn():
         'symlinks/data/imagenet/wnid_to_words.json')
     data_const.knn_html = os.path.join(
         exp_const.exp_dir,
-        'norm_reps_knn.html')
+        'reps_knn.html')
 
     find_nn.main(exp_const,data_const)
 
@@ -148,7 +148,7 @@ def exp_find_nn():
 
 
 def exp_eval_classifiers():
-    exp_name = 'multilabel_resnet_18_mean_adam_loss_bce_norm1'
+    exp_name = 'multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
@@ -161,13 +161,13 @@ def exp_eval_classifiers():
     data_const = ImagenetDatasetConstants()
 
     model_const = Constants()
-    model_const.model_num = 490000
+    model_const.model_num = 1160000
     model_const.net = ResnetNormalizedConstants()
     model_const.net.num_layers = 18
     model_const.net.num_classes = 21841
     model_const.net_path = os.path.join(
         os.getcwd(),
-        'symlinks/exp/imagenet/multilabel_resnet_18_mean_adam_loss_bce_norm1/' + \
+        'symlinks/exp/imagenet/multilabel_resnet_18_mean_adam_loss_balanced_bce_norm1/' + \
         f'models/net_{model_const.model_num}')
 
     evaluation.main(exp_const,data_const,model_const)
