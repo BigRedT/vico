@@ -12,6 +12,21 @@ from . import entity_entity_reps
 from . import entity_attr_reps
 from . import find_nn
 from . import eval as evaluation
+from . import create_gt_cooccur
+
+
+def exp_create_gt_cooccur():
+    exp_name = 'gt_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/imagenet')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = ImagenetDatasetConstants()
+
+    create_gt_cooccur.main(exp_const,data_const)
 
 
 def exp_compute_class_weights():
