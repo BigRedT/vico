@@ -7,21 +7,19 @@ from torch.utils.data import DataLoader
 
 import utils.io as io
 from utils.constants import save_constants
-from .dataset import ImagenetNoImgsDataset
-
-
-def wnid_offset_to_synset(offset):
-    synset = wn.synset_from_pos_and_offset(offset[0],int(offset[1:])).name()
-    return synset
+from .dataset import GenomeAttributesNoImgsDataset
 
 
 def create_gt_synset_cooccur(exp_const,dataloader):
     print('Creating cooccur ...')
     cooccur = {}
     for data in tqdm(dataloader):
-        on_wnids = data['on_wnids']
-        for b in range(len(on_wnids)):
-            for wnid1,wnid2 in itertools.product(on_wnids[b],on_wnids[b]):
+        B = len(data['object_synsets'])
+
+        for b in range(B):
+            on_wnids = data['object_synsets'][b] + data['attribute_synsets'][b]
+            on_wnids = list(set(on_wnids))
+            for wnid1,wnid2 in itertools.product(on_wnids,on_wnids):
                 if wnid1 not in cooccur:
                     cooccur[wnid1] = {}
                 
@@ -29,37 +27,20 @@ def create_gt_synset_cooccur(exp_const,dataloader):
                     cooccur[wnid1][wnid2] = 0
 
                 cooccur[wnid1][wnid2] += 1
-
-    print('Creating offsets to synsets dict ...')
-    offset_to_synset = {}
-    for offset in tqdm(cooccur.keys()):
-        offset_to_synset[offset] = wnid_offset_to_synset(offset)
-
-    print('Replacing offset by synset in cooccur ...')
-    synset_cooccur = {}
-    for offset1 in tqdm(cooccur.keys()):
-        synset1 = offset_to_synset[offset1]
-        
-        context = {}
-        for offset2,count in cooccur[offset1].items():
-            synset2 = offset_to_synset[offset2]
-            context[synset2] = count
-        
-        synset_cooccur[synset1] = context
         
     synset_cooccur_json = os.path.join(exp_const.exp_dir,'synset_cooccur.json')
-    io.dump_json_object(synset_cooccur,synset_cooccur_json)
+    io.dump_json_object(cooccur,synset_cooccur_json)
 
     print('Checking symmetry and self constraint in synset cooccur ...')
     sym_err_msg = 'Word cooccurence not symmetric ...'
     self_err_msg = 'Self constraints violated ...'
-    for wnid1, context in tqdm(synset_cooccur.items()):
+    for wnid1, context in tqdm(cooccur.items()):
         for wnid2, count in context.items():
             sym_err_msg = f'Word cooccurence not symmetric ({wnid1} / {wnid2})'
             self_err_msg = f'Self constraints violated ({wnid1} / {wnid2})'
-            assert(synset_cooccur[wnid2][wnid1]==count), err_msg
-            assert(synset_cooccur[wnid1][wnid1]>=count), self_err_msg
-            assert(synset_cooccur[wnid2][wnid2]>=count), self_err_msg
+            assert(cooccur[wnid2][wnid1]==count), err_msg
+            assert(cooccur[wnid1][wnid1]>=count), self_err_msg
+            assert(cooccur[wnid2][wnid2]>=count), self_err_msg
 
     print('Constraints satisfied')
     
@@ -75,8 +56,9 @@ def main(exp_const,data_const):
 
     print('Creating dataloader ...')
     data_const = copy.deepcopy(data_const)
-    dataset = ImagenetNoImgsDataset(data_const)
-    collate_fn = dataset.create_collate_fn()
+    dataset = GenomeAttributesNoImgsDataset(data_const)
+    collate_fn = dataset.create_collate_fn(
+        ['object_synsets','attribute_synsets','attribute_labels_idxs'])
     dataloader = DataLoader(
         dataset,
         batch_size=exp_const.batch_size,
