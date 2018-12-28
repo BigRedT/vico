@@ -27,8 +27,8 @@
         "token_embedders": {
             "tokens": {
                 "type": "embedding",
-                "pretrained_file": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/glove/glove.6B.300d.txt.gz",
-                "embedding_dim": 300,
+                "pretrained_file": "https://s3-us-west-2.amazonaws.com/allennlp/datasets/glove/glove.6B.100d.txt.gz",
+                "embedding_dim": 100,
                 "trainable": false
             },
             "token_characters": {
@@ -51,7 +51,7 @@
     "phrase_layer": {
       "type": "lstm",
       "bidirectional": true,
-      "input_size": 400,
+      "input_size": 200,
       "hidden_size": 100,
       "num_layers": 1,
       "dropout": 0.2
@@ -91,7 +91,7 @@
     "grad_norm": 5.0,
     "patience": 10,
     "validation_metric": "+em",
-    "cuda_device": 1,
+    "cuda_device": 2,
     "learning_rate_scheduler": {
       "type": "reduce_on_plateau",
       "factor": 0.5,
