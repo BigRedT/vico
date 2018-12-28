@@ -12,7 +12,7 @@ parser.add_argument(
     type=str, 
     default=os.path.join(
         os.getcwd(),
-        'symlinks/data/glove/glove.6B/glove.6B.300d.txt'), 
+        'symlinks/data/glove/glove.6B/glove.6B.100d.txt'), 
     help='Path to the txt file containing glove embeddings')
 parser.add_argument(
     '--out_dir',
@@ -22,7 +22,7 @@ parser.add_argument(
 parser.add_argument(
     '--name',
     type=str,
-    default='glove_6B_300d',
+    default='glove_6B_100d',
     help='Path to output directory')
 
 def main():
