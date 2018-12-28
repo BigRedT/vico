@@ -132,7 +132,7 @@ class ConcatSVM(nn.Module,io.WritableToFile):
     def cosine_similarity(self,a,b):
         a_norm = torch.norm(a,2,1,keepdim=True)
         b_norm = torch.norm(b,2,1,keepdim=True)
-        return torch.sum(a*b,1,keepdim=True)/(a_norm*b_norm+1e-6)
+        return torch.sum(a*b,1,keepdim=True)#/(a_norm*b_norm+1e-6)
 
     def l1_norm(self,x):
         return torch.sum(torch.abs(x),1,keepdim=True)
