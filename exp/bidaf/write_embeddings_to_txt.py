@@ -27,12 +27,12 @@ def write_to_txt(outdir,embeddings_h5py,words_to_idx_json):
 if __name__=='__main__':
     embeddings_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/combine_glove_visual_reps/concat_glove_visual_avg_reps_balanced_bce_norm1')
+        'symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50/concat_with_glove_100/')
     embeddings_h5py = os.path.join(embeddings_dir,'visual_word_vecs.h5py')
     words_to_idx_json = os.path.join(embeddings_dir,'visual_word_vecs_idx.json')
     outdir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/bidaf/concat_glove_visual_avg_reps_balanced_bce_norm1')
+        'symlinks/exp/bidaf/cooccur_gt')
     io.mkdir_if_not_exists(outdir,recursive=True)
     write_to_txt(outdir,embeddings_h5py,words_to_idx_json)
     
