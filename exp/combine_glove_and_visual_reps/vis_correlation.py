@@ -35,7 +35,7 @@ def vis(visual_words,glove_sim_mat,visual_sim_mat):
 
 def main(
         plot_html,
-        visual_words_vecs_h5py,
+        visual_word_vecs_h5py,
         visual_word_vecs_idx_json,
         visual_words_json,
         visual_freq_json,
@@ -44,7 +44,7 @@ def main(
     visual_freq = io.load_json_object(visual_freq_json)
     visual_word_vecs_idx = io.load_json_object(visual_word_vecs_idx_json)
     visual_word_vecs = io.load_h5py_object(
-        visual_words_vecs_h5py)['embeddings']
+        visual_word_vecs_h5py)['embeddings']
     visual_dim = visual_word_vecs.shape[1] - glove_dim
     num_words = len(visual_words)
     
@@ -104,7 +104,7 @@ if __name__=='__main__':
         'symlinks/exp/combine_glove_visual_reps/' + \
         'concat_glove_visual_avg_reps_balanced_bce_norm1/' + \
         'visual_word_vecs_idx.json')
-    visual_words_vecs_h5py = os.path.join(
+    visual_word_vecs_h5py = os.path.join(
         os.getcwd(),
         'symlinks/exp/combine_glove_visual_reps/' + \
         'concat_glove_visual_avg_reps_balanced_bce_norm1/' + \
@@ -112,7 +112,7 @@ if __name__=='__main__':
     
     main(
         plot_html,
-        visual_words_vecs_h5py,
+        visual_word_vecs_h5py,
         visual_word_vecs_idx_json,
         visual_words_json,
         visual_freq_json)
