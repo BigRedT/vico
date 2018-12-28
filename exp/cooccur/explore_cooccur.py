@@ -15,4 +15,11 @@ def f(name):
     for p in context: 
         print(p)
 
+count = 0
+for w1, context in co.items():
+    for w2 in context.keys():
+        if context[w2][0] < 5:
+            count += 1
+
+print('Num nonzero entries: ',count)
 import pdb; pdb.set_trace()
