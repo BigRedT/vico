@@ -5,7 +5,11 @@ import numpy as np
 import utils.io as io
 from utils.argparse_utils import manage_required_args
 
+
 parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--mattnet_data_json',
+    type=str)
 parser.add_argument(
     '--visual_word_vecs_h5py', 
     type=str, 
@@ -19,17 +23,9 @@ parser.add_argument(
     type=str, 
     default=None)
 parser.add_argument(
-    '--vqa_vocab_txt', 
+    '--mattnet_word_vecs_npy', 
     type=str, 
     default=None)
-parser.add_argument(
-    '--vqa_word_vecs_npy', 
-    type=str, 
-    default=None)
-parser.add_argument(
-    '--glove_dim', 
-    type=int, 
-    default=300)
 
 
 def main():
@@ -38,48 +34,43 @@ def main():
         args,
         parser,
         required_args=[
+            'mattnet_data_json',
             'visual_word_vecs_h5py',
             'visual_word_vecs_idx_json',
-            'vqa_vocab_txt',
-            'vqa_word_vecs_npy'],
+            'mattnet_word_vecs_npy'],
         optional_args=['visual_words_json'])
+
+    mattnet_data = io.load_json_object(args.mattnet_data_json)
+    mattnet_word_to_idx = mattnet_data['word_to_ix']
 
     visual_word_vecs = io.load_h5py_object(
         args.visual_word_vecs_h5py)['embeddings'][()]
-    visual_word_vecs_idx = io.load_json_object(
-        args.visual_word_vecs_idx_json)
-    
+    visual_word_vecs_idx = io.load_json_object(args.visual_word_vecs_idx_json)
+
     if args.visual_words_json is None:
         visual_words = set()
     else:
         visual_words = set(io.load_json_object(args.visual_words_json))
+    
+    vec_dim = visual_word_vecs.shape[1]
+    mattnet_word_vecs = np.zeros([len(mattnet_word_to_idx),vec_dim])
 
-    # Read vqa_vocab_txt file
-    vqa_vocab = []
-    for line in tqdm(open(args.vqa_vocab_txt,'r')):
-        vqa_vocab.append(line[:-1])
-
-    num_vqa_words = len(vqa_vocab)
-    word_vec_dim = visual_word_vecs.shape[1]
-    vqa_word_vecs = np.zeros([num_vqa_words,word_vec_dim])
     count = 0
     visual_count = 0
-
-    for i,word in enumerate(tqdm(vqa_vocab)):
+    for word,mattnet_idx in mattnet_word_to_idx.items():
         if word in visual_word_vecs_idx:
-            idx = visual_word_vecs_idx[word]
-            vqa_word_vecs[i] = visual_word_vecs[idx]
+            visual_idx = visual_word_vecs_idx[word]
+            vec = visual_word_vecs[visual_idx]
+            mattnet_word_vecs[mattnet_idx] = vec
             count += 1
             if word in visual_words:
                 visual_count += 1
 
-    print('Fraction available in glove: ',count/len(vqa_vocab))
-    print('Fraction available in visual: ',visual_count/len(vqa_vocab))
-    
-    print(f'Writing vqa word vectors to {args.vqa_word_vecs_npy} ...')
-    np.save(args.vqa_word_vecs_npy,vqa_word_vecs)
+    print('Fraction available in glove: ',count/len(mattnet_word_to_idx))
+    print('Fraction available in visual: ',visual_count/len(mattnet_word_to_idx))
 
+    np.save(args.mattnet_word_vecs_npy,mattnet_word_vecs)
+    
 
 if __name__=='__main__':
     main()
-    
