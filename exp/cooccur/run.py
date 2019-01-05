@@ -71,7 +71,7 @@ def exp_proc_word_cooccur():
 
 
 def exp_train():
-    exp_name = 'training_no_fx_self_count_dim_50_single_embed'
+    exp_name = 'training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/cooccur/imagenet_genome_gt')
@@ -83,11 +83,40 @@ def exp_train():
     exp_const.model_save_step = 10000
     exp_const.batch_size = 1000
     exp_const.num_epochs = 50
-    exp_const.lr = 0.001
+    exp_const.lr = 0.01
     exp_const.momentum = 0.9
     exp_const.num_workers = 5
     exp_const.optimizer = 'Adagrad'
     
+    data_const = CooccurDatasetConstants()
+    data_const.cooccur_json = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/cooccur/imagenet_genome_gt/fused_word_cooccur.json')
+    data_const.use_self_count = True
+    cooccur = io.load_json_object(data_const.cooccur_json)
+    num_words = len(cooccur)
+
+    model_const = Constants()
+    model_const.model_num = 140000
+    model_const.net = LogBilinearConstants()
+    model_const.net.num_words = num_words
+    model_const.net.embed_dims = 50
+    model_const.net.two_embedding_layers = False
+    model_const.net_path = os.path.join(
+        exp_const.model_dir,
+        f'net_{model_const.model_num}')
+
+    train.main(exp_const,data_const,model_const)
+
+
+def exp_extract_embeddings():
+    exp_name = 'training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/cooccur/imagenet_genome_gt')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
+
     data_const = CooccurDatasetConstants()
     data_const.cooccur_json = os.path.join(
         os.getcwd(),
@@ -105,39 +134,11 @@ def exp_train():
         exp_const.model_dir,
         f'net_{model_const.model_num}')
 
-    train.main(exp_const,data_const,model_const)
-
-
-def exp_extract_embeddings():
-    exp_name = 'training_no_fx_self_count_dim_50_single_embed'
-    out_base_dir = os.path.join(
-        os.getcwd(),
-        'symlinks/exp/cooccur/imagenet_genome_gt')
-    exp_const = ExpConstants(exp_name,out_base_dir)
-    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
-
-    data_const = CooccurDatasetConstants()
-    data_const.cooccur_json = os.path.join(
-        os.getcwd(),
-        'symlinks/exp/cooccur/imagenet_genome_gt/fused_word_cooccur.json')
-    cooccur = io.load_json_object(data_const.cooccur_json)
-    num_words = len(cooccur)
-
-    model_const = Constants()
-    model_const.model_num = 420000
-    model_const.net = LogBilinearConstants()
-    model_const.net.num_words = num_words
-    model_const.net.embed_dims = 50
-    model_const.net.two_embedding_layers = True
-    model_const.net_path = os.path.join(
-        exp_const.model_dir,
-        f'net_{model_const.model_num}')
-
     extract_embeddings.main(exp_const,data_const,model_const)
 
 
 def exp_find_nn():
-    exp_name = 'training_no_fx_self_count_dim_50_single_embed'
+    exp_name = 'training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/cooccur/imagenet_genome_gt')
@@ -154,7 +155,7 @@ def exp_find_nn():
         'word_to_idx.json')
     data_const.knn_html = os.path.join(
         exp_const.exp_dir,
-        'visual_embeddings_knn.html')
+        'visual_embeddings_cosine_knn.html')
     data_const.cooccur_json = os.path.join(
         os.getcwd(),
         'symlinks/exp/cooccur/imagenet_genome_gt/fused_word_cooccur.json')
@@ -166,7 +167,7 @@ def exp_concat_with_glove():
     exp_name = 'concat_with_glove_300'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed')
+        'symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2')
     exp_const = ExpConstants(exp_name,out_base_dir)
 
     visual_embed_dir = exp_const.out_base_dir
