@@ -38,9 +38,10 @@ class LogBilinear(nn.Module,io.WritableToFile):
         scores = torch.sum(w1*w2,1) + b1 + b2
         return scores
 
-    def loss(self,scores,x,x_max=100,alpha=0.75):
+    def loss(self,scores,target,x,x_max=100,alpha=0.75):
         f_x = 1 #torch.min(0*x+1,torch.pow(x/x_max,alpha))
-        return torch.mean(f_x*torch.pow((scores-torch.log(x+1e-6)),2))
+        return torch.mean(f_x*torch.pow((scores-target),2))
+        
 
 
 class LogBilinearNegPairs(LogBilinear):
