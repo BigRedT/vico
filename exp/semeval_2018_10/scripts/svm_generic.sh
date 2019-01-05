@@ -2,7 +2,7 @@ ACTION=$1
 GPU=$2
 
 EXP_NAME=$3
-OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/imagenet_genome_attr/glove_dot_product"
+OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/imagenet_genome_attr/cooccur_gt_training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2"
 
 LR=0.01
 L2_WEIGHT=0.001
@@ -12,7 +12,7 @@ EMBED_LINEAR_FEAT=False
 EMBED_QUADRATIC_FEAT=False
 DISTANCE_LINEAR_FEAT=True
 DISTANCE_QUADRATIC_FEAT=True
-USE_GLOVE_ONLY=True
+USE_GLOVE_ONLY=False
 USE_VISUAL_ONLY=False
 
 if [[ "${USE_GLOVE_ONLY}" = "True" ]]
@@ -20,11 +20,11 @@ then
     GLOVE_DIM=300
     EMBEDDINGS_H5PY="${PWD}/symlinks/data/glove/proc/glove_6B_300d.h5py"
     WORD_TO_IDX_JSON="${PWD}/symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json"
-    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed/concat_with_glove_300/visual_words.json"
+    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2/concat_with_glove_300/visual_words.json"
 else
-    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed/concat_with_glove_300/visual_word_vecs.h5py"
-    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed/concat_with_glove_300/visual_word_vecs_idx.json"
-    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed/concat_with_glove_300/visual_words.json"
+    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2/concat_with_glove_300/visual_word_vecs.h5py"
+    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2/concat_with_glove_300/visual_word_vecs_idx.json"
+    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/cooccur/imagenet_genome_gt/training_no_fx_self_count_dim_50_single_embed_ppmi_laplace2/concat_with_glove_300/visual_words.json"
 fi
 
 echo "Running experiment ${EXP_NAME} ..."
