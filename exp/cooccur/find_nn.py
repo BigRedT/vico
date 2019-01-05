@@ -12,7 +12,7 @@ def main(exp_const,data_const):
     cooccur = io.load_json_object(data_const.cooccur_json)
     word_freq = {word: cooccur[word][word] for word in word_to_idx.keys()}
 
-    print('Select words with freq > 1000 ...')
+    print(f'Select words with freq > {exp_const.min_freq} ...')
     select_words = [word for word in word_to_idx.keys() if \
         word_freq[word] > exp_const.min_freq]
     num_select_words = len(select_words)
