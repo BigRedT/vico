@@ -68,7 +68,11 @@ def train_model(model,dataloader,exp_const):
 
             # Compute loss
             x = Variable(torch.cuda.FloatTensor(data['x']))
-            loss = model.net.loss(scores,x)
+            pmi = Variable(torch.cuda.FloatTensor(data['pmi']))
+            ppmi = torch.max(0*pmi,pmi)
+            loss = model.net.loss(scores,ppmi,x)
+            #loss = model.net.loss(scores,torch.log(x+1e-6),x)
+            #loss = model.net.loss(scores,x)
             # loss = model.net.loss(
             #     scores,
             #     ids1,
