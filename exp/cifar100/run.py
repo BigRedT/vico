@@ -9,12 +9,15 @@ from .dataset import Cifar100DatasetConstants
 from . import train
 from . import eval as evaluation
 from .vis import vis_conf_mat
-from .vis import conf_vs_visual_sim
+from .vis import conf_vs_visual_sim, conf_as_fun_of_sims, class_vs_sim
 
 
 def exp_train():
-    #exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01'
-    exp_name = 'glove_sgd_0.01'
+    use_glove = False
+    if use_glove==False:
+        exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01_linear'
+    else:
+        exp_name = 'glove_sgd_0.01_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/cifar100')
@@ -25,13 +28,16 @@ def exp_train():
     exp_const.log_step = 100
     exp_const.model_save_step = 1000
     exp_const.val_step = 1000
-    #exp_const.num_val_samples = 1000
     exp_const.batch_size = 128
     exp_const.num_epochs = 100
-    exp_const.lr = 0.001 #0.01 with adam; finetune with 0.01 sgd
+    # Note on LR
+    # - 0.01 with adam; finetune with 0.01 sgd for simple resnet
+    # - 0.01 with sgd for 32K iters and then 0.001 sgd for embedding resnet
+    exp_const.lr = 0.01 
     exp_const.momentum = 0.9
     exp_const.num_workers = 5
     exp_const.optimizer = 'SGD'
+    exp_const.feedforward = False
     exp_const.subset = {
         'training': 'train',
         'test': 'test'
@@ -40,7 +46,7 @@ def exp_train():
     data_const = Cifar100DatasetConstants()
 
     model_const = Constants()
-    model_const.model_num = 32000 #, 48000
+    model_const.model_num = None #32000 #, 48000
     model_const.net = ResnetConstants()
     model_const.net.num_layers = 32
     model_const.net.num_classes = 100
@@ -49,11 +55,11 @@ def exp_train():
         exp_const.model_dir,
         f'net_{model_const.model_num}')
     model_const.embed2class = Embed2ClassConstants()
+    model_const.embed2class.linear = True
     model_const.embed2class_path = os.path.join(
         exp_const.model_dir,
         f'embed2class_{model_const.model_num}')
 
-    use_glove = True
     if use_glove==True:
         #Glove
         model_const.embed2class.embed_dims = 300
@@ -81,8 +87,9 @@ def exp_train():
 
 
 def exp_eval():
-    #exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01'
-    exp_name = 'glove_sgd_0.01'
+    # exp_name = 'feedforward_sgd_weight_decay_data_aug'
+    # exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01_linear'
+    exp_name = 'glove_sgd_0.01_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/cifar100')
@@ -91,12 +98,13 @@ def exp_eval():
     exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
     exp_const.batch_size = 128
     exp_const.num_workers = 5
+    exp_const.feedforward = False
 
     data_const = Cifar100DatasetConstants()
     data_const.train = False
 
     model_const = Constants()
-    model_const.model_num = 36000
+    model_const.model_num = 34000
     model_const.net = ResnetConstants()
     model_const.net.num_layers = 32
     model_const.net.num_classes = 100
@@ -105,6 +113,7 @@ def exp_eval():
         exp_const.model_dir,
         f'net_{model_const.model_num}')
     model_const.embed2class = Embed2ClassConstants()
+    model_const.embed2class.linear = True
     model_const.embed2class_path = os.path.join(
         exp_const.model_dir,
         f'embed2class_{model_const.model_num}')
@@ -127,7 +136,7 @@ def exp_vis_confmat():
 
 
 def exp_conf_vs_visual_sim():
-    exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01'
+    exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01_linear'
     #exp_name = 'glove_sgd_0.01'
     out_base_dir = os.path.join(
         os.getcwd(),
@@ -142,10 +151,52 @@ def exp_conf_vs_visual_sim():
     data_const.labels_npy = os.path.join(visual_dir,'labels.npy')
     data_const.glove_confmat_npy = os.path.join(
         os.getcwd(),
-        'symlinks/exp/cifar100/glove_sgd_0.01/confmat.npy')
+        'symlinks/exp/cifar100/glove_sgd_0.01_linear/confmat.npy')
     data_const.glove_dim = 300
 
     conf_vs_visual_sim.main(exp_const,data_const)
+
+
+def exp_conf_as_fun_of_sims():
+    exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01_linear'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/cifar100')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
+    exp_const.cosine = False
+
+    data_const = Constants()
+    visual_dir = exp_const.exp_dir
+    data_const.visual_confmat_npy = os.path.join(visual_dir,'confmat.npy')
+    data_const.visual_embed_npy = os.path.join(visual_dir,'embeddings.npy')
+    data_const.labels_npy = os.path.join(visual_dir,'labels.npy')
+    data_const.glove_confmat_npy = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/cifar100/glove_sgd_0.01/confmat.npy')
+    data_const.glove_dim = 300
+
+    conf_as_fun_of_sims.main(exp_const,data_const)
+
+
+def exp_class_vs_sim():
+    exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01_linear'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/cifar100')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
+
+    data_const = Constants()
+    visual_dir = exp_const.exp_dir
+    data_const.visual_embed_npy = os.path.join(visual_dir,'embeddings.npy')
+    data_const.labels_npy = os.path.join(visual_dir,'labels.npy')
+    data_const.class_confmat_npy = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/cifar100/feedforward_sgd_weight_decay_data_aug/confmat.npy')
+    data_const.glove_dim = 300
+
+    class_vs_sim.main(exp_const,data_const)
 
 
 if __name__=='__main__':
