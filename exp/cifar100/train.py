@@ -76,9 +76,13 @@ def train_model(model,dataloaders,exp_const):
                 img_std)
             imgs = imgs.permute(0,3,1,2)
             label_idxs = Variable(data['label_idx'].cuda())
-            _, feats = model.net(imgs)
-            class_weights = model.embed2class()
-            logits = model.embed2class.classify(feats,class_weights)
+
+            if exp_const.feedforward==True:
+                logits, feats = model.net(imgs)
+            else:
+                _, feats = model.net(imgs)
+                class_weights = model.embed2class()
+                logits = model.embed2class.classify(feats,class_weights)
 
             # Computer loss
             loss = criterion(logits,label_idxs)
@@ -129,7 +133,11 @@ def train_model(model,dataloaders,exp_const):
                     step)
                 print(eval_results)
                 log_value('Test Acc',eval_results['Acc'],step)
-
+            
+            if step==32000:
+                lr = 0.1*lr
+                pytorch_layers.set_learning_rate(opt,lr)
+                
             step += 1
 
 
@@ -158,9 +166,12 @@ def eval_model(model,dataloader,exp_const,step):
             img_std)
         imgs = imgs.permute(0,3,1,2)
         label_idxs = Variable(data['label_idx'].cuda())
-        _, feats = model.net(imgs)
-        class_weights = model.embed2class()
-        logits = model.embed2class.classify(feats,class_weights)
+        if exp_const.feedforward==True:
+            logits,feats = model.net(imgs)
+        else:
+            _, feats = model.net(imgs)
+            class_weights = model.embed2class()
+            logits = model.embed2class.classify(feats,class_weights)
 
         # Computer loss
         loss = criterion(logits,label_idxs)    

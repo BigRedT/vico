@@ -24,7 +24,8 @@ from .dataset import Cifar100Dataset
 def eval_model(model,dataloader,exp_const):
     # Set mode
     model.net.eval()
-    model.embed2class.eval()
+    if exp_const.feedforward==False:
+        model.embed2class.eval()
 
     img_mean = Variable(torch.cuda.FloatTensor(model.img_mean))
     img_std = Variable(torch.cuda.FloatTensor(model.img_std))
@@ -34,7 +35,7 @@ def eval_model(model,dataloader,exp_const):
     avg_loss = 0
     correct = 0
     num_samples = 0
-    num_classes = model.embed2class.const.num_classes
+    num_classes = len(dataloader.dataset.labels)
     confmat = np.zeros([num_classes,num_classes])
     for it,data in enumerate(tqdm(dataloader)):
         # Forward pass
@@ -45,9 +46,13 @@ def eval_model(model,dataloader,exp_const):
             img_std)
         imgs = imgs.permute(0,3,1,2)
         label_idxs = Variable(data['label_idx'].cuda())
-        _, feats = model.net(imgs)
-        class_weights = model.embed2class()
-        logits = model.embed2class.classify(feats,class_weights)
+
+        if exp_const.feedforward==True:
+            logits, feats = model.net(imgs)
+        else:
+            _, feats = model.net(imgs)
+            class_weights = model.embed2class()
+            logits = model.embed2class.classify(feats,class_weights)
 
         # Computer loss
         loss = criterion(logits,label_idxs)    
@@ -85,14 +90,19 @@ def main(exp_const,data_const,model_const):
     print('Creating network ...')
     model = Model()
     model.const = model_const
+    
     model.net = ResnetModel(model.const.net)
-    model.embed2class = Embed2Class(model.const.embed2class)
     if model.const.model_num is not None:
         model.net.load_state_dict(torch.load(model.const.net_path))
-        model.embed2class.load_state_dict(
-            torch.load(model.const.embed2class_path))
     model.net.cuda()
-    model.embed2class.cuda()
+    
+    if exp_const.feedforward==False:
+        model.embed2class = Embed2Class(model.const.embed2class)
+        if model.const.model_num is not None:
+            model.embed2class.load_state_dict(
+                torch.load(model.const.embed2class_path))
+        model.embed2class.cuda()
+    
     model.img_mean = np.array([0.485, 0.456, 0.406])
     model.img_std = np.array([0.229, 0.224, 0.225])
 
@@ -119,7 +129,14 @@ def main(exp_const,data_const,model_const):
     io.dump_json_object(results,results_json)
 
     embeddings_npy = os.path.join(exp_const.exp_dir,'embeddings.npy')
-    np.save(embeddings_npy,model.embed2class.embed.weight.data.cpu().numpy())
+    if exp_const.feedforward==True:
+        np.save(
+            embeddings_npy,
+            model.net.resnet_layers.fc.weight.data.cpu().numpy())
+    else:
+        np.save(
+            embeddings_npy,
+            model.embed2class.embed.weight.data.cpu().numpy())
 
     labels_npy = os.path.join(exp_const.exp_dir,'labels.npy')
     np.save(labels_npy,dataset.labels)
