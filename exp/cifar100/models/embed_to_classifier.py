@@ -16,6 +16,7 @@ class Embed2ClassConstants(io.JsonSerializableClass):
         self.embed_h5py = None
         self.embed_word_to_idx_json = None
         self.weights_dim = 64
+        self.linear = True
 
 
 class Embed2Class(nn.Module):
@@ -25,10 +26,13 @@ class Embed2Class(nn.Module):
         self.embed = nn.Embedding(
             self.const.num_classes,
             self.const.embed_dims)
-        self.fc1 = nn.Linear(self.const.embed_dims,self.const.weights_dim)
-        self.bn = nn.BatchNorm1d(self.const.weights_dim)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(self.const.weights_dim,self.const.weights_dim)
+        if self.const.linear==True:
+            self.fc = nn.Linear(self.const.embed_dims,self.const.weights_dim)
+        else:
+            self.fc1 = nn.Linear(self.const.embed_dims,self.const.weights_dim)
+            self.bn = nn.BatchNorm1d(self.const.weights_dim)
+            self.relu = nn.ReLU()
+            self.fc2 = nn.Linear(self.const.weights_dim,self.const.weights_dim)
 
     def load_embeddings(self,labels):
         embed_h5py = io.load_h5py_object(self.const.embed_h5py)['embeddings']
@@ -48,10 +52,13 @@ class Embed2Class(nn.Module):
         self.embed.weight.data.copy_(torch.from_numpy(embeddings))
 
     def forward(self):
-        x = self.fc1(self.embed.weight)
-        x = self.bn(x)
-        x = self.relu(x)
-        x = self.fc2(x)
+        if self.const.linear==True:
+            x = self.fc(self.embed.weight)
+        else:
+            x = self.fc1(self.embed.weight)
+            x = self.bn(x)
+            x = self.relu(x)
+            x = self.fc2(x)
         return x
 
     def classify(self,feats,class_weights):
