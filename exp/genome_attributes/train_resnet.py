@@ -54,8 +54,31 @@ class NegWeightedBCELoss(nn.Module):
     def forward(self,prob,label_vec):
         loss = -1*(
             label_vec*torch.log(prob+1e-6) + \
-            self.neg_weights*(1-label_vec)*torch.log(1-prob+1e-6))
+            0*self.neg_weights*(1-label_vec)*torch.log(1-prob+1e-6))
         loss = torch.mean(loss)
+        return loss
+
+
+class NoNegBCELoss(nn.Module):
+    def __init__(self,):
+        super(NoNegBCELoss,self).__init__()
+
+    def forward(self,prob,label_vec):
+        loss = -1*label_vec*torch.log(prob+1e-6)
+        loss = torch.sum(loss) / (1e-6+torch.sum(label_vec))
+        return loss
+
+
+class SparseLoss(nn.Module):
+    def __init__(self,p=1):
+        super(SparseLoss,self).__init__()
+        self.p = p
+
+    def forward(self,prob,label_vec):
+        loss = torch.pow(
+            torch.sum(
+                torch.pow(torch.abs((1-label_vec)*(prob)),self.p)),1/self.p) / \
+            (1e-6+torch.sum(1-label_vec))
         return loss
 
 
@@ -84,6 +107,17 @@ class MarginLoss(nn.Module):
                 loss += torch.sum((1-y[i])*torch.max(0*x[i],self.margin+x[i]-x[i,k]))
                 count += (D - len(pos_ids[i]))
         loss = loss / count
+        return loss
+
+
+class CrossEntropy(nn.Module):
+    def __init__(self):
+        super(CrossEntropy,self).__init__()
+
+    def forward(self,prob,label_vec):
+        denom = torch.sum(label_vec,1,keepdim=True)
+        gt_prob = label_vec/(denom+1e-6)
+        loss = -1*torch.mean(torch.sum(gt_prob*torch.log(prob+1e-6),1))
         return loss
 
 
@@ -145,14 +179,18 @@ def train_model(model,dataloader,exp_const):
         class_weights = Variable(
             torch.cuda.FloatTensor(np.load(class_weights_npy)),
             requires_grad=False)
-        bce_criterion = NegWeightedBCELoss(class_weights)
+        #bce_criterion = NegWeightedBCELoss(class_weights)
+    #bce_criterion = NoNegBCELoss()
+    #sparse_criterion = SparseLoss(p=exp_const.p)
     # pos_nll_criterion = PosNllLoss()
     # margin_criterion = MarginLoss(margin=exp_const.margin)
     # l2_reg_criterion = Norm1Loss()
     #l2_reg_criterion = L2RegLoss()
     #bce_criterion = nn.BCELoss()
+    ce_criterion = CrossEntropy()
 
     sigmoid = nn.Sigmoid()
+    softmax = nn.Softmax()
 
     step = 0
     if model.const.model_num is not None:
@@ -177,17 +215,27 @@ def train_model(model,dataloader,exp_const):
                 img_std)
             imgs = imgs.permute(0,3,1,2)
             logits, last_layer_feats = model.net(imgs)
-            prob = sigmoid(logits)
+            #prob = sigmoid(logits)
+            prob = softmax(logits)
             
+            prob_ = prob.data.cpu().numpy()
+            B,C = prob_.shape
+            gt_0_3 = np.sum(prob_>0.3) / (B*C)
+            gt_0_5 = np.sum(prob_>0.5) / (B*C)
+            gt_0_7 = np.sum(prob_>0.7) / (B*C)
+            gt_0_9 = np.sum(prob_>0.9) / (B*C)
+
             # Computer loss
             attr_labels = Variable(data['attribute_labels'].cuda())
             attr_labels_idxs = data['attribute_labels_idxs']
             # pos_nll_loss = 0*pos_nll_criterion(prob,attr_labels)
             # margin_loss = 0*margin_criterion(prob,attr_labels,attr_labels_idxs)
             #l2_reg_loss = l2_reg_criterion(last_layer_feats)
-            bce_loss = bce_criterion(prob,attr_labels)
-            loss = bce_loss
-            
+            #bce_loss = bce_criterion(prob,attr_labels)
+            #sparse_loss = sparse_criterion(prob,attr_labels)
+            #loss = 1*bce_loss + sparse_loss
+            loss = ce_criterion(prob,attr_labels)
+
             # Backward pass
             opt.zero_grad()
             loss.backward()
@@ -198,9 +246,14 @@ def train_model(model,dataloader,exp_const):
                     'Loss': loss.data[0],
                     # 'Pos NLL Loss': pos_nll_loss.data[0],
                     # 'Margin Loss': margin_loss.data[0],
-                    'BCE Loss': bce_loss.data[0],
+                    #'BCE Loss': bce_loss.data[0],
+                    #'Sparse Loss': sparse_loss.data[0],
                     #'L2 Reg': l2_reg_loss.data[0],
                     'LR': lr,
+                    'gt_0.3': gt_0_3,
+                    'gt_0.5': gt_0_5,
+                    'gt_0.7': gt_0_7,
+                    'gt_0.9': gt_0_9,
                 }
 
                 log_str = f'Epoch: {epoch} | Iter: {it} | Step: {step} | '
