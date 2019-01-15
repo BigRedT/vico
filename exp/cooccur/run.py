@@ -5,7 +5,9 @@ import utils.io as io
 from utils.argparse_utils import manage_required_args, str_to_bool
 from utils.constants import Constants, ExpConstants
 from . import fuse_synset_cooccur
+from . import syn_cooccur
 from . import word_cooccur
+from . import synset_to_word_cooccur
 from . import proc_word_cooccur
 from .dataset import CooccurDatasetConstants
 from .models.logbilinear import LogBilinearConstants
@@ -34,7 +36,7 @@ def exp_fuse_synset_cooccur():
     fuse_synset_cooccur.main(exp_const,data_const)
 
 
-def exp_synset_to_word_cooccur():
+def exp_word_cooccur():
     exp_name = 'imagenet_genome_gt'
     out_base_dir = os.path.join(
         os.getcwd(),
@@ -50,6 +52,34 @@ def exp_synset_to_word_cooccur():
         'symlinks/exp/cooccur/imagenet_genome_gt/fused_word_cooccur.json')
 
     word_cooccur.main(exp_const,data_const)
+
+
+def exp_synset_to_word_cooccur():
+    exp_name = 'gt_context_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+
+    data_const = Constants()
+    data_const.synset_cooccur_json = os.path.join(
+        exp_const.exp_dir,
+        'synset_cooccur.json')
+    data_const.word_cooccur_json = os.path.join(
+        exp_const.exp_dir,
+        'word_cooccur.json')
+
+    synset_to_word_cooccur.main(exp_const,data_const)
+
+
+def exp_syn_cooccur():
+    exp_name = 'syn_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/wordnet')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+
+    syn_cooccur.main(exp_const)
 
 
 def exp_proc_word_cooccur():
