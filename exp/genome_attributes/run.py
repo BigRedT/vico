@@ -3,6 +3,7 @@ import os
 from exp.experimenter import *
 from utils.argparse_utils import manage_required_args, str_to_bool
 from utils.constants import Constants, ExpConstants
+from data.visualgenome.constants import VisualGenomeConstants
 from .models.resnet_normalized import ResnetNormalizedConstants
 from .dataset import GenomeAttributesDatasetConstants
 from . import train
@@ -13,6 +14,10 @@ from . import find_nn
 from . import class_weights
 from . import attr_cooccur
 from . import create_gt_cooccur
+from . import create_gt_obj_attr_cooccur
+from . import create_gt_attr_attr_cooccur
+from . import create_gt_context_cooccur
+from .vis import vis_pred
 
 
 def exp_create_gt_cooccur():
@@ -27,6 +32,46 @@ def exp_create_gt_cooccur():
     data_const = GenomeAttributesDatasetConstants()
 
     create_gt_cooccur.main(exp_const,data_const)
+
+
+def exp_create_gt_obj_attr_cooccur():
+    exp_name = 'gt_obj_attr_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = GenomeAttributesDatasetConstants()
+
+    create_gt_obj_attr_cooccur.main(exp_const,data_const)
+
+
+def exp_create_gt_attr_attr_cooccur():
+    exp_name = 'gt_attr_attr_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = GenomeAttributesDatasetConstants()
+
+    create_gt_attr_attr_cooccur.main(exp_const,data_const)
+
+
+def exp_create_gt_context_cooccur():
+    exp_name = 'gt_context_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+
+    data_const = VisualGenomeConstants()
+
+    create_gt_context_cooccur.main(exp_const,data_const)
 
 
 def exp_compute_class_weights():
@@ -44,7 +89,7 @@ def exp_compute_class_weights():
 
 
 def exp_train_resnet():
-    exp_name = 'resnet_negweighted'
+    exp_name = 'resnet_ce'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -59,11 +104,12 @@ def exp_train_resnet():
     # exp_const.num_val_samples = 1000
     exp_const.batch_size = 10 # 10 for resnet 18; 5 for resnet 50
     exp_const.num_epochs = 20
-    exp_const.lr = 0.1
+    exp_const.lr = 0.01
     exp_const.momentum = 0.9
     exp_const.num_workers = 5
     exp_const.optimizer = 'Adam'
     exp_const.margin = 0.5
+    #exp_const.p = 1
 
     data_const = GenomeAttributesDatasetConstants()
     data_const.class_weights_npy = os.path.join(
@@ -80,6 +126,36 @@ def exp_train_resnet():
         f'net_{model_const.model_num}')
 
     train_resnet.main(exp_const,data_const,model_const)
+
+
+def exp_vis_resnet_pred():
+    exp_name = 'resnet_ce'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
+    exp_const.batch_size = 10 # 10 for resnet 18; 5 for resnet 50
+    exp_const.num_epochs = 20
+    exp_const.num_workers = 5
+    exp_const.num_nbrs = 20
+
+    data_const = GenomeAttributesDatasetConstants()
+    data_const.class_weights_npy = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes/class_weights/class_weights.npy')
+
+    model_const = Constants()
+    model_const.model_num = 70000
+    model_const.net = ResnetNormalizedConstants()
+    model_const.net.num_layers = 18
+    model_const.net.num_classes = 6497
+    model_const.net_path = os.path.join(
+        exp_const.model_dir,
+        f'net_{model_const.model_num}')
+
+    vis_pred.main(exp_const,data_const,model_const)
 
 
 def exp_train():
