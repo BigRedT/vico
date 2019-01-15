@@ -16,8 +16,8 @@ def create_scatter_plot(confmat,sim,labels,filename):
             if i==j:
                 continue
 
-            if confmat[i,j]==0:
-                continue
+            # if confmat[i,j]==0:
+            #     continue
 
             x.append(sim[i,j])
             y.append(confmat[i,j])

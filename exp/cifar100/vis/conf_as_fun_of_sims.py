@@ -18,7 +18,7 @@ def get_pair_counts(glove_sim,visual_sim,del_confmat,labels):
             if i==j:
                 continue
 
-            if abs(del_confmat[i,j]) <= 1e-4:
+            if abs(del_confmat[i,j]) <= 1e-6:
                 continue
 
             quad = ''
@@ -50,7 +50,7 @@ def create_scatter_plot(del_confmat,visual_sim,glove_sim,labels,filename):
             if i==j:
                 continue
 
-            if abs(del_confmat[i,j]) <= 1e-4:
+            if abs(del_confmat[i,j]) < 1e-6:
                 continue
 
             round_del_conf = str(-round(del_confmat[i,j],2))
@@ -123,6 +123,7 @@ def main(exp_const,data_const):
 
     pair_counts = get_pair_counts(glove_sim,visual_sim,del_confmat,labels)
     pair_counts_json = os.path.join(exp_const.exp_dir,'conf_pair_counts.json')
+    print(pair_counts_json)
     io.dump_json_object(pair_counts,pair_counts_json)
 
     print(pair_counts)
