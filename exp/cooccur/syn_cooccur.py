@@ -2,13 +2,15 @@ import os
 import copy
 import itertools
 from tqdm import tqdm
+import nltk
+from nltk.corpus import stopwords
 from nltk.corpus import wordnet as wn
 from torch.utils.data import DataLoader
 
 import utils.io as io
 
 
-def synset_to_words(synset):
+def synset_to_words(synset,stop_words):
     lemma_names = [lemma.name() for lemma in synset.lemmas()]
     words = set()
     for lemma_name in lemma_names:
@@ -28,13 +30,12 @@ def main(exp_const):
     io.mkdir_if_not_exists(exp_const.exp_dir,recursive=True)
 
     cooccur = {}
+    nltk.download('stopwords')
+    stop_words = set(stopwords.words('english'))
     for synset in wn.all_synsets():
-        words = synset_to_words(synset)
+        words = synset_to_words(synset,stop_words)
         for word1 in words:
             for word2 in words:
-                if word1==word2:
-                    continue
-
                 if word1 not in cooccur:
                         cooccur[word1] = {}
 
