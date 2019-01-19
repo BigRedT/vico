@@ -17,6 +17,9 @@ from . import create_gt_cooccur
 from . import create_gt_obj_attr_cooccur
 from . import create_gt_attr_attr_cooccur
 from . import create_gt_context_cooccur
+from . import create_gt_attr_attr_word_cooccur
+from . import create_gt_obj_attr_word_cooccur
+from . import create_gt_context_word_cooccur
 from .vis import vis_pred
 
 
@@ -35,7 +38,7 @@ def exp_create_gt_cooccur():
 
 
 def exp_create_gt_obj_attr_cooccur():
-    exp_name = 'gt_obj_attr_cooccur'
+    exp_name = 'gt_obj_attr_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -49,7 +52,7 @@ def exp_create_gt_obj_attr_cooccur():
 
 
 def exp_create_gt_attr_attr_cooccur():
-    exp_name = 'gt_attr_attr_cooccur'
+    exp_name = 'gt_attr_attr_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -63,7 +66,7 @@ def exp_create_gt_attr_attr_cooccur():
 
 
 def exp_create_gt_context_cooccur():
-    exp_name = 'gt_context_cooccur'
+    exp_name = 'gt_context_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -72,6 +75,46 @@ def exp_create_gt_context_cooccur():
     data_const = VisualGenomeConstants()
 
     create_gt_context_cooccur.main(exp_const,data_const)
+
+
+def exp_create_gt_attr_attr_word_cooccur():
+    exp_name = 'gt_attr_attr_word_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = GenomeAttributesDatasetConstants()
+
+    create_gt_attr_attr_word_cooccur.main(exp_const,data_const)
+
+
+def exp_create_gt_obj_attr_word_cooccur():
+    exp_name = 'gt_obj_attr_word_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = GenomeAttributesDatasetConstants()
+
+    create_gt_obj_attr_word_cooccur.main(exp_const,data_const)
+
+
+def exp_create_gt_context_word_cooccur():
+    exp_name = 'gt_context_word_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+
+    data_const = VisualGenomeConstants()
+
+    create_gt_context_word_cooccur.main(exp_const,data_const)
 
 
 def exp_compute_class_weights():

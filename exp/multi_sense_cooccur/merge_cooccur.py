@@ -59,7 +59,6 @@ def main(exp_const,data_const):
     df = pd.DataFrame(pandas_cols)
 
     print('Saving DataFrame to csv ...')
-    merged_cooccur_csv = os.path.join(exp_const.exp_dir,'merged_cooccur.csv')
-    df.to_csv(merged_cooccur_csv,index=False)
+    df.to_csv(data_const.merged_cooccur_csv,index=False)
     
     

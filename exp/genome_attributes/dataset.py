@@ -114,7 +114,9 @@ class GenomeAttributesDataset(Dataset):
         img_w,img_h = img.size
         regions = []
         object_synsets = []
+        object_words = []
         attribute_synsets = []
+        attribute_words = []
         object_labels = []
         attribute_labels = []
         object_labels_idx = []
@@ -136,13 +138,14 @@ class GenomeAttributesDataset(Dataset):
                 regions.append(region)
             except:
                 return None
-            
+            object_words.append(object_anno['names'])
             object_synsets.append(object_anno['object_synsets'])
             object_label, object_label_idx = self.create_object_label(
                 object_anno['object_synsets'])
             object_labels.append(object_label)
             object_labels_idx.append(object_label_idx)
             
+            attribute_words.append(object_anno['attributes'])
             attribute_synsets.append(object_anno['attribute_synsets'])
             attribute_label, attribute_pos_idxs = self.create_attribute_label(
                 object_anno['attribute_synsets'])
@@ -157,7 +160,9 @@ class GenomeAttributesDataset(Dataset):
             'boxes': boxes, # coordinates in int
             'image_sizes': [[img_h,img_w]]*num_regions, # dimensions in int
             'object_synsets': object_synsets,
+            'object_words': object_words,
             'attribute_synsets': attribute_synsets,
+            'attribute_words': attribute_words,
             'object_labels': object_labels,
             'object_labels_idx': object_labels_idx,
             'attribute_labels': attribute_labels,
@@ -197,7 +202,9 @@ class GenomeAttributesNoImgsDataset(GenomeAttributesDataset):
 
         regions = []
         object_synsets = []
+        object_words = []
         attribute_synsets = []
+        attribute_words = []
         object_labels = []
         attribute_labels = []
         object_labels_idx = []
@@ -212,12 +219,14 @@ class GenomeAttributesNoImgsDataset(GenomeAttributesDataset):
             
             boxes.append(object_anno['attribute_box'])
             
+            object_words.append(object_anno['names'])
             object_synsets.append(object_anno['object_synsets'])
             object_label, object_label_idx = self.create_object_label(
                 object_anno['object_synsets'])
             object_labels.append(object_label)
             object_labels_idx.append(object_label_idx)
             
+            attribute_words.append(object_anno['attributes'])
             attribute_synsets.append(object_anno['attribute_synsets'])
             attribute_label, attribute_pos_idxs = self.create_attribute_label(
                 object_anno['attribute_synsets'])
@@ -230,7 +239,9 @@ class GenomeAttributesNoImgsDataset(GenomeAttributesDataset):
             'object_ids': object_ids,
             'boxes': boxes, # coordinates in int
             #'image_sizes': [[img_h,img_w]]*num_regions, # dimensions in int
+            'object_words': object_words,
             'object_synsets': object_synsets,
+            'attribute_words': attribute_words,
             'attribute_synsets': attribute_synsets,
             'object_labels': object_labels,
             'object_labels_idx': object_labels_idx,

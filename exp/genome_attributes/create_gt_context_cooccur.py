@@ -37,9 +37,6 @@ def main(exp_const,data_const):
         synset_list = create_synset_list(object_annos,obj_ids)
         for synset1 in synset_list:
             for synset2 in synset_list:
-                if synset1==synset2:
-                    continue
-
                 if synset1 not in cooccur:
                         cooccur[synset1] = {}
                     

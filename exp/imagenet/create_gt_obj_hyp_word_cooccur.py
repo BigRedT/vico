@@ -1,4 +1,5 @@
 import os
+import re
 import copy
 import itertools
 from tqdm import tqdm
@@ -10,52 +11,56 @@ from utils.constants import save_constants
 from .dataset import ImagenetNoImgsDataset
 
 
-def wnid_offset_to_synset(offset):
+def wnid_offset_to_word(offset):
     synset = wn.synset_from_pos_and_offset(offset[0],int(offset[1:])).name()
-    return synset
+    return synset.split('.')[0]
+
+
+def on_wnids_to_words(on_wnids,mem):
+    words = set()
+    for wnid in on_wnids:
+        if wnid in mem:
+            proc_word = mem[wnid]
+        else:
+            raw_word = wnid_offset_to_word(wnid)
+            proc_word = re.sub("-|_",' ',raw_word)
+            proc_word = re.sub("\'s",'',proc_word)
+            mem[wnid] = proc_word
+
+        for word in proc_word.split(' '):
+            if word=='':
+                continue
+            words.add(word)
+        
+    return words
 
 
 def create_gt_synset_cooccur(exp_const,dataloader):
     print('Creating cooccur ...')
     cooccur = {}
+    mem = {}
     for data in tqdm(dataloader):
         on_wnids = data['on_wnids']
         for b in range(len(on_wnids)):
-            for wnid1 in set(on_wnids[b]):
-                for wnid2 in set(on_wnids[b]):
-                    if wnid1 not in cooccur:
-                        cooccur[wnid1] = {}
+            words = on_wnids_to_words(on_wnids[b],mem)
+            for word1 in set(words):
+                for word2 in set(words):
+                    if word1 not in cooccur:
+                        cooccur[word1] = {}
                     
-                    if wnid2 not in cooccur[wnid1]:
-                        cooccur[wnid1][wnid2] = 0
+                    if word2 not in cooccur[word1]:
+                        cooccur[word1][word2] = 0
 
-                    cooccur[wnid1][wnid2] += 1
-
-    print('Creating offsets to synsets dict ...')
-    offset_to_synset = {}
-    for offset in tqdm(cooccur.keys()):
-        offset_to_synset[offset] = wnid_offset_to_synset(offset)
-
-    print('Replacing offset by synset in cooccur ...')
-    synset_cooccur = {}
-    for offset1 in tqdm(cooccur.keys()):
-        synset1 = offset_to_synset[offset1]
+                    cooccur[word1][word2] += 1
         
-        context = {}
-        for offset2,count in cooccur[offset1].items():
-            synset2 = offset_to_synset[offset2]
-            context[synset2] = count
-        
-        synset_cooccur[synset1] = context
-        
-    synset_cooccur_json = os.path.join(exp_const.exp_dir,'synset_cooccur.json')
-    io.dump_json_object(synset_cooccur,synset_cooccur_json)
+    word_cooccur_json = os.path.join(exp_const.exp_dir,'word_cooccur.json')
+    io.dump_json_object(cooccur,word_cooccur_json)
 
-    print('Checking symmetry and self constraint in synset cooccur ...')
-    for wnid1, context in tqdm(synset_cooccur.items()):
+    print('Checking symmetry constraint in word cooccur ...')
+    for wnid1, context in tqdm(cooccur.items()):
         for wnid2, count in context.items():
             sym_err_msg = f'Word cooccurence not symmetric ({wnid1} / {wnid2})'
-            assert(synset_cooccur[wnid2][wnid1]==count), err_msg
+            assert(cooccur[wnid2][wnid1]==count), sym_err_msg
 
     print('Constraints satisfied')
     

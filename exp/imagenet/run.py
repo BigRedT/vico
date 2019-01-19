@@ -14,6 +14,7 @@ from . import find_nn
 from . import eval as evaluation
 from . import create_gt_cooccur
 from . import create_gt_obj_hyp_cooccur
+from . import create_gt_obj_hyp_word_cooccur
 
 
 def exp_create_gt_cooccur():
@@ -31,7 +32,7 @@ def exp_create_gt_cooccur():
 
 
 def exp_create_gt_obj_hyp_cooccur():
-    exp_name = 'gt_obj_hyp_cooccur'
+    exp_name = 'gt_obj_hyp_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
@@ -42,6 +43,20 @@ def exp_create_gt_obj_hyp_cooccur():
     data_const = ImagenetDatasetConstants()
 
     create_gt_obj_hyp_cooccur.main(exp_const,data_const)
+
+
+def exp_create_gt_obj_hyp_word_cooccur():
+    exp_name = 'gt_obj_hyp_word_cooccur'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/imagenet')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = ImagenetDatasetConstants()
+
+    create_gt_obj_hyp_word_cooccur.main(exp_const,data_const)
 
 
 def exp_compute_class_weights():

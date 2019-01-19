@@ -55,10 +55,10 @@ def exp_word_cooccur():
 
 
 def exp_synset_to_word_cooccur():
-    exp_name = 'gt_context_cooccur'
+    exp_name = 'gt_obj_hyp_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/genome_attributes')
+        'symlinks/exp/imagenet')
     exp_const = ExpConstants(exp_name,out_base_dir)
 
     data_const = Constants()
@@ -73,7 +73,7 @@ def exp_synset_to_word_cooccur():
 
 
 def exp_syn_cooccur():
-    exp_name = 'syn_cooccur'
+    exp_name = 'syn_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/wordnet')
