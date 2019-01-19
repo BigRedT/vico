@@ -45,28 +45,14 @@ def main(exp_const,data_const):
         for wnid2, count in context.items():
             words2 = synset_to_words_dict[wnid2]
             
-            # if wnid2!=wnid1:
-            #     words2_list = list(set(words2)-set(words1))
-            #     words1_list = list(set(words1)-set(words2))
-            # else:
-            #     words2_list = list(set(words2))
-            #     words1_list = list(set(words1))
-
-            # words1_list = list(set(words1))
-            # words2_list = list(set(words2))
-            words_list = list(set(words1+words2))
-            for word1,word2 in itertools.product(words_list,words_list):
+            for word1, word2 in itertools.product(set(words1),set(words2)):
                 if word1 not in word_cooccur:
                     word_cooccur[word1] = {}
 
                 if word2 not in word_cooccur[word1]:
                     word_cooccur[word1][word2] = 0
-                word_cooccur[word1][word2] += count
 
-                # if word1 not in words2:
-                #     if word1 not in word_cooccur[word1]:
-                #         word_cooccur[word1][word1] = 0    
-                #     word_cooccur[word1][word1] += count
+                word_cooccur[word1][word2] += count
 
     io.dump_json_object(word_cooccur,data_const.word_cooccur_json)
 
