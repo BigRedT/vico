@@ -9,8 +9,35 @@ from .dataset import MultiSenseCooccurDatasetConstants
 from .models.logbilinear import LogBilinearConstants
 from . import train
 from . import train_w_neg
-from . import extract_embeddings
+from . import extract_embeddings, extract_embeddings_xformed
 from . import find_nn
+from . import concat_with_glove
+from data.glove.constants import GloveConstantsFactory
+from . import synset_to_word_cooccur
+
+
+def exp_synset_to_word_cooccur():
+    paths = [
+        ['imagenet','gt_obj_hyp_cooccur_self'],
+        ['genome_attributes','gt_attr_attr_cooccur_self'],
+        ['genome_attributes','gt_obj_attr_cooccur_self'],
+        ['genome_attributes','gt_context_cooccur_self'],
+    ]
+    for dataset,exp_name in paths:
+        out_base_dir = os.path.join(
+            os.getcwd(),
+            f'symlinks/exp/{dataset}')
+        exp_const = ExpConstants(exp_name,out_base_dir)
+
+        data_const = Constants()
+        data_const.synset_cooccur_json = os.path.join(
+            exp_const.exp_dir,
+            'synset_cooccur.json')
+        data_const.word_cooccur_json = os.path.join(
+            exp_const.exp_dir,
+            'word_cooccur.json')
+
+        synset_to_word_cooccur.main(exp_const,data_const)
 
 
 def exp_merge_cooccur():
@@ -22,21 +49,23 @@ def exp_merge_cooccur():
 
     data_const = Constants()
     cooccur_paths = {
-        'syn': 'wordnet/syn_cooccur/word_cooccur.json',
-        'attr_attr': 'genome_attributes/gt_attr_attr_cooccur/word_cooccur.json',
-        'obj_attr': 'genome_attributes/gt_obj_attr_cooccur/word_cooccur.json',
-        'obj_hyp': 'imagenet/gt_obj_hyp_cooccur/word_cooccur.json',
-        'context': 'genome_attributes/gt_context_cooccur/word_cooccur.json',
+        'syn': 'wordnet/syn_cooccur_self/word_cooccur.json',
+        'attr_attr': 'genome_attributes/gt_attr_attr_cooccur_self/word_cooccur.json',
+        'obj_attr': 'genome_attributes/gt_obj_attr_cooccur_self/word_cooccur.json',
+        'obj_hyp': 'imagenet/gt_obj_hyp_cooccur_self/word_cooccur.json',
+        'context': 'genome_attributes/gt_context_cooccur_self/word_cooccur.json',
     }
     symlink_exp = os.path.join(os.getcwd(),'symlinks/exp')
     data_const.cooccur_paths = {
         k: os.path.join(symlink_exp,v) for k,v in cooccur_paths.items()}
-
+    data_const.merged_cooccur_csv = os.path.join(
+        exp_const.exp_dir,
+        'merged_cooccur_self.csv') # 'merged_cooccur.csv'
     merge_cooccur.main(exp_const,data_const)
 
 
 def exp_train():
-    exp_name = 'all_cooccur_dim_100_add_0_batch_1000_neg_fx' #_weight_decay'
+    exp_name = 'no_syn_cooccur_self_count_dim_100_neg_no_decay'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
@@ -51,26 +80,28 @@ def exp_train():
     exp_const.lr = 0.01 
     exp_const.momentum = 0.9
     exp_const.num_workers = 5
-    exp_const.optimizer = 'Adam'
-    exp_const.weight_decay = 1e-4
+    exp_const.optimizer = 'Adagrad'
+    exp_const.weight_decay = 0*1e-4
     exp_const.cooccur_weights = {
-        'syn': 1,
+        'syn': 0,
         'attr_attr': 1,
         'obj_attr': 1,
         'obj_hyp': 1,
         'context': 1,
     }
+    exp_const.use_neg = True
     
     data_const = MultiSenseCooccurDatasetConstants()
     data_const.cooccur_csv = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/' + \
-        'imagenet_genome_gt/merged_cooccur.csv')
+        'imagenet_genome_gt/merged_cooccur_self.csv')
+    data_const.use_self_count = True
 
     model_const = Constants()
-    model_const.model_num = None
+    model_const.model_num = 70000
     model_const.net = LogBilinearConstants()
-    model_const.net.num_words = 78416
+    model_const.net.num_words = 93553 #91138 #78416
     model_const.net.embed_dims = 100
     model_const.net.two_embedding_layers = False
     model_const.net_path = os.path.join(
@@ -82,14 +113,14 @@ def exp_train():
 
 
 def exp_extract_embeddings():
-    exp_name = 'all_cooccur_dim_100_add_0_batch_1000_wo_neg'
+    exp_name = 'no_syn_cooccur_self_count_dim_100_neg_no_decay'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.cooccur_types = [
-        'syn',
+        #'syn',
         'attr_attr',
         'obj_attr',
         'obj_hyp',
@@ -99,12 +130,12 @@ def exp_extract_embeddings():
     data_const.cooccur_csv = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/' + \
-        'imagenet_genome_gt/merged_cooccur.csv')
+        'imagenet_genome_gt/merged_cooccur_self.csv')
 
     model_const = Constants()
     model_const.model_num = 110000
     model_const.net = LogBilinearConstants()
-    model_const.net.num_words = 78416
+    model_const.net.num_words = 93553
     model_const.net.embed_dims = 100
     model_const.net.two_embedding_layers = False
     model_const.net_path = os.path.join(
@@ -112,15 +143,16 @@ def exp_extract_embeddings():
         f'net_{model_const.model_num}')
 
     extract_embeddings.main(exp_const,data_const,model_const)
+    # extract_embeddings_xformed.main(exp_const,data_const,model_const)
 
 
 def exp_find_nn():
-    exp_name = 'all_cooccur_dim_100_add_0_batch_1000_neg'
+    exp_name = 'no_syn_cooccur_self_count_dim_50_neg_no_decay'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
     exp_const = ExpConstants(exp_name,out_base_dir)
-    exp_const.num_nbrs = 10
+    exp_const.num_nbrs = 20
     exp_const.use_cosine = False
     exp_const.thresh = [
         10000,
@@ -130,11 +162,12 @@ def exp_find_nn():
         100000,
     ]
     exp_const.cooccur_types = [
-        'syn',
+        #'syn',
         'attr_attr',
         'obj_attr',
         'obj_hyp',
-        'context']
+        'context'
+    ]
 
     data_const = Constants()
     data_const.embeddings_npy = os.path.join(
@@ -146,9 +179,33 @@ def exp_find_nn():
     data_const.cooccur_csv = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/' + \
-        'imagenet_genome_gt/merged_cooccur.csv')
+        'imagenet_genome_gt/merged_cooccur_self.csv')
 
     find_nn.main(exp_const,data_const)
+
+
+def exp_concat_with_glove():
+    exp_name = 'concat_with_glove_300' # alt. xformed_
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
+        'no_syn_cooccur_self_count_dim_100_neg_no_decay')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+
+    visual_embed_dir = exp_const.out_base_dir
+    data_const = Constants()
+    data_const.visual_word_to_idx = os.path.join(
+        visual_embed_dir,
+        'word_to_idx.json')
+    data_const.visual_embeddings_npy = os.path.join(
+        visual_embed_dir,
+        'visual_embeddings.npy') # alt. _xformed.npy
+    glove_const = GloveConstantsFactory.create(dim='300')
+    data_const.glove_idx = glove_const.word_to_idx_json
+    data_const.glove_h5py = glove_const.embeddings_h5py
+
+    concat_with_glove.main(exp_const,data_const)
+
 
 if __name__=='__main__':
     list_exps(globals())
