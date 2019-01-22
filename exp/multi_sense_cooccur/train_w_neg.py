@@ -28,7 +28,8 @@ def train_model(model,dataloader,neg_dataloader,exp_const):
         opt = optim.SGD(
             params,
             lr=exp_const.lr,
-            momentum=exp_const.momentum)
+            momentum=exp_const.momentum,
+            weight_decay=exp_const.weight_decay)
     elif exp_const.optimizer == 'Adam':
         opt = optim.Adam(
             params,
@@ -37,7 +38,8 @@ def train_model(model,dataloader,neg_dataloader,exp_const):
     elif exp_const.optimizer == 'Adagrad':
         opt = optim.Adagrad(
             params,
-            lr=exp_const.lr)
+            lr=exp_const.lr,
+            weight_decay=exp_const.weight_decay)
     else:
         assert(False), 'optimizer not implemented'
 
@@ -89,7 +91,7 @@ def train_model(model,dataloader,neg_dataloader,exp_const):
             for cooccur_type, weight in exp_const.cooccur_weights.items():
                 loss = loss + \
                     weight*losses[cooccur_type] + \
-                    weight*losses[f'Neg {cooccur_type}']
+                    exp_const.use_neg*weight*losses[f'Neg {cooccur_type}']
 
             # Backward pass
             opt.zero_grad()
