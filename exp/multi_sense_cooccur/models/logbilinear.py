@@ -14,6 +14,7 @@ class TransformConstants(io.JsonSerializableClass):
         super(TransformConstants,self).__init__()
         self.in_feat = 100
         self.out_feat = 50
+        self.identity = False
 
 
 class Transform(nn.Module,io.WritableToFile):
@@ -25,6 +26,9 @@ class Transform(nn.Module,io.WritableToFile):
         # self.fc2 = nn.Linear(self.const.out_feat,self.const.out_feat)
 
     def forward(self,x):
+        if self.const.identity==True:
+            return x
+
         x = self.fc1(x)
         # x = self.relu(x)
         # x = self.fc2(x)
@@ -96,13 +100,8 @@ class LogBilinear(nn.Module,io.WritableToFile):
         return scores
 
     def loss(self,scores,target,x):
-        fx = torch.min(0*x+1,x/100)
-        gx = x < 100
-        gx = gx.float()
-        gx_sum = torch.sum(gx) + 1e-6
-        gamma = float(np.log(100))+0*scores
-        return torch.mean(fx*torch.pow((scores-target),2)) + \
-            (torch.sum(gx*torch.max(0*scores,scores-gamma))/gx_sum)
+        fx = 1
+        return torch.mean(fx*torch.pow((scores-target),2))
 
 
 
