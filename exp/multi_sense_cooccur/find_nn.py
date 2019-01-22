@@ -65,7 +65,7 @@ def main(exp_const,data_const):
                 'words': [select_words[k] for k in nn_idx[i]],
                 'joint_words': [select_words[k] for k in joint_nn_idx[i]],
                 'sim': [sim[i,k] for k in nn_idx[i]],
-                'joint_sim': [joint_sim[i,k] for k in nn_idx[i]]
+                'joint_sim': [joint_sim[i,k] for k in joint_nn_idx[i]]
             }
             
         cooccur_nbrs = {}
