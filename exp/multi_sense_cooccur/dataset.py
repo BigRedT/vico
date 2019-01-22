@@ -15,6 +15,7 @@ class MultiSenseCooccurDatasetConstants(io.JsonSerializableClass):
     def __init__(self):
         super(MultiSenseCooccurDatasetConstants,self).__init__()
         self.cooccur_csv = None
+        self.use_self_count = False
         
 
 class MultiSenseCooccurDataset(Dataset):
@@ -75,7 +76,7 @@ class MultiSenseCooccurDataset(Dataset):
             row = self.non_zero_cooccur[cooccur_type].iloc[i_]
             word1 = str(row['word1'])
             word2 = str(row['word2'])
-            if word1==word2:
+            if word1==word2 and self.const.use_self_count==False:
                 to_return_ = None
             else:
                 to_return_ = {
