@@ -99,7 +99,7 @@ def eval_model(model,data_loader,exp_const):
         best_scores_tuple_visual = tuple(['n.a.']*len(best_scores_tuple))
     
     if not (len(pred_score_non_visual)==0):
-        print('Num non-visual: ' + str(len(pred_score_visual)))
+        print('Num non-visual: ' + str(len(pred_score_non_visual)))
         pred_score_non_visual = np.array(pred_score_non_visual)
         gt_label_non_visual = np.array(gt_label_non_visual)
         _, best_scores_tuple_non_visual = compute_f1(
