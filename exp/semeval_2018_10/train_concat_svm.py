@@ -19,13 +19,14 @@ from utils.constants import save_constants
 from exp.semeval_2018_10.models.concat_svm_simple import ConcatSVM
 from exp.semeval_2018_10.dataset import SemEval201810Dataset
 from exp.semeval_2018_10.f1_computer import compute_f1
+from utils.pytorch_layers import set_learning_rate
 
 
 def train_model(model,train_data_loader,val_data_loader,exp_const):
     model.concat_svm.mlp.layers[0][0].weight = nn.Parameter(
         0*model.concat_svm.mlp.layers[0][0].weight.data)
     params = model.concat_svm.parameters()
-    optimizer = optim.Adam(params,lr=exp_const.lr)
+    optimizer = optim.SGD(params,lr=exp_const.lr,momentum=0.9)
 
     step_to_val_scores_tuples = {}
     step_to_val_best_scores_tuple = {}
@@ -38,6 +39,8 @@ def train_model(model,train_data_loader,val_data_loader,exp_const):
 
     step = -1
     for epoch in range(exp_const.num_epochs):
+        lr = exp_const.lr*0.5**(epoch//1)
+        set_learning_rate(optimizer,lr=lr)
         for i, data in enumerate(train_data_loader):
             step += 1
             
@@ -63,13 +66,18 @@ def train_model(model,train_data_loader,val_data_loader,exp_const):
             optimizer.step()
 
             if step%1==0:
+                w = model.concat_svm.w.data
                 log_str = \
                     'Epoch: {} | Iter: {} | Step: {} | ' + \
                     'Total Loss: {:.4f} | ' + \
                     'Hinge Loss: {:.4f} | ' + \
                     'L2 Loss: {:.4f} | ' + \
                     'Avg F1: {:.4f} | ' + \
-                    'Acc: {:.4f} |'
+                    'Acc: {:.4f} | ' + \
+                    'LR: {:.4f} | ' + \
+                    'w_glove: {:.4f} | ' + \
+                    'w_visual: {:.4f} | ' + \
+                    'b: {:.4f}'
                 log_str = log_str.format(
                     epoch,
                     i,
@@ -78,7 +86,11 @@ def train_model(model,train_data_loader,val_data_loader,exp_const):
                     hinge_loss.data[0],
                     l2_reg.data[0],
                     train_avg_f1,
-                    train_acc)
+                    train_acc,
+                    lr,
+                    w[0],
+                    w[1],
+                    w[2])
                 print(log_str)
                 log_value('train_loss',total_loss.data[0],step)
                 log_value('train_hinge_loss',hinge_loss.data[0],step)
