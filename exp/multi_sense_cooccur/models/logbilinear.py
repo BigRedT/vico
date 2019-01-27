@@ -6,7 +6,7 @@ import numpy as np
 
 import utils.io as io
 import utils.pytorch_layers as pytorch_layers
-from . embeddings import Embeddings, EmbeddingsConstants
+from .embeddings import Embeddings, EmbeddingsConstants
 
 
 class TransformConstants(io.JsonSerializableClass):
