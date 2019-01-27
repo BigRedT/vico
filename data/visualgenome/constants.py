@@ -62,3 +62,10 @@ class VisualGenomeConstants(io.JsonSerializableClass):
             self.proc_dir,
             'all_word_freqs.json')
 
+        self.attribute_groups_json = os.path.join(
+            self.proc_dir,
+            'attribute_groups.json')
+        self.object_id_to_image_id_json = os.path.join(
+            self.proc_dir,
+            'object_id_to_image_id.json')
+
