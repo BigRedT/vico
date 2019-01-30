@@ -123,6 +123,7 @@ class GenomeAttributesDataset(Dataset):
         attribute_labels_idxs = []
         boxes = []
         img_size = []
+        object_ids_ = []
         for object_id in object_ids:
             object_anno = self.object_annos[object_id]
             
@@ -151,11 +152,13 @@ class GenomeAttributesDataset(Dataset):
                 object_anno['attribute_synsets'])
             attribute_labels.append(attribute_label)
             attribute_labels_idxs.append(attribute_pos_idxs)
+
+            object_ids_.append(object_id)
         
         to_return = {
             #'image': [np.array(img).astype(np.float32)],
             'image_ids': [image_id]*num_regions,
-            'object_ids': object_ids,
+            'object_ids': object_ids_,
             'regions': regions,
             'boxes': boxes, # coordinates in int
             'image_sizes': [[img_h,img_w]]*num_regions, # dimensions in int
@@ -211,6 +214,7 @@ class GenomeAttributesNoImgsDataset(GenomeAttributesDataset):
         attribute_labels_idxs = []
         boxes = []
         img_size = []
+        object_ids_ = []
         for object_id in object_ids:
             object_anno = self.object_annos[object_id]
             
@@ -232,11 +236,13 @@ class GenomeAttributesNoImgsDataset(GenomeAttributesDataset):
                 object_anno['attribute_synsets'])
             attribute_labels.append(attribute_label)
             attribute_labels_idxs.append(attribute_pos_idxs)
+
+            object_ids_.append(object_id)
         
         to_return = {
             #'image': [np.array(img).astype(np.float32)],
             'image_ids': [image_id]*num_regions,
-            'object_ids': object_ids,
+            'object_ids': object_ids_,
             'boxes': boxes, # coordinates in int
             #'image_sizes': [[img_h,img_w]]*num_regions, # dimensions in int
             'object_words': object_words,
