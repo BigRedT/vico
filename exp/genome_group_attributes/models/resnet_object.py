@@ -267,6 +267,7 @@ class ResnetModel(io.WritableToFile,nn.Module):
         self.const = copy.deepcopy(const)
         self.resnet_layers = self.create_resnet_layers(self.const.num_layers)
         self.embed = self.create_object_embed()
+        self.pos_fc = nn.Linear(4,self.const.num_classes)
 
     def create_object_embed(self):
         const = EmbeddingsConstants()
@@ -281,9 +282,9 @@ class ResnetModel(io.WritableToFile,nn.Module):
             self.const.pretrained,
             num_classes=self.const.num_classes)
 
-    def forward(self,x, obj_ids):
+    def forward(self,x,pos_feats,obj_ids):
         logits, last_layer_feats = self.resnet_layers(x)
-        logits = logits + self.embed(obj_ids)
+        logits = logits + self.embed(obj_ids) + self.pos_fc(pos_feats)
         return logits, last_layer_feats
 
 
