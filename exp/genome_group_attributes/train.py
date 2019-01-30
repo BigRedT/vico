@@ -66,7 +66,8 @@ def train_model(model,dataloader,exp_const):
                 img_std)
             imgs = imgs.permute(0,3,1,2)
             obj_ids = Variable(data['object_id'].cuda())
-            logits, last_layer_feats = model.net(imgs,obj_ids)
+            pos_feats = Variable(data['pos_feat'].cuda())
+            logits, last_layer_feats = model.net(imgs,pos_feats,obj_ids)
             prob = sigmoid(logits)
             #prob = softmax(logits)
             
@@ -124,14 +125,24 @@ def train_model(model,dataloader,exp_const):
                 top_prob = top_prob.data.cpu().numpy()
                 top_ids = top_ids.data.cpu().numpy()
                 top_attrs = []
+                recall = 0
+                gt_attrs = data['attributes']
                 for b in range(top_ids.shape[0]):
                     pred_attrs = [
                         dataloader.dataset.attrs[idx] for idx in top_ids[b]]
                     top_attrs.append(pred_attrs)
-                
+                    gt_attrs_set = set(gt_attrs[b])
+                    pred_attrs_set = set(pred_attrs)
+                    recall += len(gt_attrs_set.intersection(pred_attrs_set)) / \
+                        len(gt_attrs_set)
+
+                recall = recall / (top_ids.shape[0] + 1e-6)
+                log_value('Recall',recall,step)
+                print('Recall', recall)
+
                 vis_pred(
                     data['region'].numpy(),
-                    data['attributes'],
+                    gt_attrs,
                     top_prob,
                     top_attrs,
                     step,
