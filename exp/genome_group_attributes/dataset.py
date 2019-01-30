@@ -112,6 +112,17 @@ class GenomeAttributesDataset(Dataset):
         imgs = (imgs-mean) / std
         return imgs
 
+    def get_pos_feat(self,bbox,img_h,img_w):
+        eps = 1e-6
+        x,y,w,h = bbox
+        pos_feat = [
+            np.log(h+eps) - np.log(w+eps), # aspect ratio
+            np.log(h+eps) + np.log(w+eps), # area
+            np.log(w+eps) - np.log(img_w+eps), # relative width
+            np.log(h+eps) - np.log(img_h+eps), # relative height
+        ]
+        return np.array(pos_feat,dtype=np.float32)
+
     def __getitem__(self,i):
         object_id = self.object_ids[i]
         image_id = self.object_id_to_image_id[object_id]
@@ -122,6 +133,8 @@ class GenomeAttributesDataset(Dataset):
         box = anno['attribute_box']
         label_vec, pos_idxs = self.create_label_vec(attrs)
         img, img_path = self.get_image(image_id)
+        img_w, img_h = img.size # PIL Image
+        pos_feat = self.get_pos_feat(box,img_h,img_w)
         try:
             region = self.crop_region(img,box,0)
             region = self.scale_smaller_side(region,self.const.img_size)
@@ -136,6 +149,7 @@ class GenomeAttributesDataset(Dataset):
             'object': obj,
             'object_id': obj_id,
             'label_vec': label_vec,
+            'pos_feat': pos_feat,
         }
 
         return to_return
