@@ -65,6 +65,42 @@ def exp_create_gt_attr_attr_cooccur():
     create_gt_attr_attr_cooccur.main(exp_const,data_const)
 
 
+def exp_create_gt_obj_attr_extract_cooccur():
+    exp_name = 'gt_obj_attr_extract_cooccur_self'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = GenomeAttributesDatasetConstants()
+    data_const.object_annos_json = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_group_attributes/' + \
+        'resnet_34_object_pos_extract_attrs/updated_object_annos.json')
+
+    create_gt_obj_attr_cooccur.main(exp_const,data_const)
+
+
+def exp_create_gt_attr_attr_extract_cooccur():
+    exp_name = 'gt_attr_attr_extract_cooccur_self'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_attributes')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.batch_size = 32
+    exp_const.num_workers = 5
+
+    data_const = GenomeAttributesDatasetConstants()
+    data_const.object_annos_json = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/genome_group_attributes/' + \
+        'resnet_34_object_pos_extract_attrs/updated_object_annos.json')
+
+    create_gt_attr_attr_cooccur.main(exp_const,data_const)
+
+
 def exp_create_gt_context_cooccur():
     exp_name = 'gt_context_cooccur_self'
     out_base_dir = os.path.join(
