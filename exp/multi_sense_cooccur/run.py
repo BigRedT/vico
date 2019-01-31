@@ -46,6 +46,7 @@ def exp_merge_cooccur():
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur')
     exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.normalize = False
 
     data_const = Constants()
     cooccur_paths = {
@@ -77,7 +78,7 @@ def exp_train():
     exp_const.model_save_step = 10000
     exp_const.batch_size = 1000
     exp_const.num_epochs = 10
-    exp_const.lr = 0.01 
+    exp_const.lr = 0.01
     exp_const.momentum = 0.9
     exp_const.num_workers = 5
     exp_const.optimizer = 'Adagrad'
@@ -99,7 +100,7 @@ def exp_train():
     data_const.use_self_count = True
 
     model_const = Constants()
-    model_const.model_num = 70000
+    model_const.model_num = None
     model_const.net = LogBilinearConstants()
     model_const.net.num_words = 93553 #91138 #78416
     model_const.net.embed_dims = 100
@@ -143,11 +144,11 @@ def exp_extract_embeddings():
         f'net_{model_const.model_num}')
 
     extract_embeddings.main(exp_const,data_const,model_const)
-    # extract_embeddings_xformed.main(exp_const,data_const,model_const)
+    extract_embeddings_xformed.main(exp_const,data_const,model_const)
 
 
 def exp_find_nn():
-    exp_name = 'no_syn_cooccur_self_count_dim_50_neg_no_decay'
+    exp_name = 'no_syn_cooccur_self_count_dim_100_neg_no_decay'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
