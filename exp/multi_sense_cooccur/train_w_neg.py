@@ -86,9 +86,13 @@ def train_model(model,dataloader,neg_dataloader,exp_const):
                 x = Variable(torch.cuda.FloatTensor(data_['x']))
                 scores = model.net(ids1,ids2,cooccur_type)
                 losses[f'Neg {cooccur_type}'] = torch.mean(torch.max(0*scores,scores))
+                # q = model.net.sig(scores)
+                # losses[f'Neg {cooccur_type}'] = torch.mean(torch.max(0*q+0.1,q))
 
             loss = 0
             for cooccur_type, weight in exp_const.cooccur_weights.items():
+                # if cooccur_type=='syn':
+                #     continue
                 loss = loss + \
                     weight*losses[cooccur_type] + \
                     exp_const.use_neg*weight*losses[f'Neg {cooccur_type}']
