@@ -29,7 +29,8 @@ def main(exp_const,data_const,model_const):
         model.net.load_state_dict(torch.load(model.const.net_path))
     model.net.cuda()
 
-    embeddings = 0.5*(model.net.embed1.W.weight + model.net.embed2.W.weight)
+    #embeddings = 0.5*(model.net.embed1.W.weight + model.net.embed2.W.weight)
+    embeddings = model.net.embed1.W.weight
 
     print('Computing transformed embeddings ...')
     xformed_embeddings = []
