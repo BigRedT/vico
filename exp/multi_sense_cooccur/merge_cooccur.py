@@ -35,6 +35,21 @@ def main(exp_const,data_const):
 
                 merged_cooccur[word1][word2][i] += count
 
+    if exp_const.normalize==True:
+        print('Normalizing by self counts ...')
+        for word1,context in tqdm(merged_cooccur.items()):
+            norm_counts = merged_cooccur[word1][word1]
+
+            for word2,counts in context.items():
+                if word2==word1:
+                    continue
+
+                for i, norm_count in enumerate(norm_counts):
+                    counts[i] = counts[i] / (norm_count + 1e-6)
+                    counts[i] = min(1,counts[i])
+
+            merged_cooccur[word1][word1] = [1]*len(norm_counts)
+            
     pandas_cols = {
         'word1': [],
         'word2': [],
