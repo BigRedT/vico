@@ -27,7 +27,9 @@ def main(exp_const,data_const,model_const):
     model.net = LogBilinear(model.const.net)
     if model.const.model_num is not None:
         model.net.load_state_dict(torch.load(model.const.net_path))
-    embeddings = 0.5*(model.net.embed1.W.weight + model.net.embed2.W.weight)
+    
+    #embeddings = 0.5*(model.net.embed1.W.weight + model.net.embed2.W.weight)
+    embeddings = model.net.embed1.W.weight
     embeddings = embeddings.data.numpy()
     embeddings_json = os.path.join(exp_const.exp_dir,'visual_embeddings.npy')
     np.save(embeddings_json,embeddings)
