@@ -99,7 +99,7 @@ class ConcatSVM(nn.Module,io.WritableToFile):
         return torch.mean(torch.max(0*score,0.2-scaled_label*score[:,0]))
 
     def compute_l2_loss(self):
-        l2_reg = self.w.pow(2).sum()
+        l2_reg = self.w[:2].pow(2).sum()
         return l2_reg
 
     def compute_loss(self,score,label):
