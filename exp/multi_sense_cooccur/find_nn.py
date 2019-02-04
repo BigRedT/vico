@@ -3,13 +3,33 @@ import numpy as np
 import random
 import pandas as pd
 from tqdm import tqdm
+import torch
+from torch.autograd import Variable
 from sklearn.neighbors import NearestNeighbors
 
 import utils.io as io
+from utils.model import Model
 from utils.html_writer import HtmlWriter
+from .models.logbilinear import LogBilinear
 
 
-def main(exp_const,data_const):
+def get_xformed_embeddings(w,xform):
+    w = Variable(torch.FloatTensor(w),volatile=True).cuda()
+    w = xform(w)
+    w = w.data.cpu().numpy()
+    return w
+
+
+def main(exp_const,data_const,model_const):
+    print('Creating model ...')
+    model = Model()
+    model.const = model_const
+    model.net = LogBilinear(model.const.net)
+    if model.const.model_num is not None:
+        model.net.load_state_dict(torch.load(model.const.net_path))
+    model.net.cuda()
+    model.net.eval()
+
     print('Loading embeddings ...')
     embeddings = np.load(data_const.embeddings_npy)
     word_to_idx = io.load_json_object(data_const.word_to_idx_json)
@@ -18,10 +38,14 @@ def main(exp_const,data_const):
 
     for k,cooccur_type in enumerate(exp_const.cooccur_types):
         print(f'Finding knn for {cooccur_type} ...')
-        print('Loading xform ...')
-        xform = np.load(os.path.join(
-            exp_const.exp_dir,
-            f'xform_{cooccur_type}.npy'))
+
+        print('Get xform ...')
+        xform = getattr(model.net,f'xform_{cooccur_type}')
+
+        # print('Loading xform ...')
+        # xform = np.load(os.path.join(
+        #     exp_const.exp_dir,
+        #     f'xform_{cooccur_type}.npy'))
 
         print('Selecting words ...')
         sorted_df = df.sort_values(by=cooccur_type,ascending=False)
@@ -36,9 +60,13 @@ def main(exp_const,data_const):
         print('Number of selected words: ',len(select_words))
         select_word_idxs = [word_to_idx[word] for word in select_words]
         select_joint_embeddings = embeddings[select_word_idxs]
-        select_embeddings = np.matmul(
+        select_embeddings = get_xformed_embeddings(
             select_joint_embeddings,
-            np.transpose(xform))
+            xform)
+
+        # select_embeddings = np.matmul(
+        #     select_joint_embeddings,
+        #     np.transpose(xform))
         if exp_const.use_cosine==True:
             select_joint_embeddings = select_joint_embeddings / \
                 (1e-6+np.linalg.norm(select_joint_embeddings,2,1,keepdims=True))
