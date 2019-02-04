@@ -57,7 +57,7 @@ def train_model(model,train_data_loader,val_data_loader,exp_const):
                 compute_f1(
                     score.data.cpu().numpy(),
                     data['label'].numpy(),
-                    np.arange(-1.2,1.2,0.2))
+                    np.arange(-0.4,0.4,0.05)) #-1.2,1.2,0.2
             train_avg_f1, train_pos_f1, train_neg_f1, \
                 train_acc, train_best_thresh = train_best_scores_tuple
             
@@ -173,7 +173,7 @@ def eval_model(model,data_loader,exp_const):
     scores_tuples, best_scores_tuple = compute_f1(
         pred_score,
         gt_label,
-        np.arange(-1.2,1.2,0.2))
+        np.arange(-0.4,0.4,0.05)) #-1.2,1.2,0.2
     return hinge_loss, scores_tuples, best_scores_tuple
         
 
