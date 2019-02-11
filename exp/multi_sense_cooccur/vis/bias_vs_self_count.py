@@ -22,9 +22,11 @@ def get_poly(coeffs):
         return p
     return poly
 
+
 def get_polypoints(X,coeffs):
     poly = get_poly(coeffs)
     return [poly(x) for x in X]
+
 
 def grad(x,coeffs):
     d = len(coeffs)-1
@@ -33,6 +35,7 @@ def grad(x,coeffs):
         g += (d-i)*coeffs[i]*x**(d-i-1)
     return g
 
+
 def linearize(x,coeffs):
     poly = get_poly(coeffs)
     g = grad(x,coeffs)
@@ -40,8 +43,9 @@ def linearize(x,coeffs):
     g = str(round(g,2))
     c = str(round(c,2))
     x = str(x)
-    f = f'b = {g}*logX + {c} around {x}'
+    f = f'Linear approximation @ Z = {x}:  b = {g}*Z + {c}'
     return f
+
 
 def main(exp_const,data_const,model_const):
     print('Creating network ...')
@@ -77,7 +81,7 @@ def main(exp_const,data_const,model_const):
         for cooccur_type in cooccur_types:
             X = row[cooccur_type]
 
-            if X < 1:
+            if X < 50: # 1
                 continue
 
             counts[cooccur_type].append(np.log(X))
@@ -94,17 +98,24 @@ def main(exp_const,data_const,model_const):
             text=words[cooccur_type])
 
         print('Fitting polynomial ...')
-        coeffs = np.polyfit(counts[cooccur_type],bias[cooccur_type],deg=4)
+        coeffs = np.polyfit(counts[cooccur_type],bias[cooccur_type],deg=2)
         print(coeffs)
 
+        s = np.log(50)
         trace_poly = go.Scatter(
-            x = np.arange(0,12,0.1),
-            y = get_polypoints(np.arange(0,12,0.1),coeffs),
+            x = np.arange(s,12,1),
+            y = get_polypoints(np.arange(s,12,1),coeffs), # (0,12,0.1)
             mode='lines')
 
+        c0 = str(round(coeffs[0],2))
+        c1 = str(round(coeffs[1],2))
+        c2 = str(round(coeffs[2],2))
+        eq_str = f'b = {c0}*Z^2 + {c1}*Z + {c2}'
+        lin_eq_str = linearize(10,coeffs)
+
         layout = go.Layout(
-            title = linearize(10,coeffs),
-            xaxis = dict(title = 'log(X)'),
+            title = f'{eq_str}     ({lin_eq_str})',
+            xaxis = dict(title = 'Z = log(X)'),
             yaxis = dict(title = 'b'),
             hovermode = 'closest')
 
