@@ -94,6 +94,7 @@ class LogBilinearConstants(io.JsonSerializableClass):
         # xform_num_layers used on if type is 'nonlinear
         self.xform_num_layers = 2
         self.use_bias = False
+        self.use_fx = False
         
     @property
     def xform_const(self):
@@ -164,7 +165,10 @@ class LogBilinear(nn.Module,io.WritableToFile):
         return scores
 
     def loss(self,scores,target,x):
-        fx = 1
+        if self.const.use_fx==False:
+            fx = 1
+        else:
+            fx = torch.min(0*x+1,x/50.0)
         return torch.mean(fx*torch.pow((scores-target),2))
 
 
