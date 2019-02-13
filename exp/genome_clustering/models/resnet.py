@@ -1,18 +1,8 @@
 import torch.nn as nn
 import math
 import torch.utils.model_zoo as model_zoo
+from ..lib.normalize import Normalize        
 
-class Normalize(nn.Module):
-
-    def __init__(self, power=2):
-        super(Normalize, self).__init__()
-        self.power = power
-    
-    def forward(self, x):
-        norm = x.pow(self.power).sum(1, keepdim=True).pow(1./self.power)
-        out = x.div(norm)
-        return out
-        
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']

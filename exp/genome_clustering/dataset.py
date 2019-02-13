@@ -21,7 +21,6 @@ class GenomeAttributesDatasetConstants(VisualGenomeConstants):
                 'symlinks/data/visualgenome/proc')):
         super(GenomeAttributesDatasetConstants,self).__init__(raw_dir,proc_dir)
         self.img_size = 224
-        self.groups = ['color','material','shape']
         
 
 class GenomeAttributesDataset(Dataset):
@@ -30,26 +29,27 @@ class GenomeAttributesDataset(Dataset):
         self.const = copy.deepcopy(const)
         self.object_synset_freqs = io.load_json_object(
             self.const.object_synset_freqs_json)
-        self.objs = sorted(
-            list(self.object_synset_freqs.keys())) + ['__UNK__']
-        self.obj_to_idx = {
-            k:v for v,k in enumerate(self.objs)}
-        self.attrs, self.attr_to_idx = self.load_group_attributes()
+        self.attribute_synset_freqs = io.load_json_object(
+            self.const.attribute_synset_freqs_json)
+        self.sorted_object_synsets = sorted(
+            list(self.object_synset_freqs.keys()))
+        self.sorted_attribute_synsets = sorted(
+            list(self.attribute_synset_freqs.keys()))
+        self.object_synset_to_idx = {
+            k:v for v,k in enumerate(self.sorted_object_synsets)}
+        self.attribute_synset_to_idx = {
+            k:v for v,k in enumerate(self.sorted_attribute_synsets)}
         self.object_annos = io.load_json_object(self.const.object_annos_json)
         self.image_id_to_object_id = io.load_json_object(
             self.const.image_id_to_object_id_json)
         self.image_ids = list(self.image_id_to_object_id.keys())
-        self.transforms = transforms.Compose([
-                transforms.RandomCrop(self.const.img_size)])
-
-    def load_group_attributes(self):
-        attr_groups = io.load_json_object(self.const.attribute_groups_json)
-        attrs = {}
-        attr_to_idx = {}
-        for group in self.const.groups:
-            attrs[group] = sorted(attr_groups[group])
-            attr_to_idx[group] = {a:i for i,a in enumerate(attrs[group])}
-        return attrs, attr_to_idx
+        self.transforms = transforms.Compose(
+            [
+                transforms.CenterCrop(self.const.img_size),
+                #transforms.RandomCrop(self.const.img_size),
+                #transforms.RandomHorizontalFlip(),
+            ]
+        )
 
     def get_image(self,image_id):
         filename = os.path.join(self.const.img_dir1,f'{image_id}.jpg')
@@ -77,21 +77,29 @@ class GenomeAttributesDataset(Dataset):
 
         return img
 
+    def create_object_label(self,object_synsets):
+        num_objects = len(self.sorted_object_synsets)
+        label = np.zeros([num_objects],dtype=np.float32)
+        idx = -1
+        for synset in object_synsets:
+            idx = self.object_synset_to_idx[synset]
+            label[idx] = 1.0
+        return label, idx
+
+    def create_attribute_label(self,attribute_synsets):
+        num_attributes = len(self.sorted_attribute_synsets)
+        label = np.zeros([num_attributes],dtype=np.float32)
+        pos_idxs = []
+        for synset in attribute_synsets:
+            idx = self.attribute_synset_to_idx[synset]
+            label[idx] = 1.0
+            pos_idxs.append(idx)
+        return label, pos_idxs
+
     def normalize(self,imgs,mean,std):
         b,h,w,c = imgs.shape
         imgs = (imgs-mean) / std
         return imgs
-
-    def get_pos_feat(self,bbox,img_h,img_w):
-        eps = 1e-6
-        x,y,w,h = bbox
-        pos_feat = [
-            np.log(h+eps) - np.log(w+eps), # aspect ratio
-            np.log(h+eps) + np.log(w+eps), # area
-            np.log(w+eps) - np.log(img_w+eps), # relative width
-            np.log(h+eps) - np.log(img_h+eps), # relative height
-        ]
-        return np.array(pos_feat,dtype=np.float32)
 
     def __len__(self):
         return len(self.image_ids)
@@ -110,43 +118,48 @@ class GenomeAttributesDataset(Dataset):
         object_words = []
         attribute_synsets = []
         attribute_words = []
+        object_labels = []
+        attribute_labels = []
+        object_labels_idx = []
+        attribute_labels_idxs = []
         boxes = []
         img_size = []
-        cond_object_id = []
-        pos_feats = []
+        object_ids_ = []
         for object_id in object_ids:
             object_anno = self.object_annos[object_id]
             
-            box = object_anno['attribute_box']
-            pos_feat = self.get_pos_feat(box,img_h,img_w)
-            boxes.append(box)
-            pos_feats.append(pos_feat)
+            if len(object_anno['attribute_synsets'])==0:
+                continue
+            
+            boxes.append(object_anno['attribute_box'])
             
             try:
-                region = self.crop_region(img,object_anno['attribute_box'],0)
+                region = self.crop_region(img,object_anno['attribute_box'],50)
                 region = self.scale_smaller_side(region,self.const.img_size)
                 region = self.transforms(region)
                 regions.append(region)
             except:
                 return None
             object_words.append(object_anno['names'])
-            synsets = object_anno['object_synsets']
-            if len(synsets)==0:
-                synsets = ['__UNK__']
-            object_synsets.append(synsets)
-            obj_idx = self.obj_to_idx[synsets[0]]
-            cond_object_id.append(obj_idx)
+            object_synsets.append(object_anno['object_synsets'])
+            object_label, object_label_idx = self.create_object_label(
+                object_anno['object_synsets'])
+            object_labels.append(object_label)
+            object_labels_idx.append(object_label_idx)
             
             attribute_words.append(object_anno['attributes'])
-            synsets = object_anno['attribute_synsets']
-            if len(synsets)==0:
-                synsets = ['__UNK__']
-            attribute_synsets.append(synsets)
-    
+            attribute_synsets.append(object_anno['attribute_synsets'])
+            attribute_label, attribute_pos_idxs = self.create_attribute_label(
+                object_anno['attribute_synsets'])
+            attribute_labels.append(attribute_label)
+            attribute_labels_idxs.append(attribute_pos_idxs)
+
+            object_ids_.append(object_id)
+        
         to_return = {
             #'image': [np.array(img).astype(np.float32)],
             'image_ids': [image_id]*num_regions,
-            'object_ids': object_ids,
+            'object_ids': object_ids_,
             'regions': regions,
             'boxes': boxes, # coordinates in int
             'image_sizes': [[img_h,img_w]]*num_regions, # dimensions in int
@@ -154,8 +167,10 @@ class GenomeAttributesDataset(Dataset):
             'object_words': object_words,
             'attribute_synsets': attribute_synsets,
             'attribute_words': attribute_words,
-            'cond_object_id': cond_object_id,
-            'pos_feats': pos_feats,
+            'object_labels': object_labels,
+            'object_labels_idx': object_labels_idx,
+            'attribute_labels': attribute_labels,
+            'attribute_labels_idxs': attribute_labels_idxs,
         }
         return to_return
 
@@ -181,11 +196,73 @@ class GenomeAttributesDataset(Dataset):
         return collate_fn
 
 
+class GenomeAttributesNoImgsDataset(GenomeAttributesDataset):
+    def __getitem__(self,i):
+        image_id = self.image_ids[i]
+        object_ids = self.image_id_to_object_id[image_id]
+        num_regions = len(object_ids)
+        if num_regions==0:
+            return None
+
+        regions = []
+        object_synsets = []
+        object_words = []
+        attribute_synsets = []
+        attribute_words = []
+        object_labels = []
+        attribute_labels = []
+        object_labels_idx = []
+        attribute_labels_idxs = []
+        boxes = []
+        img_size = []
+        object_ids_ = []
+        for object_id in object_ids:
+            object_anno = self.object_annos[object_id]
+            
+            if len(object_anno['attribute_synsets'])==0:
+                continue
+            
+            boxes.append(object_anno['attribute_box'])
+            
+            object_words.append(object_anno['names'])
+            object_synsets.append(object_anno['object_synsets'])
+            object_label, object_label_idx = self.create_object_label(
+                object_anno['object_synsets'])
+            object_labels.append(object_label)
+            object_labels_idx.append(object_label_idx)
+            
+            attribute_words.append(object_anno['attributes'])
+            attribute_synsets.append(object_anno['attribute_synsets'])
+            attribute_label, attribute_pos_idxs = self.create_attribute_label(
+                object_anno['attribute_synsets'])
+            attribute_labels.append(attribute_label)
+            attribute_labels_idxs.append(attribute_pos_idxs)
+
+            object_ids_.append(object_id)
+        
+        to_return = {
+            #'image': [np.array(img).astype(np.float32)],
+            'image_ids': [image_id]*num_regions,
+            'object_ids': object_ids_,
+            'boxes': boxes, # coordinates in int
+            #'image_sizes': [[img_h,img_w]]*num_regions, # dimensions in int
+            'object_words': object_words,
+            'object_synsets': object_synsets,
+            'attribute_words': attribute_words,
+            'attribute_synsets': attribute_synsets,
+            'object_labels': object_labels,
+            'object_labels_idx': object_labels_idx,
+            'attribute_labels': attribute_labels,
+            'attribute_labels_idxs': attribute_labels_idxs,
+        }
+        return to_return
+
+
 if __name__=='__main__':
     const = GenomeAttributesDatasetConstants()
     dataset = GenomeAttributesDataset(const)
     collate_fn = dataset.create_collate_fn(
-        ['object_synsets','attribute_synsets',
+        ['object_synsets','attribute_synsets','attribute_labels_idxs',
         'object_words','attribute_words'])
     dataloader = DataLoader(
         dataset,
