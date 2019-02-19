@@ -2,7 +2,7 @@ ACTION=$1
 GPU=$2
 
 EXP_NAME=$3
-OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/imagenet_genome_attr/multi_sense_cooccur_dim_100_neg_bias_linear_fx_xformed_concat_with_glove_300"
+OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/imagenet_genome_attr/effect_of_xforms/multi_sense_cooccur_dim_100_neg_bias_linear_concat_with_glove_300"
 
 LR=0.1 # 0.01
 L2_WEIGHT=0.001 # lamba/2
@@ -20,11 +20,11 @@ then
     GLOVE_DIM=300
     EMBEDDINGS_H5PY="${PWD}/symlinks/data/glove/proc/glove_6B_300d.h5py"
     WORD_TO_IDX_JSON="${PWD}/symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json"
-    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/dim_100_neg_bias_linear_fx/xformed_concat_with_glove_300/visual_words.json"
+    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms/dim_100_neg_bias_linear/concat_with_glove_300/visual_words.json"
 else
-    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/dim_100_neg_bias_linear_fx/xformed_concat_with_glove_300/visual_word_vecs.h5py"
-    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/dim_100_neg_bias_linear_fx/xformed_concat_with_glove_300/visual_word_vecs_idx.json"
-    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/dim_100_neg_bias_linear_fx/xformed_concat_with_glove_300/visual_words.json"
+    EMBEDDINGS_H5PY="${PWD}/symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms/dim_100_neg_bias_linear/concat_with_glove_300/visual_word_vecs.h5py"
+    WORD_TO_IDX_JSON="${PWD}/symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms/dim_100_neg_bias_linear/concat_with_glove_300/visual_word_vecs_idx.json"
+    VISUAL_VOCAB_JSON="${PWD}/symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms/dim_100_neg_bias_linear/concat_with_glove_300/visual_words.json"
 fi
 
 echo "Running experiment ${EXP_NAME} ..."
