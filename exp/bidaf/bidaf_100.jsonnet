@@ -27,9 +27,9 @@
         "token_embedders": {
             "tokens": {
                 "type": "embedding",
-                "pretrained_file": "/home/nfs/tgupta6/Code/visual_word_vecs/symlinks/exp/bidaf/cooccur_gt/embeddings.txt.gz",
+                "pretrained_file": "/home/nfs/tgupta6/Code/visual_word_vecs/symlinks/exp/bidaf/dim_100_neg_bias_linear_concat_with_glove_100/embeddings.txt.gz",
                 # https://s3-us-west-2.amazonaws.com/allennlp/datasets/glove/glove.6B.100d.txt.gz
-                "embedding_dim": 150, # update
+                "embedding_dim": 200, # update 100 + D
                 "trainable": false,
             },
             "token_characters": {
@@ -52,7 +52,7 @@
     "phrase_layer": {
       "type": "lstm",
       "bidirectional": true,
-      "input_size": 250, # embedding_dim + 100
+      "input_size": 300, # update 200 + D
       "hidden_size": 100,
       "num_layers": 1,
       "dropout": 0.2
@@ -92,7 +92,7 @@
     "grad_norm": 5.0,
     "patience": 10,
     "validation_metric": "+em",
-    "cuda_device": 3,
+    "cuda_device": 0,
     "learning_rate_scheduler": {
       "type": "reduce_on_plateau",
       "factor": 0.5,
