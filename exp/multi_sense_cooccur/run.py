@@ -71,10 +71,10 @@ def exp_merge_cooccur():
 
 
 def exp_train():
-    exp_name = 'dim_100_neg_bias_linear_fx'
+    exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
@@ -113,7 +113,7 @@ def exp_train():
     model_const.net.xform_type = 'linear'
     model_const.net.xform_num_layers = None
     model_const.net.use_bias = True
-    model_const.net.use_fx = True
+    model_const.net.use_fx = False
     model_const.net_path = os.path.join(
         exp_const.model_dir,
         f'net_{model_const.model_num}')
@@ -123,10 +123,10 @@ def exp_train():
 
 
 def exp_extract_embeddings():
-    exp_name = 'dim_100_neg_bias_linear_fx'
+    exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.cooccur_types = [
@@ -143,7 +143,7 @@ def exp_extract_embeddings():
         'imagenet_genome_gt/merged_cooccur_self.csv')
 
     model_const = Constants()
-    model_const.model_num = 130000
+    model_const.model_num = 120000
     model_const.net = LogBilinearConstants()
     model_const.net.num_words = 93553
     model_const.net.embed_dims = 100
@@ -151,7 +151,7 @@ def exp_extract_embeddings():
     model_const.net.xform_type = 'linear'
     model_const.net.xform_num_layers = None
     model_const.net.use_bias = True
-    model_const.net.use_fx = True
+    model_const.net.use_fx = False
     model_const.net_path = os.path.join(
         exp_const.model_dir,
         f'net_{model_const.model_num}')
@@ -161,10 +161,10 @@ def exp_extract_embeddings():
 
 
 def exp_find_nn():
-    exp_name = 'dim_100_neg_bias_linear_fx'
+    exp_name = 'dim_50_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.num_nbrs = 20
@@ -197,15 +197,15 @@ def exp_find_nn():
         'imagenet_genome_gt/merged_cooccur_self.csv')
 
     model_const = Constants()
-    model_const.model_num = 130000
+    model_const.model_num = 120000
     model_const.net = LogBilinearConstants()
     model_const.net.num_words = 93553
-    model_const.net.embed_dims = 100
+    model_const.net.embed_dims = 50
     model_const.net.two_embedding_layers = False
     model_const.net.xform_type = 'linear'
     model_const.net.xform_num_layers = None
     model_const.net.use_bias = True
-    model_const.net.use_fx = True
+    model_const.net.use_fx = False
     model_const.net_path = os.path.join(
         exp_const.model_dir,
         f'net_{model_const.model_num}')
@@ -214,11 +214,11 @@ def exp_find_nn():
 
 
 def exp_concat_with_glove():
-    exp_name = 'xformed_concat_with_glove_300' # alt. xformed_
+    exp_name = 'concat_with_glove_100' # alt. xformed_
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
-        'dim_100_neg_bias_linear_fx')
+        'effect_of_xforms/dim_200_neg_bias_select')
     exp_const = ExpConstants(exp_name,out_base_dir)
 
     visual_embed_dir = exp_const.out_base_dir
@@ -228,8 +228,8 @@ def exp_concat_with_glove():
         'word_to_idx.json')
     data_const.visual_embeddings_npy = os.path.join(
         visual_embed_dir,
-        'visual_embeddings_xformed.npy') # alt. _xformed.npy
-    glove_const = GloveConstantsFactory.create(dim='300')
+        'visual_embeddings.npy') # alt. _xformed.npy
+    glove_const = GloveConstantsFactory.create(dim='100')
     data_const.glove_idx = glove_const.word_to_idx_json
     data_const.glove_h5py = glove_const.embeddings_h5py
 
@@ -237,10 +237,10 @@ def exp_concat_with_glove():
 
 
 def exp_vis_bias_vs_self_count():
-    exp_name = 'dim_100_neg_bias_linear_fx'
+    exp_name = 'dim_50_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
@@ -252,15 +252,15 @@ def exp_vis_bias_vs_self_count():
         'imagenet_genome_gt/merged_cooccur_self.csv')
 
     model_const = Constants()
-    model_const.model_num = 130000
+    model_const.model_num = 120000
     model_const.net = LogBilinearConstants()
     model_const.net.num_words = 93553
-    model_const.net.embed_dims = 100
+    model_const.net.embed_dims = 50
     model_const.net.two_embedding_layers = False
     model_const.net.xform_type = 'linear'
     model_const.net.xform_num_layers = None
     model_const.net.use_bias = True
-    model_const.net.use_fx = True
+    model_const.net.use_fx = False
     model_const.net_path = os.path.join(
         exp_const.model_dir,
         f'net_{model_const.model_num}')
@@ -270,15 +270,15 @@ def exp_vis_bias_vs_self_count():
 
 def exp_vis_pca_tsne():
     xformed = False
-    exp_name = 'no_syn_cooccur_self_count_dim_100_neg_no_decay'
+    exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
     if xformed==True:
-        exp_const.vis_dir = os.path.join(exp_const.exp_dir,'xformed_vis')
+        exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/tsne_xformed')
     else:
-        exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
+        exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/tsne')
     exp_const.category_words_only = True
     exp_const.xformed = xformed
     exp_const.cooccur_types = [
@@ -312,10 +312,10 @@ def exp_vis_pca_tsne():
 
 
 def exp_supervised_clustering():
-    exp_name = 'no_syn_cooccur_self_count_dim_100_neg_no_decay'
+    exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/clustering')
     exp_const.fine = False
@@ -343,10 +343,10 @@ def exp_supervised_clustering():
 
 
 def exp_unsupervised_clustering():
-    exp_name = 'no_syn_cooccur_self_count_dim_100_neg_no_decay'
+    exp_name = 'dim_50_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/clustering')
     exp_const.fine = False
