@@ -27,12 +27,22 @@ class Embed2Class(nn.Module):
             self.const.num_classes,
             self.const.embed_dims)
         if self.const.linear==True:
-            self.fc = nn.Linear(self.const.embed_dims,self.const.weights_dim)
+            self.fc = nn.Linear(
+                self.const.embed_dims,
+                self.const.weights_dim,
+                bias=False)
+            self.reverse_fc = nn.Linear(
+                self.const.weights_dim,
+                self.const.embed_dims,
+                bias=False)
         else:
             self.fc1 = nn.Linear(self.const.embed_dims,self.const.weights_dim)
             self.bn = nn.BatchNorm1d(self.const.weights_dim)
             self.relu = nn.ReLU()
             self.fc2 = nn.Linear(self.const.weights_dim,self.const.weights_dim)
+        self.kappa = nn.Parameter(
+            data=torch.FloatTensor([0]),
+            requires_grad=True)
 
     def load_embeddings(self,labels):
         embed_h5py = io.load_h5py_object(self.const.embed_h5py)['embeddings']
@@ -62,6 +72,48 @@ class Embed2Class(nn.Module):
         return x
 
     def classify(self,feats,class_weights):
-        logits = torch.matmul(feats,class_weights.t())
+        feats = feats / \
+            (1e-6 + torch.pow(torch.sum(feats*feats,1,keepdim=True),0.5))
+        class_weights = class_weights / \
+            (1e-6 + torch.pow(torch.sum(
+                class_weights*class_weights,1,keepdim=True),0.5))
+        logits = self.kappa*torch.matmul(feats,class_weights.t())
         return logits
 
+    def margin_loss(self,scores,idx):
+        idx_ = idx.data.cpu().numpy()
+        mloss = 0
+        B = idx.size(0)
+        num_samples = 0
+        for b in range(B):
+            if idx_[b]==-1:
+                continue
+            
+            num_samples += 1
+            mloss += torch.sum(
+                torch.max(
+                    0*scores[b], 
+                    0.2 + scores[b] - scores[b,idx_[b]]))
+
+        mloss = mloss / num_samples
+        return mloss
+
+    def reverse_loss(self,class_weights):
+        y = self.reverse_fc(class_weights)
+        d = y - self.embed.weight
+        return torch.mean(d*d)
+
+
+    def sim_loss(self,class_weights):
+        class_weights_norm = torch.norm(class_weights,2,1,keepdim=True)
+        class_weights = class_weights / (class_weights_norm + 1e-6)
+
+        embed = self.embed.weight
+        embed_norm = torch.norm(embed,2,1,keepdim=True)
+        embed = embed / (embed_norm + 1e-6)
+        
+        class_sim = torch.matmul(class_weights,class_weights.t())
+        embed_sim = torch.matmul(embed,embed.t())
+
+        delta = class_sim - embed_sim
+        return torch.mean(delta*delta)

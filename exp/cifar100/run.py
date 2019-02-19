@@ -10,22 +10,23 @@ from . import train
 from . import eval as evaluation
 from .vis import vis_conf_mat
 from .vis import conf_vs_visual_sim, conf_as_fun_of_sims, class_vs_sim
+from .vis import acc_vs_num_classes
 
 
 def exp_train():
     use_glove = False
     if use_glove==False:
-        exp_name = 'training_no_fx_self_count_dim_50_single_embed_concat_with_glove_300_sgd_0.01_linear'
+        exp_name = 'dim_50_neg_bias_linear_concat_with_glove_100_held_classes_20'
     else:
-        exp_name = 'glove_sgd_0.01_linear'
+        exp_name = 'glove_100_held_classes_20'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/cifar100')
+        'symlinks/exp/cifar100/zero_shot')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
     exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
-    exp_const.log_step = 100
+    exp_const.log_step = 200
     exp_const.model_save_step = 1000
     exp_const.val_step = 1000
     exp_const.batch_size = 128
@@ -36,7 +37,7 @@ def exp_train():
     exp_const.lr = 0.01 
     exp_const.momentum = 0.9
     exp_const.num_workers = 5
-    exp_const.optimizer = 'SGD'
+    exp_const.optimizer = 'Adam'
     exp_const.feedforward = False
     exp_const.subset = {
         'training': 'train',
@@ -62,20 +63,21 @@ def exp_train():
 
     if use_glove==True:
         #Glove
-        model_const.embed2class.embed_dims = 300
+        model_const.embed2class.embed_dims = 100
         model_const.embed2class.embed_h5py = os.path.join(
             os.getcwd(),
-            'symlinks/data/glove/proc/glove_6B_300d.h5py')
+            'symlinks/data/glove/proc/glove_6B_100d.h5py')
         model_const.embed2class.embed_word_to_idx_json = os.path.join(
             os.getcwd(),
-            'symlinks/data/glove/proc/glove_6B_300d_word_to_idx.json')
+            'symlinks/data/glove/proc/glove_6B_100d_word_to_idx.json')
     else:
         # Glove + Visual
-        model_const.embed2class.embed_dims = 350
+        model_const.embed2class.embed_dims = 150
         embed_dir = os.path.join(
             os.getcwd(),
-            'symlinks/exp/cooccur/imagenet_genome_gt/' + \
-            'training_no_fx_self_count_dim_50_single_embed/concat_with_glove_300')
+            'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
+            'effect_of_xforms/dim_50_neg_bias_linear/' + \
+            'concat_with_glove_100')
         model_const.embed2class.embed_h5py = os.path.join(
             embed_dir,
             'visual_word_vecs.h5py')
@@ -84,6 +86,20 @@ def exp_train():
             'visual_word_vecs_idx.json')
 
     train.main(exp_const,data_const,model_const)
+
+
+def exp_acc_vs_num_train_classes():
+    exp_name = 'agg_results_glove_100_visual_50'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/cifar100/zero_shot')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.glove_prefix = 'glove_100_held_classes_'
+    exp_const.visual_prefix = \
+        'dim_50_neg_bias_linear_concat_with_glove_100_held_classes_'
+    exp_const.held_out_classes = [20,40,60,80]
+
+    acc_vs_num_classes.main(exp_const)
 
 
 def exp_eval():

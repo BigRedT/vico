@@ -10,6 +10,7 @@ import torchvision.transforms as transforms
 import pickle
 
 import utils.io as io
+from .test_labels import TEST_LABELS_LG, FINE_TO_SUPER, SUPER_TO_IDX
 
 
 class Cifar100DatasetConstants(io.JsonSerializableClass):
@@ -33,6 +34,11 @@ class Cifar100Dataset(Dataset):
             self.const.train,
             download=self.const.download)
         self.labels = self.load_labels()
+        self.held_out_labels = copy.deepcopy(TEST_LABELS_LG)
+        self.held_out_idx = self.get_held_out_idx()
+        self.fine_to_super = copy.deepcopy(FINE_TO_SUPER)
+        self.super_to_idx = copy.deepcopy(SUPER_TO_IDX)
+        self.fine_idx_to_super_idx = self.get_fine_idx_to_super_idx()
         self.transforms = transforms.Compose([
             transforms.RandomCrop(32,padding=4),
             transforms.RandomHorizontalFlip(),
@@ -46,6 +52,20 @@ class Cifar100Dataset(Dataset):
         labels = pickle.load(fo,encoding='latin1')['fine_label_names']
         return labels
 
+    def get_held_out_idx(self):
+        held_out_idx = []
+        for i,l in enumerate(self.labels):
+            if l in self.held_out_labels:
+                held_out_idx.append(i)
+        return held_out_idx
+
+    def get_fine_idx_to_super_idx(self):
+        fine_idx_to_super_idx = {}
+        for i, label in enumerate(self.labels):
+            fine_idx_to_super_idx[i] = \
+                self.super_to_idx[self.fine_to_super[label]]
+        return fine_idx_to_super_idx
+
     def __len__(self):
         return len(self.dataset)
 
@@ -54,10 +74,17 @@ class Cifar100Dataset(Dataset):
         if self.const.train==True:
             img = self.transforms(img)
 
+        label = self.labels[idx]
+        if self.const.train==True:
+            if label in self.held_out_labels:
+                idx = -1
+
         to_return = {
             'img': np.array(img),
             'label_idx': idx,
-            'label': self.labels[idx],
+            'label': label,
+            'super_label': self.fine_to_super[label],
+            #'super_label_idx': self.fine_idx_to_super_idx[idx],
         }
         return to_return
 
@@ -70,6 +97,7 @@ if __name__=='__main__':
     const = Cifar100DatasetConstants()
     const.download = False
     dataset = Cifar100Dataset(const)
+    import pdb; pdb.set_trace()
     import scipy
     outdir = os.path.join(
         os.getcwd(),

@@ -65,8 +65,6 @@ def train_model(model,dataloaders,exp_const):
     img_mean = Variable(torch.cuda.FloatTensor(model.img_mean))
     img_std = Variable(torch.cuda.FloatTensor(model.img_std))
 
-    selected_model_results = None
-
     for epoch in range(exp_const.num_epochs):
         for it,data in enumerate(dataloaders['training']):
             # Set mode
@@ -85,16 +83,19 @@ def train_model(model,dataloaders,exp_const):
             if exp_const.feedforward==True:
                 logits, feats = model.net(imgs)
                 reverse_loss = Variable(torch.FloatTensor([0])).cuda()
-                sim_loss = Variable(torch.FloatTensor([0])).cuda()
+                #margin_loss = torch.Variable(torch.FloatTensor([0])).cuda()
             else:
                 _, feats = model.net(imgs)
                 class_weights = model.embed2class()
                 logits = model.embed2class.classify(feats,class_weights)
+                reverse_loss = Variable(torch.FloatTensor([0])).cuda()
                 reverse_loss = model.embed2class.reverse_loss(class_weights)
-                sim_loss = model.embed2class.sim_loss(class_weights)
+                margin_loss = model.embed2class.margin_loss(logits,label_idxs)
+                #margin_loss = multimargin(logits,label_idxs)
 
             # Computer loss
-            loss = criterion(logits,label_idxs) + 0*reverse_loss + 0*sim_loss
+            loss = criterion(logits,label_idxs) + reverse_loss #+ margin_loss
+            #loss = margin_loss
 
             # Backward pass
             opt.zero_grad()
@@ -105,13 +106,12 @@ def train_model(model,dataloaders,exp_const):
                 _,argmax = torch.max(logits,1)
                 argmax = argmax.data.cpu().numpy()
                 label_idxs_ = label_idxs.data.cpu().numpy()
-                train_acc = np.mean(argmax==label_idxs_)*100
+                train_acc = np.mean(argmax==label_idxs_)
 
                 log_items = {
                     'Loss': loss.data[0],
                     'Train Acc': train_acc,
-                    'Reverse Loss': reverse_loss.data[0],
-                    'Sim Loss': sim_loss.data[0],
+                    'Reverse Loss': reverse_loss.data[0]
                 }
 
                 log_str = f'Epoch: {epoch} | Iter: {it} | Step: {step} | '
@@ -143,24 +143,14 @@ def train_model(model,dataloaders,exp_const):
                     exp_const,
                     step)
                 print(eval_results)
+                log_value('Test Acc',eval_results['Acc'],step)
+                log_value('Test Super Acc',eval_results['Super Acc'],step)
                 log_value('Seen Acc',eval_results['Seen Acc'],step)
                 log_value('Unseen Acc',eval_results['Unseen Acc'],step)
-                log_value('HM Acc',eval_results['HM Acc'],step)
-                
-                if selected_model_results is None:
-                    selected_model_results = eval_results
-                else:
-                    if eval_results['Seen Acc'] >= \
-                            selected_model_results['Seen Acc']:
-                        selected_model_results = eval_results
-                
-                selected_model_results_json = os.path.join(
-                    exp_const.exp_dir,
-                    'selected_model_results.json')
-                io.dump_json_object(
-                    selected_model_results,
-                    selected_model_results_json)
-
+                log_value('Seen Nll',eval_results['Seen Nll'],step)
+                log_value('Unseen Nll',eval_results['Unseen Nll'],step)
+                log_value('Zsl Acc',eval_results['Zsl Acc'],step)
+            
             if step==32000:
                 lr = 0.1*lr
                 pytorch_layers.set_learning_rate(opt,lr)
@@ -176,13 +166,26 @@ def eval_model(model,dataloader,exp_const,step):
     img_mean = Variable(torch.cuda.FloatTensor(model.img_mean))
     img_std = Variable(torch.cuda.FloatTensor(model.img_std))
 
+    criterion = nn.CrossEntropyLoss()
     softmax = nn.Softmax(dim=1)
+    multimargin = nn.MultiMarginLoss(margin=0.2)
 
+    conse = Conse(
+        10,
+        model.embed2class.embed.weight,
+        dataloader.dataset.held_out_idx)
+
+    avg_loss = 0
     correct = 0
-    unseen_correct_per_class = {l: 0 for l in dataloader.dataset.labels}
-    seen_correct_per_class = {l: 0 for l in dataloader.dataset.labels}
-    sample_per_class = {l: 0 for l in dataloader.dataset.labels}
+    correct_class = {l: 0 for l in dataloader.dataset.labels}
+    sample_class = {l: 0 for l in dataloader.dataset.labels}
+    nll_class = {l: 0 for l in dataloader.dataset.labels}
+    super_correct = 0
+    num_samples = 0
     for it,data in enumerate(tqdm(dataloader)):
+        # if num_samples >= exp_const.num_val_samples:
+        #     break
+
         # Forward pass
         imgs = Variable(data['img'].cuda().float()/255)
         imgs = dataloader.dataset.normalize(
@@ -190,64 +193,84 @@ def eval_model(model,dataloader,exp_const,step):
             img_mean,
             img_std)
         imgs = imgs.permute(0,3,1,2)
-
+        label_idxs = Variable(data['label_idx'].cuda())
         if exp_const.feedforward==True:
             logits,feats = model.net(imgs)
         else:
             _, feats = model.net(imgs)
             class_weights = model.embed2class()
             logits = model.embed2class.classify(feats,class_weights)
+
+        # Computer loss
+        loss = criterion(logits,label_idxs)    
+        #loss = multimargin(logits,label_idxs)
         
-        gt_labels = data['label']
-        label_idxs = data['label_idx'].numpy()
+        label_idxs_ = label_idxs.data.cpu().numpy()
+        #prob = 0.5*(logits + 1)
         prob = softmax(logits)
         prob = prob.data.cpu().numpy()
-
-        prob_zero_seen =np.copy(prob)
-        prob_zero_unseen = np.copy(prob)
         for i in range(prob.shape[1]):
-            if i in dataloader.dataset.held_out_idx:
-                prob_zero_unseen[:,i] = 0
-            else:
-                prob_zero_seen[:,i] = 0
-        
-        argmax_zero_seen = np.argmax(prob_zero_seen,1)
+            if i not in dataloader.dataset.held_out_idx:
+                prob[:,i] = 0
+        #prob = conse.infer_prob2(prob)
+        #prob = prob.data.cpu().numpy()
+        argmax = np.argmax(prob,1)
+        #argmax = argmax.data.cpu().numpy()
+        label_idxs_ = label_idxs.data.cpu().numpy()
+        super_labels = data['super_label']
+        gt_labels = data['label']
         for i in range(prob.shape[0]):
-            pred_label = dataloader.dataset.labels[argmax_zero_seen[i]]
+            pred_label = dataloader.dataset.labels[argmax[i]]
             gt_label = gt_labels[i]
-            sample_per_class[gt_label] += 1
+            nll_class[gt_label] += -1*np.log(prob[i,label_idxs_[i]]+1e-3)
+            sample_class[gt_label] += 1
             if gt_label==pred_label:
-                unseen_correct_per_class[gt_label] += 1
+                correct_class[gt_label] += 1
+            
+            if super_labels[i]==dataloader.dataset.fine_to_super[pred_label]:
+                super_correct += 1
 
-        argmax_zero_unseen = np.argmax(prob_zero_unseen,1)
-        for i in range(prob.shape[0]):
-            pred_label = dataloader.dataset.labels[argmax_zero_unseen[i]]
-            gt_label = gt_labels[i]
-            # sample_per_class[gt_label] += 1 already counted
-            if gt_label==pred_label:
-                seen_correct_per_class[gt_label] += 1
+        # Aggregate loss or accuracy
+        batch_size = imgs.size(0)
+        num_samples += batch_size
+        avg_loss += (loss.data[0]*batch_size)
+        correct += np.sum(argmax==label_idxs_)
+    
+    avg_loss = avg_loss / num_samples
+    acc = correct / float(num_samples)
+    super_acc = super_correct / float(num_samples)
     
     seen_acc = 0
     unseen_acc = 0
+    seen_nll = 0
+    unseen_nll = 0
     num_seen_classes = 0
     num_unseen_classes = 0
-    for l in dataloader.dataset.labels:
+    for l in correct_class.keys():
         if l in dataloader.dataset.held_out_labels:
-            unseen_acc += (unseen_correct_per_class[l] / sample_per_class[l])
+            unseen_nll += (nll_class[l] / sample_class[l])
+            unseen_acc += (correct_class[l] / sample_class[l])
             num_unseen_classes += 1
         else:
-            seen_acc += (seen_correct_per_class[l] / sample_per_class[l])
+            seen_nll += (nll_class[l] / sample_class[l])
+            seen_acc += (correct_class[l] / sample_class[l])
             num_seen_classes += 1
 
-    seen_acc = round(seen_acc*100 / num_seen_classes,4)
-    unseen_acc = round(unseen_acc*100 / num_unseen_classes,4)
-    hm_acc = round(2*seen_acc*unseen_acc / (seen_acc+unseen_acc),4)
+    seen_nll = round(seen_nll / num_seen_classes,4)
+    unseen_nll = round(unseen_nll / num_unseen_classes,4)
+    seen_acc = round(seen_acc / num_seen_classes,4)
+    unseen_acc = round(unseen_acc / num_unseen_classes,4)
+    zsl_acc = 2*seen_acc*unseen_acc / (seen_acc+unseen_acc)
 
     eval_results = {
+        'Avg Loss': avg_loss, 
+        'Acc': acc,
+        'Super Acc': super_acc,
         'Seen Acc': seen_acc,
         'Unseen Acc': unseen_acc,
-        'HM Acc': hm_acc,
-        'Step': step,
+        'Seen Nll': seen_nll,
+        'Unseen Nll': unseen_nll,
+        'Zsl Acc': zsl_acc,
     }
 
     return eval_results
