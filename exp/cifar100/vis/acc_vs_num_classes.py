@@ -7,12 +7,13 @@ import utils.io as io
 
 def plot_acc_vs_classes(results,metric_name,filename):
     embed_type_to_color = {
-        'glove+visual': 'rgb(31, 119, 180)',
-        'glove+visual(xformed)': 'rgb(31, 119, 180)', 
-        'glove': 'rgb(44, 150, 44)',
-        'visual': 'rgb(214, 39, 40)',
-        'visual(xformed)': 'rgb(214, 39, 40)',
-        'glove+random': 'rgb(255, 127, 14)',
+        'GloVe+ViCo(linear)': 'rgb(55, 128, 191)',
+        'GloVe+ViCo(xformed)': 'rgb(31, 119, 180)', 
+        'GloVe+ViCo(select)': 'rgb(219, 64, 82)',
+        'GloVe': 'rgb(44, 150, 44)',
+        'ViCo(linear)': 'rgb(214, 39, 40)',
+        'ViCo(xformed)': 'rgb(214, 39, 40)',
+        'GloVe+random': 'rgb(255, 127, 14)',
         'random': 'grey',
     }
 
@@ -23,7 +24,7 @@ def plot_acc_vs_classes(results,metric_name,filename):
         'Step': 'Best model iterations',
     }
 
-    num_held_out_classes = sorted(list(results['glove'].keys()))
+    num_held_out_classes = sorted(list(results['GloVe'].keys()))
 
     traces = []
 
@@ -49,12 +50,7 @@ def plot_acc_vs_classes(results,metric_name,filename):
             y = y,
             text = y,
             textposition = 'auto',
-            #mode = 'lines+markers',
             name = 'random',
-            # line = dict(
-            #     color=embed_type_to_color[embed_type],
-            #     width=2,
-            #     dash=None),
             marker = dict(color=embed_type_to_color['random']),
             opacity=0.9,
         )
@@ -66,28 +62,12 @@ def plot_acc_vs_classes(results,metric_name,filename):
             y.append(
                 round(results[embed_type][num_held][metric_name],1))
 
-        # trace = go.Scatter(
-        #     x = [100-x_ for x_ in num_held_out_classes],
-        #     y = y,
-        #     mode = 'lines+markers',
-        #     name = embed_type,
-        #     line = dict(
-        #         color=embed_type_to_color[embed_type],
-        #         width=2,
-        #         dash=None),
-        #     marker = dict(size=9,symbol='circle'),
-        # )
         trace = go.Bar(
             x = [100-x_ for x_ in num_held_out_classes],
             y = y,
             text = y,
             textposition = 'auto',
-            #mode = 'lines+markers',
             name = embed_type,
-            # line = dict(
-            #     color=embed_type_to_color[embed_type],
-            #     width=2,
-            #     dash=None),
             marker = dict(color=embed_type_to_color[embed_type]),
             opacity=0.9,
         )
@@ -100,7 +80,10 @@ def plot_acc_vs_classes(results,metric_name,filename):
         yaxis = dict(title=metric_name_to_ytitle[metric_name]),
         hovermode = 'closest',
         width=800,
-        height=800)
+        height=800,
+        barmode='group',
+        bargap=0.15,
+        bargroupgap=0.1)
 
     plotly.offline.plot(
         {'data': traces,'layout': layout},
@@ -112,7 +95,10 @@ def main(exp_const):
     io.mkdir_if_not_exists(exp_const.exp_dir,recursive=True)
     
     print('Loading results ...')
-    results = {'glove': {}, 'glove+visual': {}}
+    results = {
+        'GloVe': {}, 
+        'GloVe+ViCo(linear)': {},
+        'GloVe+ViCo(select)': {}}
     for num_held_out_classes in exp_const.held_out_classes:
         glove_exp_dir = os.path.join(
             exp_const.out_base_dir,
@@ -120,7 +106,7 @@ def main(exp_const):
         glove_results_json = os.path.join(
             glove_exp_dir,
             'selected_model_results.json')
-        results['glove'][num_held_out_classes] = \
+        results['GloVe'][num_held_out_classes] = \
                 io.load_json_object(glove_results_json)
 
         visual_exp_dir = os.path.join(
@@ -129,11 +115,21 @@ def main(exp_const):
         visual_results_json = os.path.join(
             visual_exp_dir,
             'selected_model_results.json')
-        results['glove+visual'][num_held_out_classes] = \
+        results['GloVe+ViCo(linear)'][num_held_out_classes] = \
                 io.load_json_object(visual_results_json)
 
+        visual_exp_dir = os.path.join(
+            exp_const.out_base_dir,
+            exp_const.visual_select_prefix+str(num_held_out_classes))
+        visual_results_json = os.path.join(
+            visual_exp_dir,
+            'selected_model_results.json')
+        results['GloVe+ViCo(select)'][num_held_out_classes] = \
+                io.load_json_object(visual_results_json)
+        
 
-    for metric_name in results['glove'][exp_const.held_out_classes[0]].keys():
+
+    for metric_name in results['GloVe'][exp_const.held_out_classes[0]].keys():
         filename = os.path.join(exp_const.exp_dir,f'{metric_name}.html')
         plot_acc_vs_classes(results,metric_name,filename)
 
