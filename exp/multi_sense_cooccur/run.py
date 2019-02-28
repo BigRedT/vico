@@ -317,8 +317,8 @@ def exp_supervised_clustering():
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
-    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/clustering')
-    exp_const.fine = False
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/clustering_w_select')
+    exp_const.fine = True
 
     data_const = Constants()
     
@@ -337,18 +337,23 @@ def exp_supervised_clustering():
         'xformed_concat_with_glove_300')
     data_const.xformed_word_vecs_h5py = os.path.join(
         xformed_embed_dir,
+        'visual_word_vecs.h5py')
+
+    data_const.select_word_vecs_h5py = os.path.join(
+        out_base_dir,
+        'dim_200_neg_bias_select/concat_with_glove_300/' + \
         'visual_word_vecs.h5py')
     
     supervised_clustering.main(exp_const,data_const)
 
 
 def exp_unsupervised_clustering():
-    exp_name = 'dim_50_neg_bias_linear'
+    exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
-    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/clustering')
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/clustering_w_select')
     exp_const.fine = False
 
     data_const = Constants()
@@ -368,6 +373,11 @@ def exp_unsupervised_clustering():
         'xformed_concat_with_glove_300')
     data_const.xformed_word_vecs_h5py = os.path.join(
         xformed_embed_dir,
+        'visual_word_vecs.h5py')
+
+    data_const.select_word_vecs_h5py = os.path.join(
+        out_base_dir,
+        'dim_200_neg_bias_select/concat_with_glove_300/' + \
         'visual_word_vecs.h5py')
     
     unsupervised_clustering.main(exp_const,data_const)
