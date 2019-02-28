@@ -16,7 +16,9 @@ from .vis import acc_vs_num_classes
 def exp_train():
     use_glove = False
     if use_glove==False:
-        exp_name = 'dim_50_neg_bias_linear_concat_with_glove_100_held_classes_20'
+        #exp_name = 'dim_200_neg_bias_select_concat_with_glove_100_held_classes_80'
+        #exp_name = 'dim_50_neg_bias_linear_concat_with_glove_100_held_classes_20'
+        exp_name = 'dim_100_neg_bias_linear_concat_with_glove_100_held_classes_80'
     else:
         exp_name = 'glove_100_held_classes_20'
     out_base_dir = os.path.join(
@@ -72,11 +74,16 @@ def exp_train():
             'symlinks/data/glove/proc/glove_6B_100d_word_to_idx.json')
     else:
         # Glove + Visual
-        model_const.embed2class.embed_dims = 150
+        model_const.embed2class.embed_dims = 200 #150
+        # embed_dir = os.path.join(
+        #     os.getcwd(),
+        #     'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
+        #     'effect_of_xforms/dim_200_neg_bias_select/' + \
+        #     'concat_with_glove_100')
         embed_dir = os.path.join(
             os.getcwd(),
             'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
-            'effect_of_xforms/dim_50_neg_bias_linear/' + \
+            'effect_of_xforms/dim_100_neg_bias_linear/' + \
             'concat_with_glove_100')
         model_const.embed2class.embed_h5py = os.path.join(
             embed_dir,
@@ -89,14 +96,16 @@ def exp_train():
 
 
 def exp_acc_vs_num_train_classes():
-    exp_name = 'agg_results_glove_100_visual_50'
+    exp_name = 'agg_results_glove_100_visual_100_w_select'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/cifar100/zero_shot')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.glove_prefix = 'glove_100_held_classes_'
     exp_const.visual_prefix = \
-        'dim_50_neg_bias_linear_concat_with_glove_100_held_classes_'
+        'dim_100_neg_bias_linear_concat_with_glove_100_held_classes_'
+    exp_const.visual_select_prefix = \
+        'dim_200_neg_bias_select_concat_with_glove_100_held_classes_'
     exp_const.held_out_classes = [20,40,60,80]
 
     acc_vs_num_classes.main(exp_const)
