@@ -31,6 +31,6 @@ for i, (super_class,fine_classes) in enumerate(SUPER_TO_FINE.items()):
     for fine_class in fine_classes:
         FINE_TO_SUPER[fine_class] = super_class
     
-    TEST_LABELS_LG.update(set(sorted(list(fine_classes),reverse=True)[:1]))
+    TEST_LABELS_LG.update(set(sorted(list(fine_classes),reverse=True)[:4]))
 
 print('Number of held out classes: ', len(TEST_LABELS_LG))
