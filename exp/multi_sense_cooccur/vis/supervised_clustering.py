@@ -44,18 +44,23 @@ def get_word_feats(embed,dim=2,embed_type='tsne'):
 
 def plot_metric_vs_depth(metric_name,metric,depth,filename):
     embed_type_to_color = {
-        'glove+visual': 'rgb(31, 119, 180)',
-        'glove+visual(xformed)': 'rgb(31, 119, 180)', 
-        'glove': 'rgb(44, 150, 44)',
-        'visual': 'rgb(214, 39, 40)',
-        'visual(xformed)': 'rgb(214, 39, 40)',
-        'glove+random': 'rgb(255, 127, 14)',
+        'GloVe+ViCo(linear)': 'rgb(31, 119, 180)',
+        'GloVe+ViCo(xformed)': 'rgb(31, 119, 180)',
+        'GloVe+ViCo(select)': 'rgb(31, 119, 180)', #'rgb(40,40,40)',
+        'GloVe': 'rgb(44, 150, 44)',
+        'ViCo(linear)': 'rgb(214, 39, 40)',
+        'ViCo(select)': 'rgb(214, 39, 40)', #'rgb(135, 93, 183)',
+        'ViCo(xformed)': 'rgb(214, 39, 40)',
+        'GloVe+random': 'rgb(255, 127, 14)',
         'random': 'grey',
     }
 
     traces = []
     for embed_type in metric.keys():
         if 'xformed' in embed_type:
+            dash = 'dot'
+            symbol = 'circle'
+        elif 'select' in embed_type:
             dash = 'dot'
             symbol = 'circle'
         else:
@@ -116,6 +121,8 @@ def main(exp_const,data_const):
         data_const.word_vecs_h5py)['embeddings'][()]
     xformed_embed = io.load_h5py_object(
         data_const.xformed_word_vecs_h5py)['embeddings'][()]
+    select_embed = io.load_h5py_object(
+        data_const.select_word_vecs_h5py)['embeddings'][()]
     word_to_idx = io.load_json_object(data_const.word_to_idx_json)
 
     print('Selecting words ...')
@@ -126,19 +133,23 @@ def main(exp_const,data_const):
     visual_embed = embed[:,300:]
     xformed_embed = xformed_embed[idxs,:]
     xformed_visual_embed = xformed_embed[:,300:]
+    select_embed = select_embed[idxs,:]
+    select_visual_embed = select_embed[:,300:]
     glove_embed = embed[:,:300]
     random_embed = np.copy(embed)
-    random_embed[:,300:] = 0.1*np.random.rand(
+    random_embed[:,300:] = 10*0.1*np.random.rand(
         embed.shape[0],
         visual_embed.shape[1])
     
     embed_type_to_embed = {
-        'glove+visual': embed,
-        'glove+visual(xformed)': xformed_embed, 
-        'visual': visual_embed,
-        'visual(xformed)': xformed_visual_embed,
-        'glove': glove_embed,
-        'glove+random': random_embed,
+        'GloVe+ViCo(linear)': embed,
+        #'GloVe+ViCo(xformed)': xformed_embed,
+        'GloVe+ViCo(select)': select_embed,
+        'ViCo(linear)': visual_embed,
+        #'ViCo(xformed)': xformed_visual_embed,
+        'ViCo(select)': select_visual_embed,
+        'GloVe': glove_embed,
+        'GloVe+random': random_embed,
         'random': random_embed[:,300:]
     }
 
@@ -164,7 +175,11 @@ def main(exp_const,data_const):
         ari[embed_type] = []
 
         #depths = [1,2,4,6,8,10,12,14,16]
-        depths = [1,4,8,12,16,20,24,28,32]
+        if exp_const.fine==True:
+            depths = [1,4,8,12,16,20,24,28,32,36,42,48]
+        else:
+            depths = [1,4,8,12,16,20,24] # 28,32
+
         for depth in depths:
             dt = DecisionTreeClassifier(
                 criterion='gini',
