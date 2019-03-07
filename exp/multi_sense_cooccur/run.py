@@ -12,6 +12,7 @@ from . import train_w_neg
 from . import extract_embeddings, extract_embeddings_xformed
 from . import find_nn
 from . import concat_with_glove
+from . import concat_random_with_glove
 from data.glove.constants import GloveConstantsFactory
 from . import synset_to_word_cooccur
 from .vis import bias_vs_self_count #as bias_vs_self_count
@@ -123,7 +124,7 @@ def exp_train():
 
 
 def exp_extract_embeddings():
-    exp_name = 'dim_100_neg_bias_linear'
+    exp_name = 'dim_200_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
@@ -143,10 +144,10 @@ def exp_extract_embeddings():
         'imagenet_genome_gt/merged_cooccur_self.csv')
 
     model_const = Constants()
-    model_const.model_num = 120000
+    model_const.model_num = 110000
     model_const.net = LogBilinearConstants()
     model_const.net.num_words = 93553
-    model_const.net.embed_dims = 100
+    model_const.net.embed_dims = 200
     model_const.net.two_embedding_layers = False
     model_const.net.xform_type = 'linear'
     model_const.net.xform_num_layers = None
@@ -157,7 +158,7 @@ def exp_extract_embeddings():
         f'net_{model_const.model_num}')
 
     extract_embeddings.main(exp_const,data_const,model_const)
-    extract_embeddings_xformed.main(exp_const,data_const,model_const)
+    #extract_embeddings_xformed.main(exp_const,data_const,model_const)
 
 
 def exp_find_nn():
@@ -214,11 +215,11 @@ def exp_find_nn():
 
 
 def exp_concat_with_glove():
-    exp_name = 'concat_with_glove_100' # alt. xformed_
+    exp_name = 'concat_with_glove_300' # alt. xformed_
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
-        'effect_of_xforms/dim_200_neg_bias_select')
+        'effect_of_xforms/dim_200_neg_bias_linear')
     exp_const = ExpConstants(exp_name,out_base_dir)
 
     visual_embed_dir = exp_const.out_base_dir
@@ -229,11 +230,28 @@ def exp_concat_with_glove():
     data_const.visual_embeddings_npy = os.path.join(
         visual_embed_dir,
         'visual_embeddings.npy') # alt. _xformed.npy
-    glove_const = GloveConstantsFactory.create(dim='100')
+    glove_const = GloveConstantsFactory.create(dim='300')
     data_const.glove_idx = glove_const.word_to_idx_json
     data_const.glove_h5py = glove_const.embeddings_h5py
 
     concat_with_glove.main(exp_const,data_const)
+
+
+def exp_concat_random_with_glove():
+    exp_name = 'concat_with_glove_100' # alt. xformed_
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
+        'effect_of_xforms/dim_100_neg_bias_linear')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.random_dim = 100
+
+    data_const = Constants()
+    glove_const = GloveConstantsFactory.create(dim='100')
+    data_const.glove_idx = glove_const.word_to_idx_json
+    data_const.glove_h5py = glove_const.embeddings_h5py
+
+    concat_random_with_glove.main(exp_const,data_const)
 
 
 def exp_vis_bias_vs_self_count():
