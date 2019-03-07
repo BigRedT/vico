@@ -12,11 +12,13 @@ class Embed2ClassConstants(io.JsonSerializableClass):
     def __init__(self):
         super(Embed2ClassConstants,self).__init__()
         self.num_classes = 100
+        self.glove_dim = 300
         self.embed_dims = 300
         self.embed_h5py = None
         self.embed_word_to_idx_json = None
         self.weights_dim = 64
         self.linear = True
+        self.no_glove = False
 
 
 class Embed2Class(nn.Module):
@@ -48,6 +50,7 @@ class Embed2Class(nn.Module):
         embed_h5py = io.load_h5py_object(self.const.embed_h5py)['embeddings']
         word_to_idx = io.load_json_object(self.const.embed_word_to_idx_json)
         embeddings = np.zeros([len(labels),self.const.embed_dims])
+        word_to_label = {}
         for i,label in enumerate(labels):
             if ' ' in label:
                 words = label.split(' ')
@@ -55,10 +58,24 @@ class Embed2Class(nn.Module):
                 words = label.split('_')
             else:
                 words = [label]
+
+            denom = len(words)
             for word in words:
+                if word=='tree':
+                    denom = len(words)-1
+                    continue
+
+                if word not in word_to_label:
+                    word_to_label[word] = set()
+                word_to_label[word].add(label)
+
                 idx = word_to_idx[word]
                 embeddings[i] += embed_h5py[idx][()]
-            embeddings[i] /= len(words)
+            embeddings[i] /= denom
+
+        if self.const.no_glove == True:
+            embeddings[:,:self.const.glove_dim] = 0
+        
         self.embed.weight.data.copy_(torch.from_numpy(embeddings))
 
     def forward(self):

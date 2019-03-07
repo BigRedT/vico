@@ -22,15 +22,15 @@ SUPER_TO_FINE = {
 }
 
 
-FINE_TO_SUPER = {}
-SUPER_TO_IDX = {}
-TEST_LABELS_LG = set()
-for i, (super_class,fine_classes) in enumerate(SUPER_TO_FINE.items()):
-    SUPER_TO_IDX[super_class] = i
+# FINE_TO_SUPER = {}
+# SUPER_TO_IDX = {}
+# TEST_LABELS_LG = set()
+# for i, (super_class,fine_classes) in enumerate(SUPER_TO_FINE.items()):
+#     SUPER_TO_IDX[super_class] = i
     
-    for fine_class in fine_classes:
-        FINE_TO_SUPER[fine_class] = super_class
+#     for fine_class in fine_classes:
+#         FINE_TO_SUPER[fine_class] = super_class
     
-    TEST_LABELS_LG.update(set(sorted(list(fine_classes),reverse=True)[:4]))
+#     TEST_LABELS_LG.update(set(sorted(list(fine_classes),reverse=True)[:1]))
 
-print('Number of held out classes: ', len(TEST_LABELS_LG))
+# print('Number of held out classes: ', len(TEST_LABELS_LG))

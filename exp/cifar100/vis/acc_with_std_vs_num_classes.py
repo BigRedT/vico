@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import plotly
 import plotly.graph_objs as go
 
@@ -59,9 +60,12 @@ def plot_acc_vs_classes(results,metric_name,filename):
 
     for embed_type in results.keys():
         y = []
+        err = []
         for num_held in num_held_out_classes:
             y.append(
-                round(results[embed_type][num_held][metric_name],1))
+                round(np.mean(results[embed_type][num_held][metric_name]),1))
+            err.append(
+                round(np.std(results[embed_type][num_held][metric_name]),1))
 
         trace = go.Bar(
             x = [100-x_ for x_ in num_held_out_classes],
@@ -71,6 +75,15 @@ def plot_acc_vs_classes(results,metric_name,filename):
             name = embed_type,
             marker = dict(color=embed_type_to_color[embed_type]),
             opacity=0.9,
+            #insidetextfont=dict(size=1),
+            error_y=dict(
+                type='data',
+                array=err,
+                visible=True,
+                thickness=1.5,
+                width=4,
+                color='rgba(10,10,10,0.6)'
+            )
         )
         traces.append(trace)
 
@@ -78,7 +91,7 @@ def plot_acc_vs_classes(results,metric_name,filename):
     layout = go.Layout(
         #title = metric_name,
         xaxis = dict(title=xtitle),
-        yaxis = dict(title=metric_name_to_ytitle[metric_name]),
+        yaxis = dict(title=metric_name_to_ytitle[metric_name],dtick=5),
         hovermode = 'closest',
         width=1000,
         height=600,
@@ -113,14 +126,22 @@ def main(exp_const):
 
                 continue
 
-            exp_dir = os.path.join(
-                exp_const.out_base_dir,
-                exp_const.prefix[embed_type]+str(num_held_out_classes))
-            results_json = os.path.join(
-                exp_dir,
-                'selected_model_results.json')
-            results[embed_type][num_held_out_classes] = \
-                io.load_json_object(results_json)
+
+            results[embed_type][num_held_out_classes] = {}
+            num_runs = len(exp_const.runs)
+            for run_dir in exp_const.runs:
+                exp_dir = os.path.join(
+                    run_dir,
+                    exp_const.prefix[embed_type]+str(num_held_out_classes))
+                results_json = os.path.join(
+                    exp_dir,
+                    'selected_model_results.json')
+                results_ = io.load_json_object(results_json)
+                for k,v in results_.items():
+                    if k not in results[embed_type][num_held_out_classes]:
+                        results[embed_type][num_held_out_classes][k] = []
+
+                    results[embed_type][num_held_out_classes][k].append(v)
 
 
     for metric_name in results['GloVe'][exp_const.held_out_classes[0]].keys():

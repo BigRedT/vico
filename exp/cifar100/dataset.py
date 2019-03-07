@@ -10,7 +10,7 @@ import torchvision.transforms as transforms
 import pickle
 
 import utils.io as io
-from .test_labels import TEST_LABELS_LG, FINE_TO_SUPER, SUPER_TO_IDX
+from .test_labels import SUPER_TO_FINE # TEST_LABELS_LG, FINE_TO_SUPER, SUPER_TO_IDX, 
 
 
 class Cifar100DatasetConstants(io.JsonSerializableClass):
@@ -21,6 +21,7 @@ class Cifar100DatasetConstants(io.JsonSerializableClass):
         self.root = root
         self.download = False
         self.train = True
+        self.num_held_out_classes = 20 # 20, 40, 60, 80
 
 
 class Cifar100Dataset(Dataset):
@@ -34,7 +35,11 @@ class Cifar100Dataset(Dataset):
             self.const.train,
             download=self.const.download)
         self.labels = self.load_labels()
+        TEST_LABELS_LG, SUPER_TO_IDX, FINE_TO_SUPER = \
+            self.get_test_labels()
         self.held_out_labels = copy.deepcopy(TEST_LABELS_LG)
+        for l in self.held_out_labels:
+            assert(l in self.labels), 'held out label not in labels'
         self.held_out_idx = self.get_held_out_idx()
         self.fine_to_super = copy.deepcopy(FINE_TO_SUPER)
         self.super_to_idx = copy.deepcopy(SUPER_TO_IDX)
@@ -43,6 +48,21 @@ class Cifar100Dataset(Dataset):
             transforms.RandomCrop(32,padding=4),
             transforms.RandomHorizontalFlip(),
         ])
+
+    def get_test_labels(self):
+        FINE_TO_SUPER = {}
+        SUPER_TO_IDX = {}
+        TEST_LABELS_LG = set()
+        for i, (super_class,fine_classes) in enumerate(SUPER_TO_FINE.items()):
+            SUPER_TO_IDX[super_class] = i
+            
+            for fine_class in fine_classes:
+                FINE_TO_SUPER[fine_class] = super_class
+            
+            count = self.const.num_held_out_classes // 20
+            TEST_LABELS_LG.update(
+                set(sorted(list(fine_classes),reverse=True)[:count]))
+        return TEST_LABELS_LG, SUPER_TO_IDX, FINE_TO_SUPER
 
     def load_labels(self):
         meta_file = os.path.join(
@@ -78,6 +98,7 @@ class Cifar100Dataset(Dataset):
         if self.const.train==True:
             if label in self.held_out_labels:
                 idx = -1
+                return None
 
         to_return = {
             'img': np.array(img),
@@ -91,6 +112,13 @@ class Cifar100Dataset(Dataset):
     def normalize(self,imgs,mean,std):
         imgs = (imgs-mean) / std
         return imgs
+
+    def get_collate_fn(self):
+        def collate_fn(batch):
+            batch = [s for s in batch if s is not None]
+            return default_collate(batch)
+
+        return collate_fn
 
 
 if __name__=='__main__':

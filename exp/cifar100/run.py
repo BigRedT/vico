@@ -10,20 +10,41 @@ from . import train
 from . import eval as evaluation
 from .vis import vis_conf_mat
 from .vis import conf_vs_visual_sim, conf_as_fun_of_sims, class_vs_sim
-from .vis import acc_vs_num_classes
+from .vis import acc_vs_num_classes, acc_with_std_vs_num_classes
+
+
+parser.add_argument(
+    '--held_classes',
+    type=int,
+    help='number of held out classes')
+parser.add_argument(
+    '--embed_type',
+    type=str,
+    choices=['random','glove','glove_random',
+        'glove_vico_linear','glove_vico_select'],
+    help='embedding types')
+parser.add_argument(
+    '--vico_dim',
+    type=int,
+    help='dimension of vico/random embeddings')
 
 
 def exp_train():
-    use_glove = False
-    if use_glove==False:
-        #exp_name = 'dim_200_neg_bias_select_concat_with_glove_100_held_classes_80'
-        #exp_name = 'dim_50_neg_bias_linear_concat_with_glove_100_held_classes_20'
-        exp_name = 'dim_100_neg_bias_linear_concat_with_glove_100_held_classes_80'
-    else:
-        exp_name = 'glove_100_held_classes_20'
+    args = parser.parse_args()
+    not_specified_args = manage_required_args(
+        args,
+        parser,
+        required_args=[
+            'held_classes',
+            'embed_type',
+            'vico_dim'],
+        optional_args=[])
+    exp_name = \
+        args.embed_type + '_' + str(args.vico_dim) + '_' + \
+        'held_classes_' + str(args.held_classes)
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/cifar100/zero_shot')
+        'symlinks/exp/cifar100/zero_shot4')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
@@ -32,7 +53,7 @@ def exp_train():
     exp_const.model_save_step = 1000
     exp_const.val_step = 1000
     exp_const.batch_size = 128
-    exp_const.num_epochs = 100
+    exp_const.num_epochs = 50 #100
     # Note on LR
     # - 0.01 with adam; finetune with 0.01 sgd for simple resnet
     # - 0.01 with sgd for 32K iters and then 0.001 sgd for embedding resnet
@@ -47,6 +68,7 @@ def exp_train():
     }
 
     data_const = Cifar100DatasetConstants()
+    data_const.num_held_out_classes = args.held_classes
 
     model_const = Constants()
     model_const.model_num = None #32000 #, 48000
@@ -62,10 +84,24 @@ def exp_train():
     model_const.embed2class_path = os.path.join(
         exp_const.model_dir,
         f'embed2class_{model_const.model_num}')
+    model_const.embed2class.glove_dim = 100
 
-    if use_glove==True:
-        #Glove
-        model_const.embed2class.embed_dims = 100
+    # Dimensions
+    if args.embed_type=='glove':
+        model_const.embed2class.embed_dims = model_const.embed2class.glove_dim
+    else:
+        model_const.embed2class.embed_dims = \
+            model_const.embed2class.glove_dim + \
+            args.vico_dim
+        
+        if args.embed_type=='random':
+            # for 'random' glove dimensions are zeroed out by setting no_glove
+            model_const.embed2class.no_glove = True
+
+    print('Full embedding dimension: ',model_const.embed2class.embed_dims)
+
+    # embeddings path
+    if args.embed_type=='glove':
         model_const.embed2class.embed_h5py = os.path.join(
             os.getcwd(),
             'symlinks/data/glove/proc/glove_6B_100d.h5py')
@@ -73,21 +109,37 @@ def exp_train():
             os.getcwd(),
             'symlinks/data/glove/proc/glove_6B_100d_word_to_idx.json')
     else:
-        # Glove + Visual
-        model_const.embed2class.embed_dims = 200 #150
-        # embed_dir = os.path.join(
-        #     os.getcwd(),
-        #     'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
-        #     'effect_of_xforms/dim_200_neg_bias_select/' + \
-        #     'concat_with_glove_100')
-        embed_dir = os.path.join(
-            os.getcwd(),
-            'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
-            'effect_of_xforms/dim_100_neg_bias_linear/' + \
-            'concat_with_glove_100')
-        model_const.embed2class.embed_h5py = os.path.join(
-            embed_dir,
-            'visual_word_vecs.h5py')
+        if args.embed_type in ['random','glove_random']:
+            embed_dir = os.path.join(
+                os.getcwd(),
+                'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
+                f'effect_of_xforms/dim_{args.vico_dim}_neg_bias_linear/' + \
+                'concat_with_glove_100')
+            model_const.embed2class.embed_h5py = os.path.join(
+                embed_dir,
+                'glove_random_word_vecs.h5py')
+        elif args.embed_type=='glove_vico_linear':
+            embed_dir = os.path.join(
+                os.getcwd(),
+                'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
+                f'effect_of_xforms/dim_{args.vico_dim}_neg_bias_linear/' + \
+                'concat_with_glove_100')
+            model_const.embed2class.embed_h5py = os.path.join(
+                embed_dir,
+                'visual_word_vecs.h5py')
+        elif args.embed_type=='glove_vico_select':
+            embed_dir = os.path.join(
+                os.getcwd(),
+                'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
+                f'effect_of_xforms/dim_{args.vico_dim}_neg_bias_select/' + \
+                'concat_with_glove_100')
+            model_const.embed2class.embed_h5py = os.path.join(
+                embed_dir,
+                'visual_word_vecs.h5py')
+        else:
+            err_msg = f'{args.embed_type} not implemented'
+            assert(False), err_msg
+
         model_const.embed2class.embed_word_to_idx_json = os.path.join(
             embed_dir,
             'visual_word_vecs_idx.json')
@@ -96,19 +148,45 @@ def exp_train():
 
 
 def exp_acc_vs_num_train_classes():
-    exp_name = 'agg_results_glove_100_visual_100_w_select'
+    exp_name = 'agg_results'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/cifar100/zero_shot')
+        'symlinks/exp/cifar100/zero_shot4')
     exp_const = ExpConstants(exp_name,out_base_dir)
-    exp_const.glove_prefix = 'glove_100_held_classes_'
-    exp_const.visual_prefix = \
-        'dim_100_neg_bias_linear_concat_with_glove_100_held_classes_'
-    exp_const.visual_select_prefix = \
-        'dim_200_neg_bias_select_concat_with_glove_100_held_classes_'
+    exp_const.prefix = {
+        'random(100)': 'random_100_held_classes_',
+        'GloVe': 'glove_100_held_classes_', 
+        'GloVe+random(100)': 'glove_random_100_held_classes_',
+        'GloVe+random(200)': 'glove_random_200_held_classes_',
+        'GloVe+ViCo(linear,100)': 'glove_vico_linear_100_held_classes_',
+        'GloVe+ViCo(linear,200)': 'glove_vico_linear_200_held_classes_',
+        'GloVe+ViCo(select,200)': 'glove_vico_select_200_held_classes_'}
     exp_const.held_out_classes = [20,40,60,80]
 
     acc_vs_num_classes.main(exp_const)
+
+
+def exp_acc_with_std_vs_num_train_classes():
+    exp_name = 'agg_results'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/cifar100')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.runs_prefix = os.path.join(out_base_dir,'zero_shot')
+    exp_const.runs = []
+    for i in range(4):
+        exp_const.runs.append(exp_const.runs_prefix + str(i+1))
+    exp_const.prefix = {
+        'random(100)': 'random_100_held_classes_',
+        'GloVe': 'glove_100_held_classes_', 
+        'GloVe+random(100)': 'glove_random_100_held_classes_',
+        'GloVe+random(200)': 'glove_random_200_held_classes_',
+        'GloVe+ViCo(linear,100)': 'glove_vico_linear_100_held_classes_',
+        'GloVe+ViCo(linear,200)': 'glove_vico_linear_200_held_classes_',
+        'GloVe+ViCo(select,200)': 'glove_vico_select_200_held_classes_'}
+    exp_const.held_out_classes = [20,40,60,80]
+
+    acc_with_std_vs_num_classes.main(exp_const)
 
 
 def exp_eval():

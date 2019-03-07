@@ -66,6 +66,7 @@ def train_model(model,dataloaders,exp_const):
     img_std = Variable(torch.cuda.FloatTensor(model.img_std))
 
     selected_model_results = None
+    selected_unseen_correct_per_class = None
 
     for epoch in range(exp_const.num_epochs):
         for it,data in enumerate(dataloaders['training']):
@@ -137,7 +138,7 @@ def train_model(model,dataloaders,exp_const):
                     torch.save(nn_model.state_dict(),model_path)
 
             if step%exp_const.val_step==0:
-                eval_results = eval_model(
+                eval_results, unseen_correct_per_class = eval_model(
                     model,
                     dataloaders['test'],
                     exp_const,
@@ -149,10 +150,13 @@ def train_model(model,dataloaders,exp_const):
                 
                 if selected_model_results is None:
                     selected_model_results = eval_results
+                    selected_unseen_correct_per_class = unseen_correct_per_class
                 else:
                     if eval_results['Seen Acc'] >= \
                             selected_model_results['Seen Acc']:
                         selected_model_results = eval_results
+                        selected_unseen_correct_per_class = \
+                            unseen_correct_per_class
                 
                 selected_model_results_json = os.path.join(
                     exp_const.exp_dir,
@@ -160,6 +164,12 @@ def train_model(model,dataloaders,exp_const):
                 io.dump_json_object(
                     selected_model_results,
                     selected_model_results_json)
+                selected_unseen_correct_per_class_json = os.path.join(
+                    exp_const.exp_dir,
+                    'selected_unseen_correct_per_class.json')
+                io.dump_json_object(
+                    selected_unseen_correct_per_class,
+                    selected_unseen_correct_per_class_json)
 
             if step==32000:
                 lr = 0.1*lr
@@ -250,7 +260,7 @@ def eval_model(model,dataloader,exp_const,step):
         'Step': step,
     }
 
-    return eval_results
+    return eval_results, unseen_correct_per_class
 
 
 def main(exp_const,data_const,model_const):
@@ -287,10 +297,12 @@ def main(exp_const,data_const,model_const):
         else:
             data_const.train = False
         dataset = Cifar100Dataset(data_const)
+        collate_fn = dataset.get_collate_fn()
         dataloaders[mode] = DataLoader(
             dataset,
             batch_size=exp_const.batch_size,
             shuffle=True,
-            num_workers=exp_const.num_workers)
+            num_workers=exp_const.num_workers,
+            collate_fn=collate_fn)
 
     train_model(model,dataloaders,exp_const)
