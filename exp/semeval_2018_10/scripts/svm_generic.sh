@@ -2,7 +2,7 @@ ACTION=$1
 GPU=$2
 
 EXP_NAME=$3
-OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/imagenet_genome_attr/effect_of_xforms/multi_sense_cooccur_dim_100_random_concat_with_glove_300"
+OUT_BASE_DIR="${PWD}/symlinks/exp/semeval_2018_10/imagenet_genome_gt/effect_of_xforms/random_300"
 
 LR=0.1 # 0.01
 L2_WEIGHT=0.001 # lamba/2
@@ -12,8 +12,11 @@ EMBED_LINEAR_FEAT=False
 EMBED_QUADRATIC_FEAT=False
 DISTANCE_LINEAR_FEAT=True
 DISTANCE_QUADRATIC_FEAT=True
-USE_GLOVE_ONLY=False
+USE_GLOVE_ONLY=True
 USE_VISUAL_ONLY=False
+
+# Note -  For random set USE_GLOVE_ONLY to True and self.random=True 
+# in SemEval201810DatasetConstants class in dataset.py file
 
 if [[ "${USE_GLOVE_ONLY}" = "True" ]]
 then

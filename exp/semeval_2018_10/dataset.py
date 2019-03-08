@@ -22,6 +22,7 @@ class SemEval201810DatasetConstants(SemEval201810Constants):
         self.subset = ''
         self.embeddings_h5py = None
         self.word_to_idx_json = None
+        self.random = False
 
     
 class SemEval201810Dataset(Dataset):
@@ -29,6 +30,11 @@ class SemEval201810Dataset(Dataset):
         super(SemEval201810Dataset,self).__init__()
         self.const = copy.deepcopy(const)
         self.embeddings = h5py.File(self.const.embeddings_h5py,'r')
+        if self.const.random==True:
+            n,d = self.embeddings['embeddings'].shape
+            self.embeddings = {
+                'embeddings': 2*(np.random.rand(n,d)-0.5)
+            }
         self.word_to_idx = io.load_json_object(self.const.word_to_idx_json)
         self.samples = self.read_samples(self.const.subset)
         
