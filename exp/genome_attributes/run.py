@@ -114,7 +114,7 @@ def exp_create_gt_context_cooccur():
 
 
 def exp_create_gt_attr_attr_word_cooccur():
-    exp_name = 'gt_attr_attr_word_cooccur'
+    exp_name = 'gt_attr_attr_word_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -128,7 +128,7 @@ def exp_create_gt_attr_attr_word_cooccur():
 
 
 def exp_create_gt_obj_attr_word_cooccur():
-    exp_name = 'gt_obj_attr_word_cooccur'
+    exp_name = 'gt_obj_attr_word_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')
@@ -142,7 +142,7 @@ def exp_create_gt_obj_attr_word_cooccur():
 
 
 def exp_create_gt_context_word_cooccur():
-    exp_name = 'gt_context_word_cooccur'
+    exp_name = 'gt_context_word_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/genome_attributes')

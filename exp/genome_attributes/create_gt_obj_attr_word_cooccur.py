@@ -50,6 +50,9 @@ def create_gt_word_cooccur(exp_const,dataloader):
                 stop_words)
             for word1 in object_words_set:
                 for word2 in attribute_words_set:
+                    if word1==word2:
+                        continue
+
                     if word1 not in cooccur:
                         cooccur[word1] = {}
                     
@@ -67,12 +70,18 @@ def create_gt_word_cooccur(exp_const,dataloader):
                     cooccur[word2][word1] += 1
 
             for word1 in object_words_set:
+                if word1 not in cooccur:
+                    cooccur[word1] = {}
+
                 if word1 not in cooccur[word1]:
                     cooccur[word1][word1] = 0
                 
                 cooccur[word1][word1] += 1
 
             for word2 in attribute_words_set:
+                if word2 not in cooccur:
+                    cooccur[word2] = {}
+
                 if word2 not in cooccur[word2]:
                     cooccur[word2][word2] = 0
                 

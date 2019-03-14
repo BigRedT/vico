@@ -11,4 +11,3 @@ for l in fine_labels:
 print('Coarse Categories:', len(coarse_labels))
 print('Fine Categories:', len(fine_labels))
 print('Words:', len(words))
-

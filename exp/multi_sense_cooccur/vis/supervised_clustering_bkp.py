@@ -44,32 +44,28 @@ def get_word_feats(embed,dim=2,embed_type='tsne'):
 
 def plot_metric_vs_depth(metric_name,metric,depth,filename):
     embed_type_to_color = {
-        'ViCo(linear,100)': 'rgba(55, 128, 191,0.6)',
-        'ViCo(linear,200)': 'rgba(55, 80, 191,0.6)',
-        'ViCo(select,200)': 'rgba(219, 64, 82,0.6)',
-        'GloVe+ViCo(linear,100, w/o WordNet)': 'rgb(139,0,139)',
-        'GloVe+ViCo(linear,100)': 'rgb(55, 128, 191)', 
-        'GloVe+ViCo(linear,200)': 'rgb(55, 80, 191)',
-        'GloVe+ViCo(select,200)': 'rgb(219, 64, 82)',
+        'GloVe+ViCo(linear)': 'rgb(31, 119, 180)',
+        'GloVe+ViCo(xformed)': 'rgb(31, 119, 180)',
+        'GloVe+ViCo(select)': 'rgb(31, 119, 180)', #'rgb(40,40,40)',
         'GloVe': 'rgb(44, 150, 44)',
         'ViCo(linear)': 'rgb(214, 39, 40)',
-        'GloVe+random(100)': 'rgb(255, 200, 14)',
-        'GloVe+random(200)': 'rgb(255, 127, 14)',
-        'random(100)': 'grey',
+        'ViCo(select)': 'rgb(214, 39, 40)', #'rgb(135, 93, 183)',
+        'ViCo(xformed)': 'rgb(214, 39, 40)',
+        'GloVe+random': 'rgb(255, 127, 14)',
+        'random': 'grey',
     }
 
     traces = []
     for embed_type in metric.keys():
-        if embed_type=='GloVe' or 'random' in embed_type:
+        if 'xformed' in embed_type:
             dash = 'dot'
-        else:
-            dash = None
-
-        if 'GloVe' in embed_type or 'random' in embed_type:
+            symbol = 'circle'
+        elif 'select' in embed_type:
+            dash = 'dot'
             symbol = 'circle'
         else:
-            symbol = 'circle'#'square'
-            dash = 'dash'
+            dash = None
+            symbol = 'circle'
 
         trace = go.Scatter(
             x = depth,
@@ -87,9 +83,9 @@ def plot_metric_vs_depth(metric_name,metric,depth,filename):
     layout = go.Layout(
         #title = metric_name,
         xaxis = dict(title='Decision Tree Depth'),
-        yaxis = dict(title=metric_name,range=[0,0.98]),
+        yaxis = dict(title=metric_name),
         hovermode = 'closest',
-        width=1100,
+        width=800,
         height=800)
 
     plotly.offline.plot(
@@ -104,7 +100,7 @@ def main(exp_const,data_const):
         vis_dir = os.path.join(exp_const.vis_dir,'supervised_clustering_fine')
     else:
         from . import categories as C
-        vis_dir = os.path.join(exp_const.vis_dir,'supervised_clustering_coarse')
+        vis_dir = os.path.join(exp_const.vis_dir,'supervised_clustering')
     
     io.mkdir_if_not_exists(vis_dir,recursive=True)
 
@@ -119,6 +115,43 @@ def main(exp_const,data_const):
         all_words.update(category_words)
         for word in category_words:
             word_to_label[word] = category
+    
+    print('Loading embeddings ...')
+    embed = io.load_h5py_object(
+        data_const.word_vecs_h5py)['embeddings'][()]
+    xformed_embed = io.load_h5py_object(
+        data_const.xformed_word_vecs_h5py)['embeddings'][()]
+    select_embed = io.load_h5py_object(
+        data_const.select_word_vecs_h5py)['embeddings'][()]
+    word_to_idx = io.load_json_object(data_const.word_to_idx_json)
+
+    print('Selecting words ...')
+    words = [word for word in all_words if word in word_to_idx]
+    labels = [word_to_label[word] for word in words]
+    idxs = [word_to_idx[word] for word in words]
+    embed = embed[idxs,:]
+    visual_embed = embed[:,300:]
+    xformed_embed = xformed_embed[idxs,:]
+    xformed_visual_embed = xformed_embed[:,300:]
+    select_embed = select_embed[idxs,:]
+    select_visual_embed = select_embed[:,300:]
+    glove_embed = embed[:,:300]
+    random_embed = np.copy(embed)
+    random_embed[:,300:] = 10*0.1*np.random.rand(
+        embed.shape[0],
+        visual_embed.shape[1])
+    
+    embed_type_to_embed = {
+        'GloVe+ViCo(linear)': embed,
+        #'GloVe+ViCo(xformed)': xformed_embed,
+        'GloVe+ViCo(select)': select_embed,
+        'ViCo(linear)': visual_embed,
+        #'ViCo(xformed)': xformed_visual_embed,
+        'ViCo(select)': select_visual_embed,
+        'GloVe': glove_embed,
+        'GloVe+random': random_embed,
+        'random': random_embed[:,300:]
+    }
 
     entropy = {}
     accuracy = {}
@@ -126,24 +159,10 @@ def main(exp_const,data_const):
     completeness = {}
     v_measure = {}
     ari = {}
-    for embed_type, embed_info in data_const.embed_info.items():
-        print('Loading embeddings ...')
-        embed_ = io.load_h5py_object(embed_info.word_vecs_h5py)['embeddings']
-        word_to_idx = io.load_json_object(embed_info.word_to_idx_json)
-        
-        print('Selecting words ...')
-        words = [word for word in all_words if word in word_to_idx]
-        labels = [word_to_label[word] for word in words]
-        idxs = [word_to_idx[word] for word in words]
-
-        embed = np.zeros([len(idxs),embed_.shape[1]])
-        for i,j in enumerate(idxs):
-            embed[i] = embed_[j]
-        embed = embed_info.get_embedding(embed)
-
+    for embed_type in embed_type_to_embed.keys():
         print(f'Computing word features ({embed_type}) ...')
         word_feats = get_word_feats(
-            embed,
+            embed_type_to_embed[embed_type],
             dim=2,
             embed_type='original')
 
@@ -157,9 +176,9 @@ def main(exp_const,data_const):
 
         #depths = [1,2,4,6,8,10,12,14,16]
         if exp_const.fine==True:
-            depths = [1,4,8,12,16,20,24,28,32,36,42,48,54,60,66,72,78]
+            depths = [1,4,8,12,16,20,24,28,32,36,42,48]
         else:
-            depths = [1,4,8,12,16,20,24,28] #,32,36,42,48] # 28,32
+            depths = [1,4,8,12,16,20,24] # 28,32
 
         for depth in depths:
             dt = DecisionTreeClassifier(

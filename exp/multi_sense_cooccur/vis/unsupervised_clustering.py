@@ -42,27 +42,34 @@ def get_word_feats(embed,dim=2,embed_type='tsne'):
         assert(False), f'embed_type {embed_type} not implemented'
 
 
-def plot_metric_vs_clusters(metric_name,metric,n_clusters,filename):
+def plot_metric_vs_clusters(metric_name,metric,n_clusters,filename,fine):
     embed_type_to_color = {
-        'GloVe+ViCo(linear)': 'rgb(31, 119, 180)',
-        'GloVe+ViCo(xformed)': 'rgb(31, 119, 180)',
-        'GloVe+ViCo(select)': 'rgb(31, 119, 180)', #'rgb(40,40,40)',
+        'ViCo(linear,100)': 'rgba(55, 128, 191,0.6)',
+        'ViCo(linear,200)': 'rgba(55, 80, 191,0.6)',
+        'ViCo(select,200)': 'rgba(219, 64, 82,0.6)',
+        'GloVe+ViCo(linear,100, w/o WordNet)': 'rgb(139,0,139)',
+        'GloVe+ViCo(linear,100)': 'rgb(55, 128, 191)', 
+        'GloVe+ViCo(linear,200)': 'rgb(55, 80, 191)',
+        'GloVe+ViCo(select,200)': 'rgb(219, 64, 82)',
         'GloVe': 'rgb(44, 150, 44)',
         'ViCo(linear)': 'rgb(214, 39, 40)',
-        'ViCo(select)': 'rgb(214, 39, 40)', #'rgb(135, 93, 183)',
-        'ViCo(xformed)': 'rgb(214, 39, 40)',
-        'GloVe+random': 'rgb(255, 127, 14)',
-        'random': 'grey',
+        'GloVe+random(100)': 'rgb(255, 200, 14)',
+        'GloVe+random(200)': 'rgb(255, 127, 14)',
+        'random(100)': 'grey',
     }
 
     traces = []
     for embed_type in metric.keys():
-        if 'xformed' in embed_type:
-            dash = 'dot'
-        elif 'select' in embed_type:
+        if embed_type=='GloVe' or 'random' in embed_type:
             dash = 'dot'
         else:
             dash = None
+
+        if 'GloVe' in embed_type or 'random' in embed_type:
+            symbol = 'circle'
+        else:
+            symbol = 'circle'#'square'
+            dash = 'dash'
 
         trace = go.Scatter(
             x = n_clusters,
@@ -73,16 +80,21 @@ def plot_metric_vs_clusters(metric_name,metric,n_clusters,filename):
                 color=embed_type_to_color[embed_type],
                 width=2,
                 dash=dash),
-            marker = dict(size=9)
+            marker = dict(size=9,symbol=symbol)
         )
         traces.append(trace)
     
+    if fine==True and metric_name=='Adjusted Rand Index':
+        y_max = 0.4
+    else:
+        y_max = 0.85
+
     layout = go.Layout(
         #title = metric_name,
         xaxis = dict(title='Number of Clusters'),
-        yaxis = dict(title=metric_name),
+        yaxis = dict(title=metric_name,range=[0,y_max]),
         hovermode = 'closest',
-        width=800,
+        width=1100,
         height=800)
 
     plotly.offline.plot(
@@ -97,13 +109,12 @@ def main(exp_const,data_const):
         vis_dir = os.path.join(exp_const.vis_dir,'unsupervised_clustering_fine')
     else:
         from . import categories as C
-        vis_dir = os.path.join(exp_const.vis_dir,'unsupervised_clustering')
+        vis_dir = os.path.join(exp_const.vis_dir,'unsupervised_clustering_coarse')
 
     io.mkdir_if_not_exists(vis_dir,recursive=True)
 
     print('Reading words and categories ...')
     categories = sorted([c for c in dir(C) if '__' not in c and c!='C'])
-    #import pdb; pdb.set_trace()
     categories_to_idx = {l:i for i,l in enumerate(categories)}
     all_words = set()
     word_to_label = {}
@@ -112,52 +123,29 @@ def main(exp_const,data_const):
         all_words.update(category_words)
         for word in category_words:
             word_to_label[word] = category
-    
-    print('Loading embeddings ...')
-    embed = io.load_h5py_object(
-        data_const.word_vecs_h5py)['embeddings'][()]
-    xformed_embed = io.load_h5py_object(
-        data_const.xformed_word_vecs_h5py)['embeddings'][()]
-    select_embed = io.load_h5py_object(
-        data_const.select_word_vecs_h5py)['embeddings'][()]
-    word_to_idx = io.load_json_object(data_const.word_to_idx_json)
-
-    print('Selecting words ...')
-    words = [word for word in all_words if word in word_to_idx]
-    labels = [word_to_label[word] for word in words]
-    idxs = [word_to_idx[word] for word in words]
-    embed = embed[idxs,:]
-    visual_embed = embed[:,300:]
-    xformed_embed = xformed_embed[idxs,:]
-    xformed_visual_embed = xformed_embed[:,300:]
-    select_embed = select_embed[idxs,:]
-    select_visual_embed = select_embed[:,300:]
-    glove_embed = embed[:,:300]
-    random_embed = np.copy(embed)
-    random_embed[:,300:] = np.random.rand(
-        embed.shape[0],
-        visual_embed.shape[1])
-    
-    embed_type_to_embed = {
-        'GloVe+ViCo(linear)': embed,
-        #'GloVe+ViCo(xformed)': xformed_embed,
-        'GloVe+ViCo(select)': select_embed,
-        'ViCo(linear)': visual_embed,
-        #'ViCo(xformed)': xformed_visual_embed,
-        'ViCo(select)': select_visual_embed,
-        'GloVe': glove_embed,
-        'GloVe+random': random_embed,
-        'random': random_embed[:,300:]
-    }
 
     homogeneity = {}
     completeness = {}
     v_measure = {}
     ari = {}
-    for embed_type in embed_type_to_embed.keys():
+    for embed_type, embed_info in data_const.embed_info.items():
+        print('Loading embeddings ...')
+        embed_ = io.load_h5py_object(embed_info.word_vecs_h5py)['embeddings']
+        word_to_idx = io.load_json_object(embed_info.word_to_idx_json)
+        
+        print('Selecting words ...')
+        words = [word for word in all_words if word in word_to_idx]
+        labels = [word_to_label[word] for word in words]
+        idxs = [word_to_idx[word] for word in words]
+
+        embed = np.zeros([len(idxs),embed_.shape[1]])
+        for i,j in enumerate(idxs):
+            embed[i] = embed_[j]
+        embed = embed_info.get_embedding(embed)
+
         print(f'Computing word features ({embed_type}) ...')
         word_feats = get_word_feats(
-            embed_type_to_embed[embed_type],
+            embed,
             dim=2,
             embed_type='original')
 
@@ -168,9 +156,9 @@ def main(exp_const,data_const):
         ari[embed_type] = []
 
         if exp_const.fine==True:
-            n_clusters_list = [4,8,16,24,32,40,48,54,64,72,80]
+            n_clusters_list = [1,4,8,16,24,32,40,48,56,64,72,80]
         else:
-            n_clusters_list = [4,8,16,24,32,40,48,54,64,72,80]
+            n_clusters_list = [1,4,8,16,24,32,40,48,56,64,72,80]
 
         for n_clusters in n_clusters_list:
             clustering = AgglomerativeClustering(
@@ -202,22 +190,26 @@ def main(exp_const,data_const):
             'Homogeneity',
             homogeneity,
             n_clusters_list,
-            os.path.join(vis_dir,'homogeneity.html'))
+            os.path.join(vis_dir,'homogeneity.html'),
+            exp_const.fine)
 
         plot_metric_vs_clusters(
             'Completeness',
             completeness,
             n_clusters_list,
-            os.path.join(vis_dir,'completeness.html'))
+            os.path.join(vis_dir,'completeness.html'),
+            exp_const.fine)
 
         plot_metric_vs_clusters(
             'V-Measure',
             v_measure,
             n_clusters_list,
-            os.path.join(vis_dir,'v_measure.html'))
+            os.path.join(vis_dir,'v_measure.html'),
+            exp_const.fine)
 
         plot_metric_vs_clusters(
             'Adjusted Rand Index',
             ari,
             n_clusters_list,
-            os.path.join(vis_dir,'ari.html'))
+            os.path.join(vis_dir,'ari.html'),
+            exp_const.fine)

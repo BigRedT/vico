@@ -54,14 +54,6 @@ def create_gt_word_cooccur(exp_const,dataloader):
                         cooccur[word1][word2] = 0
 
                     cooccur[word1][word2] += 1
-
-                    if word2 not in cooccur:
-                        cooccur[word2] = {}
-                    
-                    if word1 not in cooccur[word2]:
-                        cooccur[word2][word1] = 0
-
-                    cooccur[word2][word1] += 1
         
     word_cooccur_json = os.path.join(exp_const.exp_dir,'word_cooccur.json')
     io.dump_json_object(cooccur,word_cooccur_json)

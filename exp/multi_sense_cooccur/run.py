@@ -71,6 +71,31 @@ def exp_merge_cooccur():
     merge_cooccur.main(exp_const,data_const)
 
 
+def exp_merge_word_cooccur():
+    exp_name = 'imagenet_genome_gt_word'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.normalize = False
+
+    data_const = Constants()
+    cooccur_paths = {
+        #'syn': 'wordnet/syn_cooccur_self/word_cooccur.json',
+        'attr_attr': 'genome_attributes/gt_attr_attr_word_cooccur_self/word_cooccur.json',
+        'obj_attr': 'genome_attributes/gt_obj_attr_word_cooccur_self/word_cooccur.json',
+        'obj_hyp': 'imagenet/gt_obj_hyp_word_cooccur_self/word_cooccur.json',
+        'context': 'genome_attributes/gt_context_word_cooccur_self/word_cooccur.json',
+    }
+    symlink_exp = os.path.join(os.getcwd(),'symlinks/exp')
+    data_const.cooccur_paths = {
+        k: os.path.join(symlink_exp,v) for k,v in cooccur_paths.items()}
+    data_const.merged_cooccur_csv = os.path.join(
+        exp_const.exp_dir,
+        'merged_cooccur_self.csv') # 'merged_cooccur.csv'
+    merge_cooccur.main(exp_const,data_const)
+
+
 def exp_train():
     exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
@@ -87,7 +112,7 @@ def exp_train():
     exp_const.lr = 0.01
     exp_const.momentum = 0.9
     exp_const.num_workers = 5
-    exp_const.optimizer = 'Adagrad'
+    exp_const.optimizer = 'Adam' # First train with Adam then swith to Adagrad
     exp_const.weight_decay = 0*1e-4
     exp_const.cooccur_weights = {
         # 'syn': 0,
@@ -106,9 +131,64 @@ def exp_train():
     data_const.use_self_count = True
 
     model_const = Constants()
-    model_const.model_num = 50000
+    model_const.model_num = None # 50000
     model_const.net = LogBilinearConstants()
-    model_const.net.num_words = 93553 #91138 #78416
+    model_const.net.num_words = 93553 #93553 for w synsets, 33444 wo
+    model_const.net.embed_dims = 100
+    model_const.net.two_embedding_layers = False
+    model_const.net.xform_type = 'linear'
+    model_const.net.xform_num_layers = None
+    model_const.net.use_bias = True
+    model_const.net.use_fx = False
+    model_const.net_path = os.path.join(
+        exp_const.model_dir,
+        f'net_{model_const.model_num}')
+
+    #train.main(exp_const,data_const,model_const)
+    train_w_neg.main(exp_const,data_const,model_const)
+
+
+# Difference between exp_tran and exp_train_word: 
+# - append "word" to paths
+# - update num_words
+def exp_train_word():
+    exp_name = 'dim_100_neg_bias_linear'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt_word/effect_of_xforms')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
+    exp_const.log_dir = os.path.join(exp_const.exp_dir,'log')
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis')
+    exp_const.log_step = 10
+    exp_const.model_save_step = 10000
+    exp_const.batch_size = 1000
+    exp_const.num_epochs = 10
+    exp_const.lr = 0.01
+    exp_const.momentum = 0.9
+    exp_const.num_workers = 5
+    exp_const.optimizer = 'Adagrad'
+    exp_const.weight_decay = 0*1e-4
+    exp_const.cooccur_weights = {
+        # 'syn': 0,
+        'attr_attr': 1,
+        'obj_attr': 1,
+        'obj_hyp': 0,
+        'context': 1,
+    }
+    exp_const.use_neg = True
+    
+    data_const = MultiSenseCooccurDatasetConstants()
+    data_const.cooccur_csv = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur/' + \
+        'imagenet_genome_gt_word/merged_cooccur_self.csv')
+    data_const.use_self_count = True
+
+    model_const = Constants()
+    model_const.model_num = 30000 # 50000
+    model_const.net = LogBilinearConstants()
+    model_const.net.num_words = 33444 #93553 for w synsets, 33444 wo
     model_const.net.embed_dims = 100
     model_const.net.two_embedding_layers = False
     model_const.net.xform_type = 'linear'
@@ -124,10 +204,10 @@ def exp_train():
 
 
 def exp_extract_embeddings():
-    exp_name = 'dim_200_neg_bias_linear'
+    exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt_word/effect_of_xforms')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.cooccur_types = [
@@ -141,13 +221,13 @@ def exp_extract_embeddings():
     data_const.cooccur_csv = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/' + \
-        'imagenet_genome_gt/merged_cooccur_self.csv')
+        'imagenet_genome_gt_word/merged_cooccur_self.csv')
 
     model_const = Constants()
-    model_const.model_num = 110000
+    model_const.model_num = 60000 #110000
     model_const.net = LogBilinearConstants()
-    model_const.net.num_words = 93553
-    model_const.net.embed_dims = 200
+    model_const.net.num_words = 33444 #93553
+    model_const.net.embed_dims = 100
     model_const.net.two_embedding_layers = False
     model_const.net.xform_type = 'linear'
     model_const.net.xform_num_layers = None
@@ -218,8 +298,8 @@ def exp_concat_with_glove():
     exp_name = 'concat_with_glove_300' # alt. xformed_
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
-        'effect_of_xforms/dim_200_neg_bias_linear')
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt_word/' + \
+        'effect_of_xforms/dim_100_neg_bias_linear')
     exp_const = ExpConstants(exp_name,out_base_dir)
 
     visual_embed_dir = exp_const.out_base_dir
@@ -329,7 +409,7 @@ def exp_vis_pca_tsne():
     pca_tsne.main(exp_const,data_const)
 
 
-def exp_supervised_clustering():
+def exp_supervised_clustering_bkp():
     exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
@@ -365,7 +445,7 @@ def exp_supervised_clustering():
     supervised_clustering.main(exp_const,data_const)
 
 
-def exp_unsupervised_clustering():
+def exp_unsupervised_clustering_bkp():
     exp_name = 'dim_100_neg_bias_linear'
     out_base_dir = os.path.join(
         os.getcwd(),
@@ -399,6 +479,166 @@ def exp_unsupervised_clustering():
         'visual_word_vecs.h5py')
     
     unsupervised_clustering.main(exp_const,data_const)
+
+
+def exp_unsupervised_clustering():
+    exp_name = 'analysis'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/clustering')
+    exp_const.fine = True
+
+    data_const = Constants()
+    
+    class EmbedInfo():
+        def __init__(self,exp_dir,random,to_extract,vico_dim,glove_dim=300):
+            self.exp_dir = exp_dir
+            self.random = random
+            self.vico_dim = vico_dim
+            self.glove_dim = glove_dim
+            self.to_extract = to_extract
+            
+        @property
+        def embed_dir(self):
+            return os.path.join(
+                self.exp_dir,
+                f'concat_with_glove_{self.glove_dim}')
+            
+        @property
+        def word_to_idx_json(self):
+            return os.path.join(self.embed_dir,'visual_word_vecs_idx.json')
+        
+        @property
+        def word_vecs_h5py(self):
+            if self.random==True:
+                h5py_path = os.path.join(
+                    self.embed_dir,
+                    'glove_random_word_vecs.h5py')
+            else:
+                h5py_path = os.path.join(
+                    self.embed_dir,
+                    'visual_word_vecs.h5py')
+            return h5py_path
+
+        def get_embedding(self,embeddings):
+            if self.to_extract=='glove':
+                embed = embeddings[:,:self.glove_dim]
+            elif self.to_extract=='visual':
+                embed = embeddings[:,self.glove_dim:]
+            elif self.to_extract=='both':
+                embed = embeddings
+            else:
+                assert(False),'extract type not implemented'
+            
+            return embed
+
+    glove_vico_linear_100 = os.path.join(out_base_dir,'dim_100_neg_bias_linear')
+    glove_vico_linear_200 = os.path.join(out_base_dir,'dim_200_neg_bias_linear')
+    glove_vico_select_200 = os.path.join(out_base_dir,'dim_200_neg_bias_select')
+    no_wn_dir = out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt_word/effect_of_xforms')
+    glove_vico_wo_wordnet_linear_100 = os.path.join(
+        no_wn_dir,
+        'dim_100_neg_bias_linear')
+    data_const.embed_info = {
+        'random(100)': EmbedInfo(glove_vico_linear_100,True,'visual',100),
+        'GloVe': EmbedInfo(glove_vico_linear_100,True,'glove',100),
+        'GloVe+random(100)': EmbedInfo(glove_vico_linear_100,True,'both',100),
+        'GloVe+random(200)': EmbedInfo(glove_vico_linear_200,True,'both',200),
+        'ViCo(linear,100)': EmbedInfo(glove_vico_linear_100,False,'visual',100),
+        'ViCo(linear,200)': EmbedInfo(glove_vico_linear_200,False,'visual',200),
+        'ViCo(select,200)': EmbedInfo(glove_vico_select_200,False,'visual',200),
+        'GloVe+ViCo(linear,100, w/o WordNet)': EmbedInfo(
+            glove_vico_wo_wordnet_linear_100,False,'both',100),
+        'GloVe+ViCo(linear,100)': EmbedInfo(glove_vico_linear_100,False,'both',100),
+        'GloVe+ViCo(linear,200)': EmbedInfo(glove_vico_linear_200,False,'both',200),
+        'GloVe+ViCo(select,200)': EmbedInfo(glove_vico_select_200,False,'both',200),
+    }
+    
+    unsupervised_clustering.main(exp_const,data_const)
+
+
+def exp_supervised_clustering():
+    exp_name = 'analysis'
+    out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms')
+    exp_const = ExpConstants(exp_name,out_base_dir)
+    exp_const.vis_dir = os.path.join(exp_const.exp_dir,'vis/clustering')
+    exp_const.fine = True
+
+    data_const = Constants()
+    
+    class EmbedInfo():
+        def __init__(self,exp_dir,random,to_extract,vico_dim,glove_dim=300):
+            self.exp_dir = exp_dir
+            self.random = random
+            self.vico_dim = vico_dim
+            self.glove_dim = glove_dim
+            self.to_extract = to_extract
+            
+        @property
+        def embed_dir(self):
+            return os.path.join(
+                self.exp_dir,
+                f'concat_with_glove_{self.glove_dim}')
+            
+        @property
+        def word_to_idx_json(self):
+            return os.path.join(self.embed_dir,'visual_word_vecs_idx.json')
+        
+        @property
+        def word_vecs_h5py(self):
+            if self.random==True:
+                h5py_path = os.path.join(
+                    self.embed_dir,
+                    'glove_random_word_vecs.h5py')
+            else:
+                h5py_path = os.path.join(
+                    self.embed_dir,
+                    'visual_word_vecs.h5py')
+            return h5py_path
+
+        def get_embedding(self,embeddings):
+            if self.to_extract=='glove':
+                embed = embeddings[:,:self.glove_dim]
+            elif self.to_extract=='visual':
+                embed = embeddings[:,self.glove_dim:]
+            elif self.to_extract=='both':
+                embed = embeddings
+            else:
+                assert(False),'extract type not implemented'
+            
+            return embed
+
+    glove_vico_linear_100 = os.path.join(out_base_dir,'dim_100_neg_bias_linear')
+    glove_vico_linear_200 = os.path.join(out_base_dir,'dim_200_neg_bias_linear')
+    glove_vico_select_200 = os.path.join(out_base_dir,'dim_200_neg_bias_select')
+    no_wn_dir = out_base_dir = os.path.join(
+        os.getcwd(),
+        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt_word/effect_of_xforms')
+    glove_vico_wo_wordnet_linear_100 = os.path.join(
+        no_wn_dir,
+        'dim_100_neg_bias_linear')
+    data_const.embed_info = {
+        'random(100)': EmbedInfo(glove_vico_linear_100,True,'visual',100),
+        'GloVe': EmbedInfo(glove_vico_linear_100,True,'glove',100),
+        'GloVe+random(100)': EmbedInfo(glove_vico_linear_100,True,'both',100),
+        'GloVe+random(200)': EmbedInfo(glove_vico_linear_200,True,'both',200),
+        'ViCo(linear,100)': EmbedInfo(glove_vico_linear_100,False,'visual',100),
+        'ViCo(linear,200)': EmbedInfo(glove_vico_linear_200,False,'visual',200),
+        'ViCo(select,200)': EmbedInfo(glove_vico_select_200,False,'visual',200),
+        'GloVe+ViCo(linear,100, w/o WordNet)': EmbedInfo(
+            glove_vico_wo_wordnet_linear_100,False,'both',100),
+        'GloVe+ViCo(linear,100)': EmbedInfo(glove_vico_linear_100,False,'both',100),
+        'GloVe+ViCo(linear,200)': EmbedInfo(glove_vico_linear_200,False,'both',200),
+        'GloVe+ViCo(select,200)': EmbedInfo(glove_vico_select_200,False,'both',200),
+    }
+    
+    supervised_clustering.main(exp_const,data_const)
 
 
 if __name__=='__main__':

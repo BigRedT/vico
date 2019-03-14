@@ -4,7 +4,7 @@ from tqdm import tqdm
 import plotly
 import plotly.graph_objs as go
 from sklearn.manifold import TSNE
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.cluster import AgglomerativeClustering, DBSCAN, SpectralClustering
 import sklearn.metrics as skmetrics
 
 import utils.io as io
@@ -42,37 +42,30 @@ def get_word_feats(embed,dim=2,embed_type='tsne'):
         assert(False), f'embed_type {embed_type} not implemented'
 
 
-def plot_metric_vs_depth(metric_name,metric,depth,filename):
+def plot_metric_vs_clusters(metric_name,metric,n_clusters,filename):
     embed_type_to_color = {
-        'ViCo(linear,100)': 'rgba(55, 128, 191,0.6)',
-        'ViCo(linear,200)': 'rgba(55, 80, 191,0.6)',
-        'ViCo(select,200)': 'rgba(219, 64, 82,0.6)',
-        'GloVe+ViCo(linear,100, w/o WordNet)': 'rgb(139,0,139)',
-        'GloVe+ViCo(linear,100)': 'rgb(55, 128, 191)', 
-        'GloVe+ViCo(linear,200)': 'rgb(55, 80, 191)',
-        'GloVe+ViCo(select,200)': 'rgb(219, 64, 82)',
+        'GloVe+ViCo(linear)': 'rgb(31, 119, 180)',
+        'GloVe+ViCo(xformed)': 'rgb(31, 119, 180)',
+        'GloVe+ViCo(select)': 'rgb(31, 119, 180)', #'rgb(40,40,40)',
         'GloVe': 'rgb(44, 150, 44)',
         'ViCo(linear)': 'rgb(214, 39, 40)',
-        'GloVe+random(100)': 'rgb(255, 200, 14)',
-        'GloVe+random(200)': 'rgb(255, 127, 14)',
-        'random(100)': 'grey',
+        'ViCo(select)': 'rgb(214, 39, 40)', #'rgb(135, 93, 183)',
+        'ViCo(xformed)': 'rgb(214, 39, 40)',
+        'GloVe+random': 'rgb(255, 127, 14)',
+        'random': 'grey',
     }
 
     traces = []
     for embed_type in metric.keys():
-        if embed_type=='GloVe' or 'random' in embed_type:
+        if 'xformed' in embed_type:
+            dash = 'dot'
+        elif 'select' in embed_type:
             dash = 'dot'
         else:
             dash = None
 
-        if 'GloVe' in embed_type or 'random' in embed_type:
-            symbol = 'circle'
-        else:
-            symbol = 'circle'#'square'
-            dash = 'dash'
-
         trace = go.Scatter(
-            x = depth,
+            x = n_clusters,
             y = metric[embed_type],
             mode = 'lines+markers',
             name = embed_type,
@@ -80,16 +73,16 @@ def plot_metric_vs_depth(metric_name,metric,depth,filename):
                 color=embed_type_to_color[embed_type],
                 width=2,
                 dash=dash),
-            marker = dict(size=9,symbol=symbol)
+            marker = dict(size=9)
         )
         traces.append(trace)
     
     layout = go.Layout(
         #title = metric_name,
-        xaxis = dict(title='Decision Tree Depth'),
-        yaxis = dict(title=metric_name,range=[0,0.98]),
+        xaxis = dict(title='Number of Clusters'),
+        yaxis = dict(title=metric_name),
         hovermode = 'closest',
-        width=1100,
+        width=800,
         height=800)
 
     plotly.offline.plot(
@@ -101,11 +94,11 @@ def plot_metric_vs_depth(metric_name,metric,depth,filename):
 def main(exp_const,data_const):
     if exp_const.fine==True:
         from . import fine_categories as C
-        vis_dir = os.path.join(exp_const.vis_dir,'supervised_clustering_fine')
+        vis_dir = os.path.join(exp_const.vis_dir,'unsupervised_clustering_fine')
     else:
         from . import categories as C
-        vis_dir = os.path.join(exp_const.vis_dir,'supervised_clustering_coarse')
-    
+        vis_dir = os.path.join(exp_const.vis_dir,'unsupervised_clustering')
+
     io.mkdir_if_not_exists(vis_dir,recursive=True)
 
     print('Reading words and categories ...')
@@ -119,72 +112,72 @@ def main(exp_const,data_const):
         all_words.update(category_words)
         for word in category_words:
             word_to_label[word] = category
+    
+    print('Loading embeddings ...')
+    embed = io.load_h5py_object(
+        data_const.word_vecs_h5py)['embeddings'][()]
+    xformed_embed = io.load_h5py_object(
+        data_const.xformed_word_vecs_h5py)['embeddings'][()]
+    select_embed = io.load_h5py_object(
+        data_const.select_word_vecs_h5py)['embeddings'][()]
+    word_to_idx = io.load_json_object(data_const.word_to_idx_json)
 
-    entropy = {}
-    accuracy = {}
+    print('Selecting words ...')
+    words = [word for word in all_words if word in word_to_idx]
+    labels = [word_to_label[word] for word in words]
+    idxs = [word_to_idx[word] for word in words]
+    embed = embed[idxs,:]
+    visual_embed = embed[:,300:]
+    xformed_embed = xformed_embed[idxs,:]
+    xformed_visual_embed = xformed_embed[:,300:]
+    select_embed = select_embed[idxs,:]
+    select_visual_embed = select_embed[:,300:]
+    glove_embed = embed[:,:300]
+    random_embed = np.copy(embed)
+    random_embed[:,300:] = np.random.rand(
+        embed.shape[0],
+        visual_embed.shape[1])
+    
+    embed_type_to_embed = {
+        'GloVe+ViCo(linear)': embed,
+        #'GloVe+ViCo(xformed)': xformed_embed,
+        'GloVe+ViCo(select)': select_embed,
+        'ViCo(linear)': visual_embed,
+        #'ViCo(xformed)': xformed_visual_embed,
+        'ViCo(select)': select_visual_embed,
+        'GloVe': glove_embed,
+        'GloVe+random': random_embed,
+        'random': random_embed[:,300:]
+    }
+
     homogeneity = {}
     completeness = {}
     v_measure = {}
     ari = {}
-    for embed_type, embed_info in data_const.embed_info.items():
-        print('Loading embeddings ...')
-        embed_ = io.load_h5py_object(embed_info.word_vecs_h5py)['embeddings']
-        word_to_idx = io.load_json_object(embed_info.word_to_idx_json)
-        
-        print('Selecting words ...')
-        words = [word for word in all_words if word in word_to_idx]
-        labels = [word_to_label[word] for word in words]
-        idxs = [word_to_idx[word] for word in words]
-
-        embed = np.zeros([len(idxs),embed_.shape[1]])
-        for i,j in enumerate(idxs):
-            embed[i] = embed_[j]
-        embed = embed_info.get_embedding(embed)
-
+    for embed_type in embed_type_to_embed.keys():
         print(f'Computing word features ({embed_type}) ...')
         word_feats = get_word_feats(
-            embed,
+            embed_type_to_embed[embed_type],
             dim=2,
             embed_type='original')
 
-        print(f'Learn Decision Tree ({embed_type}) ...')
-        entropy[embed_type] = []
-        accuracy[embed_type] = []
+        print(f'Clustering ({embed_type}) ...')
         homogeneity[embed_type] = []
         completeness[embed_type] = []
         v_measure[embed_type] = []
         ari[embed_type] = []
 
-        #depths = [1,2,4,6,8,10,12,14,16]
         if exp_const.fine==True:
-            depths = [1,4,8,12,16,20,24,28,32,36,42,48,54,60,66,72,78]
+            n_clusters_list = [4,8,16,24,32,40,48,54,64,72,80]
         else:
-            depths = [1,4,8,12,16,20,24,28] #,32,36,42,48] # 28,32
+            n_clusters_list = [4,8,16,24,32,40,48,54,64,72,80]
 
-        for depth in depths:
-            dt = DecisionTreeClassifier(
-                criterion='gini',
-                max_depth=depth,
-                min_samples_leaf=2,
-            )
-            dt.fit(word_feats,labels)
-            prob = dt.predict_proba(word_feats)
-            pred_labels = dt.predict(word_feats)
-
-            confmat = np.zeros([len(categories),len(categories)])
-            counts = np.zeros([len(categories),1])
-            for i,label in enumerate(labels):
-                r = categories_to_idx[label]
-                confmat[r] += prob[i]
-                counts[r,0] += 1
-
-            confmat = confmat / counts
-            ce = -np.mean(np.sum(confmat*np.log(confmat+1e-6),1))
-
-            acc = 0
-            for gt_l,pred_l in zip(labels,pred_labels):
-                acc += gt_l==pred_l
-            acc = acc / len(labels)
+        for n_clusters in n_clusters_list:
+            clustering = AgglomerativeClustering(
+                n_clusters=n_clusters,
+                affinity='cosine',
+                linkage='average')
+            pred_labels = clustering.fit_predict(word_feats)
             
             homo_score,comp_score,v_measure_score = \
                 skmetrics.homogeneity_completeness_v_measure(
@@ -192,8 +185,6 @@ def main(exp_const,data_const):
                     pred_labels)
             ari_score = skmetrics.adjusted_rand_score(labels,pred_labels)
 
-            entropy[embed_type].append(ce)
-            accuracy[embed_type].append(acc)
             homogeneity[embed_type].append(homo_score)
             completeness[embed_type].append(comp_score)
             v_measure[embed_type].append(v_measure_score)
@@ -202,39 +193,31 @@ def main(exp_const,data_const):
         print('*'*80)
         print(embed_type)
         print('*'*80)
-        print('entropy',entropy[embed_type])
-        print('accuracy',accuracy[embed_type])
         print('homogeneity',homogeneity[embed_type])
         print('completeness',completeness[embed_type])
         print('v_measure',v_measure[embed_type])
         print('ari',ari[embed_type])
-        
-        plot_metric_vs_depth(
-            'Accuracy',
-            accuracy,
-            depths,
-            os.path.join(vis_dir,'accuracy.html'))
 
-        plot_metric_vs_depth(
+        plot_metric_vs_clusters(
             'Homogeneity',
             homogeneity,
-            depths,
+            n_clusters_list,
             os.path.join(vis_dir,'homogeneity.html'))
 
-        plot_metric_vs_depth(
+        plot_metric_vs_clusters(
             'Completeness',
             completeness,
-            depths,
+            n_clusters_list,
             os.path.join(vis_dir,'completeness.html'))
 
-        plot_metric_vs_depth(
+        plot_metric_vs_clusters(
             'V-Measure',
             v_measure,
-            depths,
+            n_clusters_list,
             os.path.join(vis_dir,'v_measure.html'))
 
-        plot_metric_vs_depth(
+        plot_metric_vs_clusters(
             'Adjusted Rand Index',
             ari,
-            depths,
+            n_clusters_list,
             os.path.join(vis_dir,'ari.html'))

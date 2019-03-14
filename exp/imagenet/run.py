@@ -46,7 +46,7 @@ def exp_create_gt_obj_hyp_cooccur():
 
 
 def exp_create_gt_obj_hyp_word_cooccur():
-    exp_name = 'gt_obj_hyp_word_cooccur'
+    exp_name = 'gt_obj_hyp_word_cooccur_self'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/imagenet')
