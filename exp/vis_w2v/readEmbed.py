@@ -9,9 +9,12 @@ def main(embedPath):
     #print 'Reading embeddings from %s and saving vocab...\n' % embedPath,
     startTime = time.time();
 
-    with open(embedPath, 'r') as fileId:
+    print('Here')
+    with open(embedPath, 'r', encoding='latin') as fileId:
+        print('Here')
         # Read only the word, ignore feature vector
         lines = [line.split(' ', 1) for line in fileId.readlines()]; #[0]
+        import pdb; pdb.set_trace()
 
     import pdb; pdb.set_trace()
     # Header has vocab size, double check for sanity

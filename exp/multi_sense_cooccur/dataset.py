@@ -122,9 +122,10 @@ if __name__=='__main__':
     const.cooccur_csv = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/' + \
-        'imagenet_genome_gt/merged_cooccur.csv')
+        'imagenet_genome_gt/merged_cooccur_self.csv')
 
     dataset = MultiSenseCooccurDataset(const)    
+    import pdb; pdb.set_trace()
     collate_fn = dataset.create_collate_fn()
     dataloader = DataLoader(
         dataset,

@@ -44,11 +44,13 @@ def get_word_feats(embed,dim=2,embed_type='tsne'):
 
 def plot_metric_vs_depth(metric_name,metric,depth,filename):
     embed_type_to_color = {
+        'ViCo(linear,50)': 'rgb(55, 128, 191,0.6)', 
         'ViCo(linear,100)': 'rgba(55, 128, 191,0.6)',
         'ViCo(linear,200)': 'rgba(55, 80, 191,0.6)',
         'ViCo(select,200)': 'rgba(219, 64, 82,0.6)',
         'GloVe+ViCo(linear,100, w/o WordNet)': 'rgb(139,0,139)',
-        'GloVe+ViCo(linear,100)': 'rgb(55, 128, 191)', 
+        'GloVe+ViCo(linear,100)': 'rgb(55, 128, 191)',
+        'GloVe+ViCo(linear,50)': 'rgb(55, 128, 191)', 
         'GloVe+ViCo(linear,200)': 'rgb(55, 80, 191)',
         'GloVe+ViCo(select,200)': 'rgb(219, 64, 82)',
         'GloVe': 'rgb(44, 150, 44)',
@@ -56,6 +58,9 @@ def plot_metric_vs_depth(metric_name,metric,depth,filename):
         'GloVe+random(100)': 'rgb(255, 200, 14)',
         'GloVe+random(200)': 'rgb(255, 127, 14)',
         'random(100)': 'grey',
+        'random(300)': 'rgb(96,96,96)',
+        'vis-w2v': 'black',
+        'GloVe+vis-w2v': 'black',
     }
 
     traces = []
@@ -159,7 +164,7 @@ def main(exp_const,data_const):
         if exp_const.fine==True:
             depths = [1,4,8,12,16,20,24,28,32,36,42,48,54,60,66,72,78]
         else:
-            depths = [1,4,8,12,16,20,24,28] #,32,36,42,48] # 28,32
+            depths = [1,4,8,12,16,20,24,28,32,36,42,48,54,60,66,72,78] #,32,36,42,48] # 28,32
 
         for depth in depths:
             dt = DecisionTreeClassifier(
@@ -238,3 +243,23 @@ def main(exp_const,data_const):
             ari,
             depths,
             os.path.join(vis_dir,'ari.html'))
+
+
+    print('*'*80)
+    print('Aggregate stats across all clusters')
+    print('*'*80)
+    metrics = ['v_measure','ari','accuracy']
+
+    metric_str = ' '
+    for metric in metrics:
+        metric_str += ' & '
+        metric_str += metric
+    print(metric_str)
+
+    for embed_type in data_const.embed_info.keys():
+        metric_str = embed_type
+        for metric in metrics:
+            metric_str += ' & '
+            metric_value = round(np.mean(locals()[metric][embed_type]),2)
+            metric_str += '{:.2f}'.format(metric_value)
+        print(metric_str)
