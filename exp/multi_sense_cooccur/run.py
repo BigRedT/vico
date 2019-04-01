@@ -25,10 +25,10 @@ from data.visualgenome.constants import VisualGenomeConstants
 
 def exp_synset_to_word_cooccur():
     paths = [
-        ['imagenet','gt_obj_hyp_cooccur_self'],
-        ['genome_attributes','gt_attr_attr_cooccur_self'],
-        ['genome_attributes','gt_obj_attr_cooccur_self'],
-        ['genome_attributes','gt_context_cooccur_self'],
+        ['imagenet','gt_obj_hyp_cooccur'],
+        ['genome_attributes','gt_attr_attr_cooccur'],
+        ['genome_attributes','gt_obj_attr_cooccur'],
+        ['genome_attributes','gt_context_cooccur'],
     ]
     for dataset,exp_name in paths:
         out_base_dir = os.path.join(
@@ -57,11 +57,11 @@ def exp_merge_cooccur():
 
     data_const = Constants()
     cooccur_paths = {
-        'syn': 'wordnet/syn_cooccur_self/word_cooccur.json',
-        'attr_attr': 'genome_attributes/gt_attr_attr_cooccur_self/word_cooccur.json',
-        'obj_attr': 'genome_attributes/gt_obj_attr_cooccur_self/word_cooccur.json',
-        'obj_hyp': 'imagenet/gt_obj_hyp_cooccur_self/word_cooccur.json',
-        'context': 'genome_attributes/gt_context_cooccur_self/word_cooccur.json',
+        'syn': 'wordnet/syn_cooccur/word_cooccur.json',
+        'attr_attr': 'genome_attributes/gt_attr_attr_cooccur/word_cooccur.json',
+        'obj_attr': 'genome_attributes/gt_obj_attr_cooccur/word_cooccur.json',
+        'obj_hyp': 'imagenet/gt_obj_hyp_cooccur/word_cooccur.json',
+        'context': 'genome_attributes/gt_context_cooccur/word_cooccur.json',
     }
     symlink_exp = os.path.join(os.getcwd(),'symlinks/exp')
     data_const.cooccur_paths = {
