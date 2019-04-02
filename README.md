@@ -34,16 +34,38 @@ While you can choose any directory for storing datasets and experiments, the cod
 
 # Steps for Learning ViCo embeddings
 
-1. Create co-occurrence matrices for different co-occurrence types:
-    * Object-Attribute (VisualGenome)
-    * Attribute-Attribute (VisualGenome)
-    * Context (VisualGenome)
-    * Object-Hypernym (ImageNet)
-    * Synonyms (WordNet)
-2. Train ViCo's multitask log-bilinear model and save model
-3. Extract embeddings from the saved model
-4. Concat with GloVe
-5. Rock and Roll :metal:
+## Step 1: Create co-occurrence matrices
+
+We compute the following types of co-occurrences from different sources:
+* Object-Attribute (VisualGenome)
+* Attribute-Attribute (VisualGenome)
+* Context (VisualGenome)
+* Object-Hypernym (ImageNet)
+* Synonyms (WordNet)
+
+If you have already downloaded the datasets, simply run:
+```
+bash exp/multi_sense_cooccur/create_cooccur.sh
+```
+
+This will create the following file which will be used to learn ViCo embeddings:
+```
+symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/merged_cooccur.csv
+```
+
+For inspection, we provide a simple command line utility to load the csv into a pandas dataframe and interactively display all co-occurrences for a given word with other words sorted by co-occurrence types in ascending order (to avoid having to scroll to the top). To launch this utility run:
+```
+python -m exp.multi_sense_cooccur.explore_merged_cooccur
+```
+Follow the prompted instructions to interactively explore co-occurrences. To see the instructions again, simply call `usage()`.
+
+## Step 2: Train ViCo's multitask log-bilinear model
+
+## Step 3: Extract embeddings from the saved model
+
+## Step 4: Concat with GloVe
+
+## Step 5: You embeddings are ready to use :metal:
 
 # Evaluation
 
