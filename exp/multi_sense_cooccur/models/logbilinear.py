@@ -83,19 +83,23 @@ class LogBilinearConstants(io.JsonSerializableClass):
         self.embed_dims = 100
         self.two_embedding_layers = False
         self.cooccur_types = [
-            #'syn',
+            'syn',
             'attr_attr',
             'obj_attr',
             'obj_hyp',
             'context'
         ]
-        self.xform_out_feats = [50]*4
+        self.xform_out_feat_dim = 50
         self.xform_type = 'linear'
         # xform_num_layers used on if type is 'nonlinear
         self.xform_num_layers = 2
         self.use_bias = False
         self.use_fx = False
-        
+
+    @property
+    def xform_out_feats(self):
+        return [self.xform_out_feat_dim]*len(self.cooccur_types)
+
     @property
     def xform_const(self):
         const = {}
