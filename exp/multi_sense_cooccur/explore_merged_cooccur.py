@@ -3,7 +3,7 @@ import pandas as pd
 
 merged_cooccur_csv = os.path.join(
     os.getcwd(),
-    'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/merged_cooccur.csv')
+    'symlinks/exp/multi_sense_cooccur/cooccurrences/merged_cooccur.csv')
 
 print('Reading csv ...')
 df = pd.read_csv(merged_cooccur_csv)
