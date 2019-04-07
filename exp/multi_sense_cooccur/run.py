@@ -35,6 +35,11 @@ parser.add_argument(
     type=int,
     default=-1,
     help='model num for finetuning or embedding extraction')
+parser.add_argument(
+    '--glove_dim',
+    type=int,
+    default=300,
+    help='Dimension of GloVe embeddings to concatenate with ViCo')
 
 
 def exp_synset_to_word_cooccur():
@@ -96,7 +101,8 @@ def exp_train():
             'xform',
             'model_num'])
 
-    exp_name = f'{args.xform}_{args.embed_dim}'
+    #exp_name = f'{args.xform}_{args.embed_dim}'
+    exp_name='trial'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur')
@@ -110,7 +116,7 @@ def exp_train():
     exp_const.num_epochs = 10
     exp_const.lr = 0.01
     exp_const.momentum = 0.9    # used only when optimizer is set to 'SGD'
-    exp_const.num_workers = 5
+    exp_const.num_workers = 0
     # First train with Adam then finetune with Adagrad
     if args.model_num==-1:
         exp_const.optimizer = 'Adam'
@@ -160,49 +166,73 @@ def exp_train():
 
 
 def exp_extract_embeddings():
-    exp_name = 'dim_100_neg_bias_linear'
+    args = parser.parse_args()
+    not_specified_args = manage_required_args(
+        args,
+        parser,
+        required_args=[
+            'embed_dim',
+            'xform',
+            'model_num'])
+
+    exp_name = f'{args.xform}_{args.embed_dim}'
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt_word/effect_of_xforms')
+        'symlinks/exp/multi_sense_cooccur')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.model_dir = os.path.join(exp_const.exp_dir,'models')
     exp_const.cooccur_types = [
-        #'syn',
+        'syn',
         'attr_attr',
         'obj_attr',
         'obj_hyp',
-        'context']
+        'context'
+    ]
 
     data_const = MultiSenseCooccurDatasetConstants()
     data_const.cooccur_csv = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/' + \
-        'imagenet_genome_gt_word/merged_cooccur_self.csv')
+        'symlinks/exp/multi_sense_cooccur/cooccurrences/merged_cooccur.csv')
 
     model_const = Constants()
-    model_const.model_num = 60000 #110000
+    model_const.model_num = args.model_num
     model_const.net = LogBilinearConstants()
-    model_const.net.num_words = 33444 #93553
-    model_const.net.embed_dims = 100
+    model_const.net.num_words = 93553
+    model_const.net.embed_dims = args.embed_dim
     model_const.net.two_embedding_layers = False
-    model_const.net.xform_type = 'linear'
+    model_const.net.xform_type = args.xform
     model_const.net.xform_num_layers = None
     model_const.net.use_bias = True
     model_const.net.use_fx = False
+    model_const.net.cooccur_types = [
+        'syn',
+        'attr_attr',
+        'obj_attr',
+        'obj_hyp',
+        'context'
+    ]
     model_const.net_path = os.path.join(
         exp_const.model_dir,
         f'net_{model_const.model_num}')
 
     extract_embeddings.main(exp_const,data_const,model_const)
-    #extract_embeddings_xformed.main(exp_const,data_const,model_const)
+    extract_embeddings_xformed.main(exp_const,data_const,model_const)
 
 
 def exp_concat_with_glove():
-    exp_name = 'concat_with_glove_300' # alt. xformed_
+    args = parser.parse_args()
+    not_specified_args = manage_required_args(
+        args,
+        parser,
+        required_args=[
+            'embed_dim',
+            'xform',
+            'glove_dim'])
+
+    exp_name = f'concat_with_glove_{args.glove_dim}' # alt. xformed_
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt_word/' + \
-        'effect_of_xforms/dim_100_neg_bias_linear')
+        f'symlinks/exp/multi_sense_cooccur/{args.xform}_{args.embed_dim}')
     exp_const = ExpConstants(exp_name,out_base_dir)
 
     visual_embed_dir = exp_const.out_base_dir
@@ -213,12 +243,11 @@ def exp_concat_with_glove():
     data_const.visual_embeddings_npy = os.path.join(
         visual_embed_dir,
         'visual_embeddings.npy') # alt. _xformed.npy
-    glove_const = GloveConstantsFactory.create(dim='300')
+    glove_const = GloveConstantsFactory.create(dim=str(args.glove_dim))
     data_const.glove_idx = glove_const.word_to_idx_json
     data_const.glove_h5py = glove_const.embeddings_h5py
 
     concat_with_glove.main(exp_const,data_const)
-
 
 
 def exp_concat_random_with_glove():
