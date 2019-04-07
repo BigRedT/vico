@@ -11,8 +11,10 @@
         - [Start Training](#start-training)
         - [Finetune](#finetune)
         - [Monitor Losses](#monitor-losses)
+        - [Time and Memory](#Time-and-Memory)
     - [Step 3: Extract embeddings from the saved model](#step-3:-extract-embeddings-from-the-saved-model)
     - [Step 4: Concat with GloVe](#step-4:-concat-with-glove)
+        - [A note on memory vs speed trade-off for slicing/indexing](#a-note-on-memory-vs-speed-trade-off-for-slicing/indexing)
     - [Step 5: Be Awesome :metal:](#step-5:-use-vico-embeddings-in-your-awesome-project-:metal:)
 
 # Setup
@@ -73,13 +75,20 @@ While you can choose any directory for storing datasets and experiments, the cod
 
 # Steps for Learning ViCo embeddings
 
+We provide a simple bash script `./exp/multi_sense_cooccur/scripts/helper.sh` that can be used to run all steps involved in learning ViCo. Simply modify the script to specify the `GPU` on which you want to run the experiments, and the steps you want to run using the `MODE` variable (multiple steps can be specified at once) and execute:
+```
+bash ./exp/multi_sense_cooccur/scripts/helper.sh
+``` 
+
+Each step is explained in detail below along with commands which are the same as the script but with explicit arguments for ViCo(linear,100) as a running example.
+
 ## Step 1: Create co-occurrence matrices
 
 We compute the following types of co-occurrences from different sources:
-* Object-Attribute (VisualGenome)
-* Attribute-Attribute (VisualGenome)
-* Context (VisualGenome)
-* Object-Hypernym (ImageNet)
+* Object-Attribute (VisualGenome + WordNet)
+* Attribute-Attribute (VisualGenome + WordNet)
+* Context (VisualGenome + WordNet)
+* Object-Hypernym (ImageNet + WordNet)
 * Synonyms (WordNet)
 
 If you have already downloaded the datasets, simply run:
@@ -134,9 +143,77 @@ tensorboard --logdir=./symlinks/exp/multi_sense_cooccur/
 
 Note the steep decrease in loss around 80000 iterations due to change in optimizer (learing rate is unchanged). `Neg_*` denotes the losses due to the **max** term while others correspond to the **log-bilinear** loss. `Total_Loss` denotes the sum of all losses.  
 
+### Time and Memory
+- Initial training + finetuning: ~8 hours 
+- GPU memory usage: ~1GB
+- RAM usage: ~7GB 
+
 ## Step 3: Extract embeddings from the saved model
 
+To extract embeddings from the embedding layer of the saved model, run:
+```
+python \
+    -m exp.multi_sense_cooccur.run \
+    --exp exp_extract_embeddings \
+    --embed_dim 100 \
+    --xform linear \
+    --model_num 160000
+```
+This saves the following files in the `./symlinks/exp/multi_sense_cooccur/linear_100/` directory:
+- `visual_embeddings.npy`: VxD matrix of ViCo embeddings where V is the vocabulary size, and D is the embedding dimension
+- `visual_embeddings_xformed.npy`: VxD' matrix constructed by concatenating all transformed embeddings. Default configuration results in a concatenation of 50 dimensional transformed embeddings for each co-occurrence type in the following order:
+    - Synonyms
+    - Attribute-Attribute
+    - Object-Attribute
+    - Object-Hypernym
+    - Context
+
+    Note that for ViCo(select), `visual_embeddings.npy` and `visual_embeddings_xformed.npy` are the same while for ViCo(linear,100), D=100 and D'=250 (=50x5).
+- `word_to_idx.json`: A dictionary mapping words to indices in the above npy files
+
 ## Step 4: Concat with GloVe
+
+To concatenate GloVe with ViCo, run:
+```
+python \
+    -m exp.multi_sense_cooccur.run \
+    --exp exp_concat_with_glove \
+    --embed_dim 100 \
+    --xform linear \
+    --glove_dim 300
+```
+This creates the following files in the `./symlinks/exp/multi_sense_cooccur/linear_100/concat_with_glove_300` directory:
+- `visual_word_vecs.h5py`: An hdf5 file that contains Nx(300+D) dimensional embeddings where N is the GloVe vocabulary (assuming N > V, the visual co-occurrence vocabulary). If a word in GloVe's vocabulary does not exist in the visual vocabulary, the mean of ViCo embeddings is used instead.
+- `visual_word_vecs_idx.json`: A dictionary mapping words to indices in the above h5py files.
+
+The embedding for any word can be accessed as follows:
+```python
+import h5py
+import json
+
+# Load json file
+word_to_idx = json.load(open('visual_word_vecs_idx.json', 'r'))
+
+# Load h5py file
+embeddings = h5py.File('visual_word_vecs.h5py','r')['embeddings']
+
+word = 'green'
+idx = word_to_idx[word]
+word_embedding = embeddings[idx] # (400,) numpy.ndarray
+glove_component = word_embedding[:300]
+vico_component = word_embedding[300:]
+```
+
+### A note on memory vs speed trade-off for slicing/indexing
+
+The advantage of h5py is that the variable `embeddings` refers to an h5py Dataset object which can be indexed to get individual rows without loading the entire embedding matrix (400000x400) into memory. However, every slice operation like `embeddings[idx]` would have to read from disk. This may not be an issue if slicing is infrequent but could be slow otherwise (for example if used in a dataloader to create mini-batches for a captioning-task).
+
+Therefore, if RAM is not an issue, it is recommended to load the full matrix using:
+```python
+  embeddings = h5py.File('visual_word_vecs.h5py','r')['embeddings'][()]
+  # Notice the '[()]' at the end
+```
+In this case, `embeddings` is the full embedding matrix loaded in RAM as a numpy array. Since the entire matrix is in RAM, slicing operations are fast. 
 
 ## Step 5: Use ViCo embeddings in your awesome project :metal:
 Build on it, analyze it, improve it ...
