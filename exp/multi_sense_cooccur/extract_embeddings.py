@@ -28,20 +28,10 @@ def main(exp_const,data_const,model_const):
     if model.const.model_num is not None:
         model.net.load_state_dict(torch.load(model.const.net_path))
     
-    #embeddings = 0.5*(model.net.embed1.W.weight + model.net.embed2.W.weight)
-    embeddings = model.net.embed1.W.weight
+    embeddings = 0.5*(model.net.embed1.W.weight + model.net.embed2.W.weight)
     embeddings = embeddings.data.numpy()
     embeddings_json = os.path.join(exp_const.exp_dir,'visual_embeddings.npy')
     np.save(embeddings_json,embeddings)
-
-    # print('Saving transformations ...')
-    # for cooccur_type in exp_const.cooccur_types:
-    #     xform = getattr(model.net,f'xform_{cooccur_type}').fc1.weight.data.numpy()
-    #     print(f'Saving xfrom_{cooccur_type} with shape: ', xform.shape)
-    #     xform_json = os.path.join(
-    #         exp_const.exp_dir,
-    #         f'xform_{cooccur_type}.npy')
-    #     np.save(xform_json,xform)
 
     print('Saving word_to_idx.json ...')
     dataset = MultiSenseCooccurDataset(data_const)
