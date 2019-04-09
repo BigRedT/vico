@@ -67,9 +67,9 @@ ELECTRONICS_MISC = {'electonic','device','digital','clock','camera',
 # Utensils
 UTENSILS_CONTAINERS = {'cup','bowl','utensil','plate','jar','vase','urn'}
 
-UTENSILS_DRINKS = {'glass','bottle','jug','fork'}
+UTENSILS_DRINKS = {'glass','bottle','jug'}
 
-UTENSILS_CUTLERY = {'spoon','spatula',}
+UTENSILS_CUTLERY = {'spoon','spatula','fork'}
 
 UTENSILS_COOKING = {'pan','kettle','teapot','pot'}
 

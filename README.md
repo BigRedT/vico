@@ -6,16 +6,20 @@
     - [Directories](#directories)
     - [A note on `run.py` files](#a-note-on-`run.py`-files)
 - [Steps for Learning ViCo embeddings](#steps-for-learning-vico-embeddings)
+    - [Quick Start](#quick-start)
     - [Step 1: Create co-occurrence matrices](#step-1:-create-co-occurrence-matrices)
     - [Step 2: Train ViCo's multitask log-bilinear model](#step-2:-train-vico's-multitask-log-bilinear-model)
         - [Start Training](#start-training)
         - [Finetune](#finetune)
         - [Monitor Losses](#monitor-losses)
-        - [Time and Memory](#Time-and-Memory)
+        - [Time and Memory](#time-and-memory)
     - [Step 3: Extract embeddings from the saved model](#step-3:-extract-embeddings-from-the-saved-model)
     - [Step 4: Concat with GloVe](#step-4:-concat-with-glove)
         - [A note on memory vs speed trade-off for slicing/indexing](#a-note-on-memory-vs-speed-trade-off-for-slicing/indexing)
     - [Step 5: Be Awesome :metal:](#step-5:-use-vico-embeddings-in-your-awesome-project-:metal:)
+- [Evaluation](#evaluation)
+    - [Unsupervised Clustering Aanalysis](#unsupervised-clustering-analysis)
+    - [Supervised Partitioning Aanalysis](#supervised-partitioning-analysis)
 
 # Setup
 We will assume we are currently in the root directory (which contains the `README.md`). All `bash` or `python` scripts described below will be executed from the root directory.
@@ -75,6 +79,7 @@ While you can choose any directory for storing datasets and experiments, the cod
 
 # Steps for Learning ViCo embeddings
 
+## Quick Start
 We provide a simple bash script `./exp/multi_sense_cooccur/scripts/helper.sh` that can be used to run all steps involved in learning ViCo. Simply modify the script to specify the `GPU` on which you want to run the experiments, and the steps you want to run using the `MODE` variable (multiple steps can be specified at once) and execute:
 ```
 bash ./exp/multi_sense_cooccur/scripts/helper.sh
@@ -118,9 +123,12 @@ CUDA_VISIBLE_DEVICES=0 python \
     -m exp.multi_sense_cooccur.run \
     --exp exp_train \
     --embed_dim 100 \
-    --xform linear
+    --xform linear \
+    --syn True
 ```
-`embed_dim` is the ViCo embedding dimension and `xform` is the transformation function to be used in the multitask log-bilinear model. `xform` can alternatively be set to 'select'. It is easy to extend ViCo with other transforms as shown in `./exp/multi_sense_cooccur/models/logbilinear.py`.
+`embed_dim` is the ViCo embedding dimension and `xform` is the transformation function to be used in the multitask log-bilinear model. `xform` can alternatively be set to 'select'. It is easy to extend ViCo with other transforms as shown in `./exp/multi_sense_cooccur/models/logbilinear.py`. 
+
+Here, we turned on the use of synonym co-occurrences during training using `--syn`.  However, we empirically found ViCo trained w/o synonym co-occurrences to perform slightly better (see tables in the evaluation section). The version of embeddings used in the paper are trained w/o synonym co-occurrences. If that is the version you are after, go ahead and set `--syn False` here and in all commands below.
 
 ### Finetune
 To finetune with Adagrad starting from a saved model, say at iteration number 80000, run:
@@ -130,7 +138,8 @@ CUDA_VISIBLE_DEVICES=0 python \
     --exp exp_train \
     --embed_dim 100 \
     --xform linear \
-    --model_num 80000
+    --model_num 80000 \
+    --syn True
 ```
 Experiments data including hyperparameters/constants, tensorboard logs, and models are saved in `./symlinks/exp/multi_sense_cooccur/linear_100/`. Models, by default, are saved every 10000 iterations. Any model number other than `-1` (default) automatically selects Adagrad optimizer. 
 
@@ -157,7 +166,8 @@ python \
     --exp exp_extract_embeddings \
     --embed_dim 100 \
     --xform linear \
-    --model_num 160000
+    --model_num 160000 \
+    --syn True
 ```
 This saves the following files in the `./symlinks/exp/multi_sense_cooccur/linear_100/` directory:
 - `visual_embeddings.npy`: VxD matrix of ViCo embeddings where V is the vocabulary size, and D is the embedding dimension
@@ -225,8 +235,71 @@ Run it through our evaluation protocol as described in the next section to bette
 # Evaluation
 
 We provide scripts for the following:
-1. Unsupervised clustering analysis
-2. Supervised partitioning analysis
-3. Zero-Shot-like (visual generalization) analysis
-4. Discriminative attributes task evaluation
+- Unsupervised clustering analysis
+- Supervised partitioning analysis
+- Zero-Shot-like (visual generalization) analysis
+- Discriminative attributes task evaluation (SemEval 2018, Task 10)
 
+
+## Unsupervised Clustering Aanalysis
+
+If you have the ViCo(linear,100) embeddings trained and concatenated with GloVe as described above, you can run the analysis by executing
+```
+python -m exp.multi_sense_cooccur.run --exp exp_unsupervised_clustering
+```
+This saves plots in `./symlinks/exp/multi_sense_cooccur/analysis/unsupervised_clustering` directory and prints average performance across cluster numbers in the terminal, which can directly be copied to a latex file
+
+- Clustering performance on fine categories
+
+    | Embedding | V-Measure | ARI |
+    |:---------|:---------:|:---:|
+    | GloVe | 0.50 | 0.15 |
+    | ViCo(linear,100) | 0.59 | 0.22 |
+    | GloVe+ViCo(linear,100) | 0.60 | 0.22 |
+    | GloVe+ViCo(linear,100) (w/o syn) | **0.61** | **0.23** |
+
+- Clustering performance on coarse categories
+
+    | Embedding | V-Measure | ARI |
+    |:---------|:---------:|:---:|
+    | GloVe | 0.52 | 0.38 |
+    | ViCo(linear,100) | 0.61 | 0.40 |
+    | GloVe+ViCo(linear,100) | **0.67** | **0.51** |
+    | GloVe+ViCo(linear,100) (w/o syn) | 0.65 | 0.48 |
+
+
+### What if you want to compare other embeddings?
+Usually we want to run such an analysis to compare various embeddings. Runner `exp_unsupervised_clustering` in `./exp/multi_sense_cooccur/run.py` file creates a dictionary called `data_const.embed_info` which contains all necessary information about embeddings which need to be evaluated. The information is provides through an instance of a python class which must have a `get_embedding` method and the following attributes/properties:
+- `word_vecs_h5py`: Path to the h5py file
+- `word_to_idx_json`: Path to the json file which maps words to indices in the h5py file
+
+See the class `EmbedInfo` for example. Since all of my embeddings followed a consistent naming convention, I could use the same class to automatically construct these attributes.
+
+The `get_embedding` method is used to extract parts of the embedding such as -- the GloVe component, the ViCo component, or keep both.
+
+
+## Supervised Partitioning Analysis
+
+The runner for the partitioning analysis is similar to the clustering case and can be executed using
+```
+python -m exp.multi_sense_cooccur.run --exp exp_supervised_partitioning
+```
+This saves plots in `./symlinks/exp/multi_sense_cooccur/analysis/supervised_partitioning` directory and prints average performance across various tree depths in the terminal, which can directly be copied to a latex file
+
+- Partitioning performance on fine categories
+
+    |Embedding | V-Measure | ARI | Accuracy |
+    |:---------|:---------:|:---:|:-------:|
+    |GloVe | 0.70 | 0.47 | 0.64 |
+    |ViCo(linear,100) | 0.75 | 0.53 | 0.68 |
+    |GloVe+ViCo(linear,100) | 0.76 | 0.53 | 0.70 |
+    |GloVe+ViCo(linear,100) (w/o syn) | **0.78** | **0.61** | **0.72** |
+
+- Partitioning performance on coarse categories
+
+    |Embedding | V-Measure | ARI | Accuracy |
+    |:---------|:---------:|:---:|:-------:|
+    |GloVe | 0.77 | 0.74 | 0.84 |
+    |ViCo(linear,100) | 0.78 | 0.74 | 0.85 |
+    |GloVe+ViCo(linear,100) | 0.79 | 0.77 | 0.85 |
+    |GloVe+ViCo(linear,100) (w/o syn) | **0.81** | **0.78** | **0.87** |

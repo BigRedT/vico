@@ -2,7 +2,7 @@ GPU=3
 # Include any combination of 'train', 'finetune', 'extract' in the MODE string 
 # to perform the corresponding steps. For example 'train_extract' would train 
 # ViCo model, skip finetuning, and extract embeddings. 
-MODE='concat'
+MODE='train'
 EMBED_DIM=100
 XFORM='linear'
 # FINETUNE_MODEL_NUM and MODEL_NUM must correspond to one of the saved models
@@ -10,6 +10,10 @@ XFORM='linear'
 FINETUNE_MODEL_NUM=80000 
 MODEL_NUM=160000
 GLOVE_DIM=300 # For concatenating with ViCo
+SYN=False 
+# Set to true to use Synonym co-occurrences during training
+# We empirically found ViCo w/o Synonyms to perform slightly better
+# See README.md for numbers
 
 echo "------------------------------------------------------------"
 echo "ViCo specifications:"
@@ -26,7 +30,8 @@ then
         -m exp.multi_sense_cooccur.run \
         --exp exp_train \
         --embed_dim $EMBED_DIM \
-        --xform $XFORM
+        --xform $XFORM \
+        --syn $SYN
 fi
 
 if [[ "${MODE}" = *"finetune"* ]]
@@ -39,7 +44,8 @@ then
         --exp exp_train \
         --embed_dim $EMBED_DIM \
         --xform $XFORM \
-        --model_num $FINETUNE_MODEL_NUM
+        --model_num $FINETUNE_MODEL_NUM \
+        --syn $SYN
 fi
 
 if [[ "${MODE}" = *"extract"* ]]
@@ -52,7 +58,8 @@ then
         --exp exp_extract_embeddings \
         --embed_dim $EMBED_DIM \
         --xform $XFORM \
-        --model_num $MODEL_NUM
+        --model_num $MODEL_NUM \
+        --syn $SYN
 fi
 
 if [[ "${MODE}" = *"concat"* ]]
@@ -63,6 +70,19 @@ then
     python \
         -m exp.multi_sense_cooccur.run \
         --exp exp_concat_with_glove \
+        --embed_dim $EMBED_DIM \
+        --xform $XFORM \
+        --glove_dim $GLOVE_DIM
+fi
+
+if [[ "${MODE}" = *"tsne"* ]]
+then
+    echo "------------------------------------------------------------"
+    echo "Visualizing coarse category clustering using t-SNE ..."
+    echo "------------------------------------------------------------"
+    python \
+        -m exp.multi_sense_cooccur.run \
+        --exp exp_vis_pca_tsne \
         --embed_dim $EMBED_DIM \
         --xform $XFORM \
         --glove_dim $GLOVE_DIM

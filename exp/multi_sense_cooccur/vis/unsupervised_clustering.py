@@ -43,38 +43,14 @@ def get_word_feats(embed,dim=2,embed_type='tsne'):
 
 
 def plot_metric_vs_clusters(metric_name,metric,n_clusters,filename,fine):
-    embed_type_to_color = {
-        'ViCo(linear,50)': 'rgb(55, 128, 191,0.6)', 
-        'ViCo(linear,100)': 'rgba(55, 128, 191,0.6)',
-        'ViCo(linear,200)': 'rgba(55, 80, 191,0.6)',
-        'ViCo(select,200)': 'rgba(219, 64, 82,0.6)',
-        'GloVe+ViCo(linear,100, w/o WordNet)': 'rgb(139,0,139)',
-        'GloVe+ViCo(linear,100)': 'rgb(55, 128, 191)', 
-        'GloVe+ViCo(linear,50)': 'rgb(55, 128, 191)', 
-        'GloVe+ViCo(linear,200)': 'rgb(55, 80, 191)',
-        'GloVe+ViCo(select,200)': 'rgb(219, 64, 82)',
-        'GloVe': 'rgb(44, 150, 44)',
-        'ViCo(linear)': 'rgb(214, 39, 40)',
-        'GloVe+random(100)': 'rgb(255, 200, 14)',
-        'GloVe+random(200)': 'rgb(255, 127, 14)',
-        'random(100)': 'grey',
-        'random(300)': 'rgb(96,96,96)',
-        'vis-w2v': 'black',
-        'GloVe+vis-w2v': 'black',
-    }
-
     traces = []
     for embed_type in metric.keys():
-        if embed_type=='GloVe' or 'random' in embed_type:
+        if embed_type=='GloVe' or 'random' in embed_type: # GloVe, random or their concatenation
             dash = 'dot'
-        else:
-            dash = None
-
-        if 'GloVe' in embed_type or 'random' in embed_type:
-            symbol = 'circle'
-        else:
-            symbol = 'circle'#'square'
+        elif 'GloVe' not in embed_type and 'random' not in embed_type:
             dash = 'dash'
+        else:
+            dash = None # line
 
         trace = go.Scatter(
             x = n_clusters,
@@ -82,22 +58,15 @@ def plot_metric_vs_clusters(metric_name,metric,n_clusters,filename,fine):
             mode = 'lines+markers',
             name = embed_type,
             line = dict(
-                color=embed_type_to_color[embed_type],
                 width=2,
                 dash=dash),
-            marker = dict(size=9,symbol=symbol)
+            marker = dict(size=9,symbol='circle')
         )
         traces.append(trace)
-    
-    if fine==True and metric_name=='Adjusted Rand Index':
-        y_max = 0.4
-    else:
-        y_max = 0.85
 
     layout = go.Layout(
-        #title = metric_name,
         xaxis = dict(title='Number of Clusters'),
-        yaxis = dict(title=metric_name,range=[0,y_max]),
+        yaxis = dict(title=metric_name),
         hovermode = 'closest',
         width=1100,
         height=800)
@@ -111,14 +80,20 @@ def plot_metric_vs_clusters(metric_name,metric,n_clusters,filename,fine):
 def main(exp_const,data_const):
     if exp_const.fine==True:
         from . import fine_categories as C
-        vis_dir = os.path.join(exp_const.vis_dir,'unsupervised_clustering_fine')
+        vis_dir = os.path.join(exp_const.exp_dir,'fine')
+        print('*'*80)
+        print('Fine Categories')
+        print('*'*80)
     else:
         from . import categories as C
-        vis_dir = os.path.join(exp_const.vis_dir,'unsupervised_clustering_coarse')
+        vis_dir = os.path.join(exp_const.exp_dir,'coarse')
+        print('*'*80)
+        print('Coarse Categories')
+        print('*'*80)
 
     io.mkdir_if_not_exists(vis_dir,recursive=True)
 
-    print('Reading words and categories ...')
+    #print('Reading words and categories ...')
     categories = sorted([c for c in dir(C) if '__' not in c and c!='C'])
     categories_to_idx = {l:i for i,l in enumerate(categories)}
     all_words = set()
@@ -134,11 +109,13 @@ def main(exp_const,data_const):
     v_measure = {}
     ari = {}
     for embed_type, embed_info in data_const.embed_info.items():
-        print('Loading embeddings ...')
+        print(f'- {embed_type}',end=' ',flush=True)
+
+        #print('Loading embeddings ...')
         embed_ = io.load_h5py_object(embed_info.word_vecs_h5py)['embeddings']
         word_to_idx = io.load_json_object(embed_info.word_to_idx_json)
         
-        print('Selecting words ...')
+        #print('Selecting words ...')
         words = [word for word in all_words if word in word_to_idx]
         labels = [word_to_label[word] for word in words]
         idxs = [word_to_idx[word] for word in words]
@@ -148,13 +125,13 @@ def main(exp_const,data_const):
             embed[i] = embed_[j]
         embed = embed_info.get_embedding(embed)
 
-        print(f'Computing word features ({embed_type}) ...')
+        #print(f'Computing word features ({embed_type}) ...')
         word_feats = get_word_feats(
             embed,
             dim=2,
             embed_type='original')
 
-        print(f'Clustering ({embed_type}) ...')
+        #print(f'Clustering ({embed_type}) ...')
         homogeneity[embed_type] = []
         completeness[embed_type] = []
         v_measure[embed_type] = []
@@ -183,13 +160,7 @@ def main(exp_const,data_const):
             v_measure[embed_type].append(v_measure_score)
             ari[embed_type].append(ari_score)
         
-        print('*'*80)
-        print(embed_type)
-        print('*'*80)
-        print('homogeneity',homogeneity[embed_type])
-        print('completeness',completeness[embed_type])
-        print('v_measure',v_measure[embed_type])
-        print('ari',ari[embed_type])
+        print('[Done]')
 
         plot_metric_vs_clusters(
             'Homogeneity',
@@ -219,16 +190,20 @@ def main(exp_const,data_const):
             os.path.join(vis_dir,'ari.html'),
             exp_const.fine)
 
-    print('*'*80)
-    print('Aggregate stats across all clusters')
-    print('*'*80)
+
+    print('')
+    print('Aggregate performance across different cluster numbers (Copy to your latex table/spreadsheet)')
     metrics = ['v_measure','ari']
     
-    metric_str = ' '
+    print('')
+
+    print('-'*40)
+    metric_str = 'Embedding'
     for metric in metrics:
         metric_str += ' & '
         metric_str += metric
     print(metric_str)
+    print('-'*40)
 
     for embed_type in data_const.embed_info.keys():
         metric_str = embed_type
@@ -236,4 +211,9 @@ def main(exp_const,data_const):
             metric_str += ' & '
             metric_value = round(np.mean(locals()[metric][embed_type]),2)
             metric_str += '{:.2f}'.format(metric_value)
+            
+        metric_str += ' \\\\'
         print(metric_str)
+    print('-'*40)
+
+    print('')

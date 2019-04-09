@@ -190,11 +190,6 @@ def main(exp_const,data_const):
                 'glove': glove_embed,
                 'joint': embed,
             }
-            if exp_const.xformed==True:
-                for i,cooccur_type in enumerate(exp_const.cooccur_types):
-                    embed_types_to_embed[cooccur_type] = visual_embed[
-                        :,
-                        i*exp_const.cooccur_dim:(i+1)*exp_const.cooccur_dim]
 
             for embed_type in embed_types_to_embed.keys():
                 print(f'TSNE on {embed_type} embeddings ...')
