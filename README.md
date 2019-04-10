@@ -7,19 +7,19 @@
     - [A note on `run.py` files](#a-note-on-`run.py`-files)
 - [Steps for Learning ViCo embeddings](#steps-for-learning-vico-embeddings)
     - [Quick Start](#quick-start)
-    - [Step 1: Create co-occurrence matrices](#step-1:-create-co-occurrence-matrices)
-    - [Step 2: Train ViCo's multitask log-bilinear model](#step-2:-train-vico's-multitask-log-bilinear-model)
+    - [Step 1: Create co-occurrence matrices](#step-1-create-co-occurrence-matrices)
+    - [Step 2: Train ViCo's multitask log-bilinear model](#step-2-train-vico-s-multitask-log-bilinear-model)
         - [Start Training](#start-training)
         - [Finetune](#finetune)
         - [Monitor Losses](#monitor-losses)
         - [Time and Memory](#time-and-memory)
-    - [Step 3: Extract embeddings from the saved model](#step-3:-extract-embeddings-from-the-saved-model)
-    - [Step 4: Concat with GloVe](#step-4:-concat-with-glove)
-        - [A note on memory vs speed trade-off for slicing/indexing](#a-note-on-memory-vs-speed-trade-off-for-slicing/indexing)
-    - [Step 5: Be Awesome :metal:](#step-5:-use-vico-embeddings-in-your-awesome-project-:metal:)
+    - [Step 3: Extract embeddings from the saved model](#step-3-extract-embeddings-from-the-saved-model)
+    - [Step 4: Concat with GloVe](#step-4-concat-with-glove)
+        - [A note on memory vs speed trade-off for slicing/indexing](#a-note-on-memory-vs-speed-trade-off-for-slicing-indexing)
+    - [Step 5: Be Awesome :metal:](#step-5-use-vico-embeddings-in-your-awesome-project-metal)
 - [Evaluation](#evaluation)
-    - [Unsupervised Clustering Aanalysis](#unsupervised-clustering-analysis)
-    - [Supervised Partitioning Aanalysis](#supervised-partitioning-analysis)
+    - [Unsupervised Clustering Analysis](#unsupervised-clustering-analysis)
+    - [Supervised Partitioning Analysis](#supervised-partitioning-analysis)
 
 # Setup
 We will assume we are currently in the root directory (which contains the `README.md`). All `bash` or `python` scripts described below will be executed from the root directory.
@@ -303,3 +303,18 @@ This saves plots in `./symlinks/exp/multi_sense_cooccur/analysis/supervised_part
     |ViCo(linear,100) | 0.78 | 0.74 | 0.85 |
     |GloVe+ViCo(linear,100) | 0.79 | 0.77 | 0.85 |
     |GloVe+ViCo(linear,100) (w/o syn) | **0.81** | **0.78** | **0.87** |
+
+## Zero-Shot Analysis
+
+To launch the zero-shot analysis (a.k.a visual generalization analysis) for ViCo(linear,100), run:
+```
+bash exp/cifar100/scripts/run.sh <num_held_out_classes> <gpu_id> <run>
+```
+where `num_held_out_classes` is one of {20,40,60,80}, `gpu_id` refers to the GPU on which to run the evaluation, and `run` is an 
+
+| Embeddings | Run 0 | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | Run 6 | Run 7 | Mean | Std |
+|:-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| GloVe | 18.20 | 20.0 | 20.50 | 22.65 | 22.15 | 19.80 | 22.65 | 18.90 | 20.61 | 1.60 |
+| ViCo(linear,100) | 13.85 | 14.95 | 12.50 | 17.25 | 15.90 | 14.15 | 13.30 | 16.65 | 14.82 | 1.56 |
+| GloVe+ViCo(linear,100) | 22.75 | 24.20 | 18.15 | 20.30 | 22.80 | 24.45 | 21.45 | 22.20 | 22.04 | 1.94 |
+| GloVe+ViCo(select,200) | **28.40** | **27.00** | **25.90** | **28.80** | **28.10** | **27.60** | **28.85** | **31.25** | **28.24** | 1.47 |
