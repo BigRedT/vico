@@ -22,7 +22,8 @@
     - [Supervised Partitioning Analysis](#supervised-partitioning-analysis)
     - [Zero-Shot Analysis](#zero-shot-analysis)
 
-# Setup
+# Setup 
+
 We will assume we are currently in the root directory (which contains the `README.md`). All `bash` or `python` scripts described below will be executed from the root directory.
 
 Before we begin, let us create a directory called `symlinks` in the root directory to store our data and experiments. 
@@ -46,6 +47,8 @@ exp -> path_to_store_experiment_outputs/vico_exp
 ```
 
 While you can choose any directory for storing datasets and experiments, the code base assumes symlinks to be called `data` and `exp`.
+
+[Back to Contents](#contents)
 
 # Code structure
 
@@ -77,6 +80,8 @@ While you can choose any directory for storing datasets and experiments, the cod
     ```
     $ python -m exp.genome_attributes.run --exp exp_create_gt_context_cooccur
     ```
+
+[Back to Contents](#contents)
 
 # Steps for Learning ViCo embeddings
 
@@ -233,6 +238,8 @@ OR
 
 Run it through our evaluation protocol as described in the next section to better understand it.
 
+[Back to Contents](#contents)
+
 # Evaluation
 
 We provide scripts for the following:
@@ -319,3 +326,5 @@ where `num_held_out_classes` is one of {20,40,60,80}, `gpu_id` refers to the GPU
 | ViCo(linear,100) | 13.85 | 14.95 | 12.50 | 17.25 | 15.90 | 14.15 | 13.30 | 16.65 | 14.82 | 1.56 |
 | GloVe+ViCo(linear,100) | 22.75 | 24.20 | 18.15 | 20.30 | 22.80 | 24.45 | 21.45 | 22.20 | 22.04 | 1.94 |
 | GloVe+ViCo(select,200) | **28.40** | **27.00** | **25.90** | **28.80** | **28.10** | **27.60** | **28.85** | **31.25** | **28.24** | 1.47 |
+
+[Back to Contents](#contents)
