@@ -8,18 +8,19 @@
 - [Steps for Learning ViCo embeddings](#steps-for-learning-vico-embeddings)
     - [Quick Start](#quick-start)
     - [Step 1: Create co-occurrence matrices](#step-1-create-co-occurrence-matrices)
-    - [Step 2: Train ViCo's multitask log-bilinear model](#step-2-train-vico-s-multitask-log-bilinear-model)
+    - [Step 2: Train ViCo's multitask log-bilinear model](#step-2-train-vicos-multitask-log-bilinear-model)
         - [Start Training](#start-training)
         - [Finetune](#finetune)
         - [Monitor Losses](#monitor-losses)
         - [Time and Memory](#time-and-memory)
     - [Step 3: Extract embeddings from the saved model](#step-3-extract-embeddings-from-the-saved-model)
     - [Step 4: Concat with GloVe](#step-4-concat-with-glove)
-        - [A note on memory vs speed trade-off for slicing/indexing](#a-note-on-memory-vs-speed-trade-off-for-slicing-indexing)
-    - [Step 5: Be Awesome :metal:](#step-5-use-vico-embeddings-in-your-awesome-project-metal)
+        - [A note on memory vs speed trade-off for slicing/indexing](#a-note-on-memory-vs-speed-trade-off-for-slicingindexing)
+    - [Step 5: Be Awesome :metal:](#step-5-use-vico-embeddings-in-your-awesome-project)
 - [Evaluation](#evaluation)
     - [Unsupervised Clustering Analysis](#unsupervised-clustering-analysis)
     - [Supervised Partitioning Analysis](#supervised-partitioning-analysis)
+    - [Zero-Shot Analysis](#zero-shot-analysis)
 
 # Setup
 We will assume we are currently in the root directory (which contains the `README.md`). All `bash` or `python` scripts described below will be executed from the root directory.
@@ -225,7 +226,7 @@ Therefore, if RAM is not an issue, it is recommended to load the full matrix usi
 ```
 In this case, `embeddings` is the full embedding matrix loaded in RAM as a numpy array. Since the entire matrix is in RAM, slicing operations are fast. 
 
-## Step 5: Use ViCo embeddings in your awesome project :metal:
+## Step 5: Use ViCo embeddings in your awesome project
 Build on it, analyze it, improve it ...
 
 OR
@@ -241,7 +242,7 @@ We provide scripts for the following:
 - Discriminative attributes task evaluation (SemEval 2018, Task 10)
 
 
-## Unsupervised Clustering Aanalysis
+## Unsupervised Clustering Analysis
 
 If you have the ViCo(linear,100) embeddings trained and concatenated with GloVe as described above, you can run the analysis by executing
 ```
