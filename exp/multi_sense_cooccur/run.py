@@ -108,8 +108,7 @@ def exp_train():
             'model_num',
             'syn'])
 
-    #exp_name = f'{args.xform}_{args.embed_dim}'
-    exp_name='trial'
+    exp_name = f'{args.xform}_{args.embed_dim}'
     out_base_dir = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur')
