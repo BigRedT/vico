@@ -1,8 +1,8 @@
-GPU=3
+GPU=1
 # Include any combination of 'train', 'finetune', 'extract' in the MODE string 
 # to perform the corresponding steps. For example 'train_extract' would train 
 # ViCo model, skip finetuning, and extract embeddings. 
-MODE='train'
+MODE='train_finetune_extract_concat_tsne'
 EMBED_DIM=100
 XFORM='linear'
 # FINETUNE_MODEL_NUM and MODEL_NUM must correspond to one of the saved models

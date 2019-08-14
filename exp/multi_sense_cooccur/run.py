@@ -122,7 +122,7 @@ def exp_train():
     exp_const.num_epochs = 10
     exp_const.lr = 0.01
     exp_const.momentum = 0.9    # used only when optimizer is set to 'SGD'
-    exp_const.num_workers = 0
+    exp_const.num_workers = 5
     # First train with Adam then finetune with Adagrad
     if args.model_num==-1:
         exp_const.optimizer = 'Adam'
