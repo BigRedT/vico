@@ -2,7 +2,7 @@ GPU=$CUDA_VISIBLE_DEVICES
 # Include any combination of 'cooccur', 'train', 'finetune', 'extract' in the MODE string 
 # to perform the corresponding steps. For example 'train_extract' would train 
 # ViCo model, skip finetuning, and extract embeddings. 
-MODE='cooccur' #_train_finetune_extract_concat_tsne'
+MODE='train_finetune_extract_concat_tsne' #_train_finetune_extract_concat_tsne'
 EMBED_DIM=100
 XFORM='linear'
 # FINETUNE_MODEL_NUM and MODEL_NUM must correspond to one of the saved models
