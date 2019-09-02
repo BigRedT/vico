@@ -1,8 +1,8 @@
-GPU=1
-# Include any combination of 'train', 'finetune', 'extract' in the MODE string 
+GPU=$CUDA_VISIBLE_DEVICES
+# Include any combination of 'cooccur', 'train', 'finetune', 'extract' in the MODE string 
 # to perform the corresponding steps. For example 'train_extract' would train 
 # ViCo model, skip finetuning, and extract embeddings. 
-MODE='train_finetune_extract_concat_tsne'
+MODE='cooccur' #_train_finetune_extract_concat_tsne'
 EMBED_DIM=100
 XFORM='linear'
 # FINETUNE_MODEL_NUM and MODEL_NUM must correspond to one of the saved models
@@ -14,6 +14,14 @@ SYN=False
 # Set to true to use Synonym co-occurrences during training
 # We empirically found ViCo w/o Synonyms to perform slightly better
 # See README.md for numbers
+
+if [[ "${MODE}" = *"cooccur"* ]]
+then
+    echo "------------------------------------------------------------"
+    echo "Computing cooccurrences ..."
+    echo "------------------------------------------------------------"
+    bash exp/multi_sense_cooccur/create_cooccur.sh
+fi
 
 echo "------------------------------------------------------------"
 echo "ViCo specifications:"

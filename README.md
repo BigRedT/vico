@@ -123,7 +123,7 @@ bash exp/multi_sense_cooccur/create_cooccur.sh
 
 This will create the following file which will be used to learn ViCo embeddings:
 ```
-symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/merged_cooccur.csv
+symlinks/exp/multi_sense_cooccur/cooccurrences/merged_cooccur.csv
 ```
 
 For inspection, we provide a simple command line utility to load the csv into a pandas dataframe and interactively display all co-occurrences for a given word with other words sorted by co-occurrence types in ascending order (to avoid having to scroll to the top). To launch this utility run:

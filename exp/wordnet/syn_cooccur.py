@@ -30,6 +30,7 @@ def main(exp_const):
     io.mkdir_if_not_exists(exp_const.exp_dir,recursive=True)
 
     cooccur = {}
+    nltk.download('wordnet')
     nltk.download('stopwords')
     stop_words = set(stopwords.words('english'))
     for synset in wn.all_synsets():
