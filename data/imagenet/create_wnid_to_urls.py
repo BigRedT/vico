@@ -13,10 +13,6 @@ def main():
         lines = f.readlines()
         
     print('Parsing each row to get wnid, imgid, and url ...')
-    #lines = [line.rstrip('\n') for line in lines]
-    #lines = [line[0].split('_')+[line[1]] for line in lines]
-
-    print('Storing in a hierarchical dict ...')
     wnid_to_urls = {}
     lines_skipped = 0
     for line in tqdm(lines):
@@ -43,6 +39,7 @@ def main():
     print(f'Images skipped: {lines_skipped}')
 
     wnid_to_urls_json = const.wnid_to_urls_json
+    import pdb; pdb.set_trace()
     io.dump_json_object(wnid_to_urls,wnid_to_urls_json)
     
 

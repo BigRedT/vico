@@ -1,1 +1,0 @@
-python -m data.glove.save_as_hdf5

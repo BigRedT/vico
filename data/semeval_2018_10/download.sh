@@ -12,3 +12,6 @@ echo "-----------------------------------------------"
 echo "Downloading Semeval 2018 Task 10 Repository ..."
 echo "-----------------------------------------------"
 git clone $URL $TARGET
+
+echo "Preprocessing ..."
+bash data/semeval_2018_10/preprocess.sh

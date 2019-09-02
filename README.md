@@ -54,9 +54,23 @@ While you can choose any directory for storing datasets and experiments, the cod
 
 ## Directories
 * `./data` contains scripts for downloading and preprocessing:
+    * GloVe embeddings
+        ```
+        bash data/glove/download_glove.sh
+        ```
     * ImageNet and VisualGenome datasets which are used for computing co-occurrences
+        ```
+        bash data/imagenet/download.sh
+        bash data/visualgenome/download.sh
+        ```
     * CIFAR-100 which is used for a zero-shot-like analysis
+        ```
+        bash data/cifar100/download.sh
+        ```
     * Data for Discriminative Attributes Task (SemEval 2018 Task 10) which is a word-only downstream task. 
+        ```
+        bash data/semeval_2018_10/download.sh
+        ```
 * `./exp` contains scripts for computing co-occurrence statistics, learning ViCo embeddings, and evaluating embeddings. It also contains training and evaluation scripts for the Discriminative Attributes Task.
     
 ## A note on `run.py` files 

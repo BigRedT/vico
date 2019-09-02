@@ -39,16 +39,21 @@ do
     wget "${BASEURL}/${FILENAME}" -P $TARGET
 done
 
-declare -a IMG_DIRNAMES=(
-    "images.zip"
-    "images2.zip")
+## Uncomment the following to download images as well (not needed for vico)
 
-for DIRNAME in "${IMG_DIRNAMES[@]}"
-do
-    echo "-----------------------------------------------"
-    echo "Downloading ${DIRNAME} ..."
-    echo "-----------------------------------------------"
-    wget "${IMG_BASEURL}/${DIRNAME}" -P $TARGET
-    unzip "${TARGET}/${DIRNAME}" -d $TARGET
-    rm -rf "${TARGET}/${DIRNAME}"
-done
+# declare -a IMG_DIRNAMES=(
+#     "images.zip"
+#     "images2.zip")
+
+# for DIRNAME in "${IMG_DIRNAMES[@]}"
+# do
+#     echo "-----------------------------------------------"
+#     echo "Downloading ${DIRNAME} ..."
+#     echo "-----------------------------------------------"
+#     wget "${IMG_BASEURL}/${DIRNAME}" -P $TARGET
+#     unzip "${TARGET}/${DIRNAME}" -d $TARGET
+#     rm -rf "${TARGET}/${DIRNAME}"
+# done
+
+echo "Preprocessing ..."
+bash data/visualgenome/preprocess.sh

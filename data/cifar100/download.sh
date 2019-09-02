@@ -5,7 +5,7 @@ mkdir $OUT_DIR
 
 echo "Downloading CIFAR 100 ..."
 URL="https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
-#wget --directory-prefix=$OUT_DIR $URL
+wget --directory-prefix=$OUT_DIR $URL
 
 echo "Extract CIFAR 100 ..."
 TAR_GZ_FILE="${OUT_DIR}/cifar-100-python.tar.gz"
