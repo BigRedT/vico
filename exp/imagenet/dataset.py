@@ -145,6 +145,15 @@ class ImagenetDataset(Dataset):
 
 
 class ImagenetNoImgsDataset(ImagenetDataset):
+    def get_wnid_and_img_paths(self):
+        wnid_to_urls = io.load_json_object(self.const.wnid_to_urls_json)
+        wnid_and_img_paths = []
+        for wnid,urls in wnid_to_urls.items():
+            for img_id,url in urls.items():
+                wnid_and_img_paths.append((wnid,url))
+        
+        return wnid_and_img_paths
+
     def __getitem__(self,i):
         wnid, img_path = self.wnid_and_img_paths[i]
         label_vec, on_wnids = self.get_label_vec(wnid)
