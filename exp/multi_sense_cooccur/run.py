@@ -311,6 +311,15 @@ def exp_vis_pca_tsne():
     pca_tsne.main(exp_const,data_const)
 
 
+class SimpleEmbedInfo():
+    def __init__(self,word_to_idx_json,word_vecs_h5py):
+        self.word_to_idx_json = word_to_idx_json # path to word_to_idx.json
+        self.word_vecs_h5py = word_vecs_h5py # path to word
+
+    def get_embedding(self,embeddings):
+        return embeddings
+
+
 class EmbedInfo():
         def __init__(self,exp_dir,random,to_extract,vico_dim,glove_dim=300):
             self.exp_dir = exp_dir
@@ -366,11 +375,22 @@ def exp_unsupervised_clustering():
     glove_vico_linear_100 = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/linear_100')
-    paper = os.path.join(
-        os.getcwd(),
-        'symlinks/exp_iccv/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms/dim_100_neg_bias_linear')
 
-    # Update this dictionary to control which embeddings are evaluated
+    """
+    Update data_const.embed_info dictionary to control which embeddings are 
+    evaluated. To evaluate your own embeddings create a class object with the 
+    following 2 attributes:
+    - `word_to_idx_json`: path to your word_to_idx.json file
+    - `word_vecs_h5py`: path to your word_vecs.h5py file
+    The class should also have a `get_embedding` function that accepts the
+    read embeddings as argument and returns a modified version of it (eg. 
+    reading only some of the embedding dimensions). 
+     
+    Class `EmbedInfo` is an example of such a class which dynamically creates 
+    the 2 attributes and get_embedding function based on certain arguments.
+
+    However the simplest case could look like `SimpleEmbedInfo` above.
+    """
     data_const.embed_info = {
         'GloVe': EmbedInfo(
             glove_vico_linear_100,
@@ -386,12 +406,6 @@ def exp_unsupervised_clustering():
             glove_dim=300), 
         'GloVe+ViCo(linear,100)': EmbedInfo(
             glove_vico_linear_100,
-            False,
-            'both', # Concatenated
-            vico_dim=100,
-            glove_dim=300), 
-        'paper': EmbedInfo(
-            paper,
             False,
             'both', # Concatenated
             vico_dim=100,
@@ -418,11 +432,22 @@ def exp_supervised_partitioning():
     glove_vico_linear_100 = os.path.join(
         os.getcwd(),
         'symlinks/exp/multi_sense_cooccur/linear_100')
-    paper = os.path.join(
-        os.getcwd(),
-        'symlinks/exp_iccv/multi_sense_cooccur/imagenet_genome_gt/effect_of_xforms/dim_100_neg_bias_linear')
 
-    # Update this dictionary to control which embeddings are evaluated
+    """
+    Update data_const.embed_info dictionary to control which embeddings are 
+    evaluated. To evaluate your own embeddings create a class object with the 
+    following 2 attributes:
+    - `word_to_idx_json`: path to your word_to_idx.json file
+    - `word_vecs_h5py`: path to your word_vecs.h5py file
+    The class should also have a `get_embedding` function that accepts the
+    read embeddings as argument and returns a modified version of it (eg. 
+    reading only some of the embedding dimensions). 
+     
+    Class `EmbedInfo` is an example of such a class which dynamically creates 
+    the 2 attributes and get_embedding function based on certain arguments.
+
+    However the simplest case could look like `SimpleEmbedInfo` above.
+    """
     data_const.embed_info = {
         'GloVe': EmbedInfo(
             glove_vico_linear_100,
@@ -441,13 +466,7 @@ def exp_supervised_partitioning():
             False,
             'both', # Concatenated
             vico_dim=100,
-            glove_dim=300), 
-        'paper': EmbedInfo(
-            paper,
-            False,
-            'both', # Concatenated
-            vico_dim=100,
-            glove_dim=300), 
+            glove_dim=300),
     }
     
     exp_const.fine = True
