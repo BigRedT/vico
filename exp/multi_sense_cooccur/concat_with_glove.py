@@ -42,6 +42,8 @@ def normalize(x):
 
 
 def main(exp_const,data_const):
+    nltk.download('averaged_perceptron_tagger')
+    
     io.mkdir_if_not_exists(exp_const.exp_dir,recursive=True)
     save_constants(
         {'exp': exp_const, 'data': data_const},
