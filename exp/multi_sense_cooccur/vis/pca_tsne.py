@@ -44,13 +44,14 @@ def scatter_plot(
             y = embed[idxs,1].tolist(),
             mode='markers',
             marker=dict(
-                color=[colors[k] for k in idxs],
+                color=[-colors[k] for k in idxs],
                 symbol=[symbols[k] for k in idxs],
                 size=[sizes[k] for k in idxs],
                 line=dict(
                     color='rgb(0,0,0)',
                     width=1),
-                showscale=False),
+                showscale=False,
+                colorscale='RdBu'),
             text=[words[k] for k in idxs],
             name=symbol_to_category[symbol].lower())
     layout = go.Layout(
