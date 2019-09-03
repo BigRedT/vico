@@ -236,8 +236,7 @@ def exp_concat_with_glove():
         required_args=[
             'embed_dim',
             'xform',
-            'glove_dim',
-            'syn'])
+            'glove_dim'])
 
     exp_name = f'concat_with_glove_{args.glove_dim}' # alt. xformed_
     out_base_dir = os.path.join(
@@ -264,8 +263,7 @@ def exp_concat_random_with_glove():
     exp_name = 'concat_with_glove_100' # alt. xformed_
     out_base_dir = os.path.join(
         os.getcwd(),
-        'symlinks/exp/multi_sense_cooccur/imagenet_genome_gt/' + \
-        'effect_of_xforms/dim_100_neg_bias_linear')
+        'symlinks/exp/multi_sense_cooccur/linear_100')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.random_dim = 100
 
