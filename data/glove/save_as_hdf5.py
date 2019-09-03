@@ -40,6 +40,7 @@ def main():
         embeddings.append(np.array([float(val) for val in splitLine[1:]]))
         word_to_idx[word] = i
     embeddings = np.stack(embeddings)
+    print('Embedding matrix shape:',embeddings.shape)
     mean = np.mean(embeddings,axis=0)
     std = np.std(embeddings,axis=0)
     min_ = np.min(embeddings,axis=0)
