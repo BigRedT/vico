@@ -93,15 +93,6 @@ def exp_train():
         f'embed2class_{model_const.model_num}')
     model_const.embed2class.glove_dim = args.glove_dim
 
-    paper = os.path.join(
-        os.getcwd(),
-        'symlinks/exp_iccv/multi_sense_cooccur/imagenet_genome_gt/' + \
-        'effect_of_xforms/dim_100_neg_bias_linear')
-    paper_select = os.path.join(
-        os.getcwd(),
-        'symlinks/exp_iccv/multi_sense_cooccur/imagenet_genome_gt/' + \
-        'effect_of_xforms/dim_200_neg_bias_select')
-
     # Dimensions
     if args.embed_type=='glove':
         model_const.embed2class.embed_dims = args.glove_dim
@@ -114,12 +105,9 @@ def exp_train():
     elif args.embed_type=='glove_vico_linear':
         model_const.embed2class.embed_dims = args.glove_dim + args.vico_dim
         embed_dir = os.path.join(
-            paper,
-            f'concat_with_glove_{args.glove_dim}')
-        # embed_dir = os.path.join(
-        #     os.getcwd(),
-        #     'symlinks/exp/multi_sense_cooccur/' + \
-        #     f'linear_100/concat_with_glove_{args.glove_dim}')
+            os.getcwd(),
+            'symlinks/exp/multi_sense_cooccur/' + \
+            f'linear_100/concat_with_glove_{args.glove_dim}')
         model_const.embed2class.embed_h5py = os.path.join(
             embed_dir,
             'visual_word_vecs.h5py')
@@ -130,12 +118,9 @@ def exp_train():
         model_const.embed2class.no_glove = True # Zero out the glove component
         model_const.embed2class.embed_dims = args.glove_dim + args.vico_dim
         embed_dir = os.path.join(
-            paper,
-            f'concat_with_glove_{args.glove_dim}')
-        # embed_dir = os.path.join(
-        #     os.getcwd(),
-        #     'symlinks/exp/multi_sense_cooccur/' + \
-        #     f'linear_100/concat_with_glove_{args.glove_dim}')
+            os.getcwd(),
+            'symlinks/exp/multi_sense_cooccur/' + \
+            f'linear_100/concat_with_glove_{args.glove_dim}')
         model_const.embed2class.embed_h5py = os.path.join(
             embed_dir,
             'visual_word_vecs.h5py')
@@ -145,12 +130,9 @@ def exp_train():
     elif args.embed_type=='glove_vico_select':
         model_const.embed2class.embed_dims = args.glove_dim + args.vico_dim
         embed_dir = os.path.join(
-            paper_select,
-            f'concat_with_glove_{args.glove_dim}')
-        # embed_dir = os.path.join(
-        #     os.getcwd(),
-        #     'symlinks/exp/multi_sense_cooccur/' + \
-        #     f'linear_100/concat_with_glove_{args.glove_dim}')
+            os.getcwd(),
+            'symlinks/exp/multi_sense_cooccur/' + \
+            f'select_200/concat_with_glove_{args.glove_dim}')
         model_const.embed2class.embed_h5py = os.path.join(
             embed_dir,
             'visual_word_vecs.h5py')
@@ -171,12 +153,13 @@ def exp_agg_results():
         'symlinks/exp/cifar100')
     exp_const = ExpConstants(exp_name,out_base_dir)
     exp_const.runs_prefix = os.path.join(out_base_dir,'zero_shot_')
-    exp_const.runs = [0,1,2,3,4,5,6,7]
+    exp_const.runs = [0,1,2,3]
     exp_const.prefix = {
         'GloVe': 'glove_100_0_held_classes_', 
-        'ViCo(linear,100)': 'vico_linear_100_100_held_classes_',
+        #'ViCo(linear,100)': 'vico_linear_100_100_held_classes_',
         'GloVe+ViCo(linear,100)': 'glove_vico_linear_100_100_held_classes_',
-        'GloVe+ViCo(select,200)': 'glove_vico_select_100_200_held_classes_'}
+        #'GloVe+ViCo(select,200)': 'glove_vico_select_100_200_held_classes_'
+    }
     
     held_out_classes_list = [20]
     for held_out_classes in held_out_classes_list:
