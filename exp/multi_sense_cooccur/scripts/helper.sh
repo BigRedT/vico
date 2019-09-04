@@ -2,7 +2,7 @@ GPU=$CUDA_VISIBLE_DEVICES
 # Include any combination of 'cooccur', 'train', 'finetune', 'extract' in the MODE string 
 # to perform the corresponding steps. For example 'train_extract' would train 
 # ViCo model, skip finetuning, and extract embeddings. 
-MODE='train_finetune_extract_concat_tsne' #_train_finetune_extract_concat_tsne'
+MODE='train_finetune_extract_concat_tsne' #'cooccur_train_finetune_extract_concat_tsne'
 EMBED_DIM=100
 XFORM='linear'
 # FINETUNE_MODEL_NUM and MODEL_NUM must correspond to one of the saved models
@@ -10,10 +10,10 @@ XFORM='linear'
 FINETUNE_MODEL_NUM=80000 
 MODEL_NUM=160000
 GLOVE_DIM=300 # For concatenating with ViCo
-SYN=False 
+SYN=True
 # Set to true to use Synonym co-occurrences during training
-# We empirically found ViCo w/o Synonyms to perform slightly better
-# See README.md for numbers
+
+export HDF5_USE_FILE_LOCKING=FALSE
 
 if [[ "${MODE}" = *"cooccur"* ]]
 then
