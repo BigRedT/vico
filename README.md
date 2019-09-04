@@ -271,23 +271,23 @@ python -m exp.multi_sense_cooccur.run --exp exp_unsupervised_clustering
 ```
 This saves plots in `./symlinks/exp/multi_sense_cooccur/analysis/unsupervised_clustering` directory and prints average performance across cluster numbers in the terminal, which can directly be copied to a latex file
 
+The current version of code uses slightly different Obj-Hyp cooccurrence counts than those used in the paper and different training runs may produce slightly different embeddings and hence slightly different evaluation results. The following are numbers from one run using this code base.  
+
 - Clustering performance on fine categories
 
     | Embedding | V-Measure | ARI |
     |:---------|:---------:|:---:|
     | GloVe | 0.50 | 0.15 |
-    | ViCo(linear,100) | 0.59 | 0.22 |
-    | GloVe+ViCo(linear,100) | 0.60 | 0.22 |
-    | GloVe+ViCo(linear,100) (w/o syn) | **0.61** | **0.23** |
+    | ViCo(linear,100) | 0.60 | 0.21 |
+    | GloVe+ViCo(linear,100) | **0.63** | **0.24** |
 
 - Clustering performance on coarse categories
 
     | Embedding | V-Measure | ARI |
     |:---------|:---------:|:---:|
     | GloVe | 0.52 | 0.38 |
-    | ViCo(linear,100) | 0.61 | 0.40 |
-    | GloVe+ViCo(linear,100) | **0.67** | **0.51** |
-    | GloVe+ViCo(linear,100) (w/o syn) | 0.65 | 0.48 |
+    | ViCo(linear,100) | 0.60 | 0.37 |
+    | GloVe+ViCo(linear,100) | **0.67** | **0.50** |
 
 
 ### What if you want to compare other embeddings?
@@ -295,7 +295,7 @@ Usually we want to run such an analysis to compare various embeddings. Runner `e
 - `word_vecs_h5py`: Path to the h5py file
 - `word_to_idx_json`: Path to the json file which maps words to indices in the h5py file
 
-See the class `EmbedInfo` for example. Since all of my embeddings followed a consistent naming convention, I could use the same class to automatically construct these attributes.
+See the class `EmbedInfo` for example. Since all of my embeddings followed a consistent naming convention, I could use the same class to automatically construct these attributes. However, you could also use something simple like `SimpleEmbedInfo`.
 
 The `get_embedding` method is used to extract parts of the embedding such as -- the GloVe component, the ViCo component, or keep both.
 
@@ -313,31 +313,40 @@ This saves plots in `./symlinks/exp/multi_sense_cooccur/analysis/supervised_part
     |Embedding | V-Measure | ARI | Accuracy |
     |:---------|:---------:|:---:|:-------:|
     |GloVe | 0.70 | 0.47 | 0.64 |
-    |ViCo(linear,100) | 0.75 | 0.53 | 0.68 |
-    |GloVe+ViCo(linear,100) | 0.76 | 0.53 | 0.70 |
-    |GloVe+ViCo(linear,100) (w/o syn) | **0.78** | **0.61** | **0.72** |
+    |ViCo(linear,100) | 0.74 | 0.54 | 0.67 |
+    |GloVe+ViCo(linear,100) | 0.74 | 0.53 | 0.68 |
 
 - Partitioning performance on coarse categories
 
     |Embedding | V-Measure | ARI | Accuracy |
     |:---------|:---------:|:---:|:-------:|
     |GloVe | 0.77 | 0.74 | 0.84 |
-    |ViCo(linear,100) | 0.78 | 0.74 | 0.85 |
-    |GloVe+ViCo(linear,100) | 0.79 | 0.77 | 0.85 |
-    |GloVe+ViCo(linear,100) (w/o syn) | **0.81** | **0.78** | **0.87** |
+    |ViCo(linear,100) | 0.76 | 0.74 | 0.84 |
+    |GloVe+ViCo(linear,100) | 0.77 | 0.75 | 0.85 |
 
 ## Zero-Shot Analysis
+
+Zero shot analysis is performed on ViCo concatenated with 100 dim. GloVe (instead of 300 dim.). This is because we would essentially be learning a function to regress classifiers from word vectors using less than 100 classes as training data. Learning the function from more than 100 dimensional embeddings is already ill-constrained and prone to overfitting.
+
+So first, let us concatenate vico with glove 100 using the following:
+```
+python -m exp.multi_sense_cooccur.run --exp exp_concat_with_glove --embed_dim 100 --xform linear --glove_dim 100
+```
 
 To launch the zero-shot analysis (a.k.a visual generalization analysis) for ViCo(linear,100), run:
 ```
 bash exp/cifar100/scripts/run.sh <num_held_out_classes> <gpu_id> <run>
 ```
-where `num_held_out_classes` is one of {20,40,60,80}, `gpu_id` refers to the GPU on which to run the evaluation, and `run` is an 
+where `num_held_out_classes` is one of {20,40,60,80}, `gpu_id` refers to the GPU on which to run the evaluation, and `run` is a number like {0,1,2,3,...} which is used to keep track of different runs. 
+
+Results for different embeddings and runs can be aggregated using 
+```
+python -m exp.cifar100.run --exp exp_agg_results
+```
 
 | Embeddings | Run 0 | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | Run 6 | Run 7 | Mean | Std |
 |:-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 | GloVe | 18.20 | 20.0 | 20.50 | 22.65 | 22.15 | 19.80 | 22.65 | 18.90 | 20.61 | 1.60 |
-| ViCo(linear,100) | 13.85 | 14.95 | 12.50 | 17.25 | 15.90 | 14.15 | 13.30 | 16.65 | 14.82 | 1.56 |
 | GloVe+ViCo(linear,100) | 22.75 | 24.20 | 18.15 | 20.30 | 22.80 | 24.45 | 21.45 | 22.20 | 22.04 | 1.94 |
 | GloVe+ViCo(select,200) | **28.40** | **27.00** | **25.90** | **28.80** | **28.10** | **27.60** | **28.85** | **31.25** | **28.24** | 1.47 |
 
