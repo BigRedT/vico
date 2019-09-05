@@ -10,8 +10,10 @@ XFORM='linear'
 FINETUNE_MODEL_NUM=80000 
 MODEL_NUM=160000
 GLOVE_DIM=300 # For concatenating with ViCo
-SYN=True
-# Set to true to use Synonym co-occurrences during training
+SYN=False
+# Set SYN to true to use Synonym co-occurrences during training. The numbers in the 
+# paper are without using synonym co-occurrences because we empirically found it
+# to hurt performance in some cases.
 
 export HDF5_USE_FILE_LOCKING=FALSE
 
