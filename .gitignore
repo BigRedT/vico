@@ -2,3 +2,4 @@ settings.json
 symlinks/*
 *.pyc
 .DS_Store
+.vscode*
