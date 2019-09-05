@@ -1,6 +1,7 @@
 # ViCo: Word Embeddings from Visual Co-occurrences
 
 # Contents
+- [Just give me pretrained ViCo](#just-give-me-pretrained-vico)
 - [Setup](#setup)
 - [Code Structure](#code-structure)
     - [Directories](#directories)
@@ -21,7 +22,53 @@
     - [Unsupervised Clustering Analysis](#unsupervised-clustering-analysis)
     - [Supervised Partitioning Analysis](#supervised-partitioning-analysis)
     - [Zero-Shot Analysis](#zero-shot-analysis)
+    - [Discriminative Attributes Task](#discriminative-attributes-task)
 
+# Just give me pretrained ViCo
+In a hurry? Download pretrained embeddings [here](https://drive.google.com/file/d/1WI2yQki4v2H_b-Ik1Xu7URKWxGML-Wv3/view?usp=sharing).
+
+Untar the downloaded directory and you will see the following directories:
+- `glove_300_vico_linear_50:` GloVe + ViCo(linear,50)
+- `glove_300_vico_linear_100:` GloVe + ViCo(linear,100)
+- `glove_300_vico_linear_200:` GloVe + ViCo(linear,200)
+- `glove_300_vico_select_200:` GloVe + ViCo(select,200)
+
+Each of these directories consist of:
+- `visual_word_vecs.h5py:` An h5py file containing the word embedding matrix of size 400000x(300+x) where x is {50,100,200}. First 300 dims. correspond to GloVe and remaining correspond to ViCo
+- `visual_word_vecs_idx.json:` A json file mapping words to index in embedding matrix.
+- `visual_words.json:` List of words for which ViCo exists. For other words not in visual vocabulary, the average ViCo embeddings are used in `visual_word_vecs.h5py`
+
+To get embeddings for a particular word, say `dog`:
+```python
+import h5py
+import json
+
+word = 'dog'
+
+glove_dim=300
+
+f = h5py.File('visual_word_vecs.h5py','r')
+word_to_idx = json.load(open('visual_word_vecs_idx.json','r'))
+visual_words = json.load(open('visual_words.json','r'))
+
+# To just slice the row in the matrix without loading the full matrix in RAM do the following:
+embed_mat = f[embeddings]
+
+# To load the entire matrix in memory (recommended if you are going to query words frequently) use the following instead:
+# embed_mat = f[embeddings][()]
+
+if word in word_to_idx:
+    word_embed = embed_mat[word_to_idx[word]]
+    word_embed_glove = word_embed[:glove_dim] # GloVe component
+    word_embed_vico = word_embed[glove_dim:]  # ViCo component
+else:
+    print('Word not in vocabulary')
+
+if word in visual_words:
+    print('Word has ViCo component')
+else:
+    print('Word is not in the visual word vocabulary. word_embed_vico is set to average ViCo embedding computed across visual words')
+```
 # Setup 
 
 We will assume we are currently in the root directory (which contains the `README.md`). All `bash` or `python` scripts described below will be executed from the root directory.
@@ -148,7 +195,7 @@ CUDA_VISIBLE_DEVICES=0 python \
 ```
 `embed_dim` is the ViCo embedding dimension and `xform` is the transformation function to be used in the multitask log-bilinear model. `xform` can alternatively be set to 'select'. It is easy to extend ViCo with other transforms as shown in `./exp/multi_sense_cooccur/models/logbilinear.py`. 
 
-Here, we turned on the use of synonym co-occurrences during training using `--syn`.  However, we empirically found ViCo trained w/o synonym co-occurrences to perform slightly better (see tables in the evaluation section). The version of embeddings used in the paper are trained w/o synonym co-occurrences. If that is the version you are after, go ahead and set `--syn False` here and in all commands below.
+Here, we turned on the use of synonym co-occurrences during training using `--syn`.  However, we empirically found ViCo trained w/o synonym co-occurrences may perform slightly better. The version of embeddings used in the paper are trained w/o synonym co-occurrences. If that is the version you are after, go ahead and set `--syn False` here and in all commands below.
 
 ### Finetune
 To finetune with Adagrad starting from a saved model, say at iteration number 80000, run:
@@ -173,7 +220,7 @@ tensorboard --logdir=./symlinks/exp/multi_sense_cooccur/
 Note the steep decrease in loss around 80000 iterations due to change in optimizer (learing rate is unchanged). `Neg_*` denotes the losses due to the **max** term while others correspond to the **log-bilinear** loss. `Total_Loss` denotes the sum of all losses.  
 
 ### Time and Memory
-- Initial training + finetuning: ~8 hours 
+- Initial training + finetuning: ~10 hours on Titan Xp 
 - GPU memory usage: ~1GB
 - RAM usage: ~7GB 
 
@@ -262,6 +309,9 @@ We provide scripts for the following:
 - Zero-Shot-like (visual generalization) analysis
 - Discriminative attributes task evaluation (SemEval 2018, Task 10)
 
+**A note on reproducibility**: The current version of code uses slightly different Obj-Hyp cooccurrence counts. Specifically, earlier version required downloading imagenet images and cooccurrences were counted while iterating over the list of all downloaded images. However, in this scheme broken urls for which annotations are still available would be missed and also we would be downloading images unnecessarily even though all we need is annotations. Thus the current version just iterates over the urls and their annotations.
+
+Another cause for variance is that different training runs may produce different embeddings because of SGD and these different embeddings might in turn lead to slightly different evaluation results. The results in the following section are from one example run using this code base to show the variance that can be expected in learning embeddings. The embeddings and cooccurrences used in the paper are available [here](https://drive.google.com/file/d/1WI2yQki4v2H_b-Ik1Xu7URKWxGML-Wv3/view?usp=sharing).
 
 ## Unsupervised Clustering Analysis
 
@@ -271,23 +321,23 @@ python -m exp.multi_sense_cooccur.run --exp exp_unsupervised_clustering
 ```
 This saves plots in `./symlinks/exp/multi_sense_cooccur/analysis/unsupervised_clustering` directory and prints average performance across cluster numbers in the terminal, which can directly be copied to a latex file
 
-The current version of code uses slightly different Obj-Hyp cooccurrence counts than those used in the paper and different training runs may produce slightly different embeddings and hence slightly different evaluation results. The following are numbers from one run using this code base.  
-
 - Clustering performance on fine categories
 
     | Embedding | V-Measure | ARI |
     |:---------|:---------:|:---:|
     | GloVe | 0.50 | 0.15 |
-    | ViCo(linear,100) | 0.60 | 0.21 |
-    | GloVe+ViCo(linear,100) | **0.63** | **0.24** |
+    | ViCo(linear,100) | 0.58 | 0.20 |
+    | GloVe+ViCo(linear,100) | 0.60 | 0.22 |
+    | GloVe+ViCo(linear,100)[paper] | **0.61** | **0.23** |
 
 - Clustering performance on coarse categories
 
     | Embedding | V-Measure | ARI |
     |:---------|:---------:|:---:|
     | GloVe | 0.52 | 0.38 |
-    | ViCo(linear,100) | 0.60 | 0.37 |
-    | GloVe+ViCo(linear,100) | **0.67** | **0.50** |
+    | ViCo(linear,100) | 0.56 | 0.34 |
+    | GloVe+ViCo(linear,100) | **0.66** | **0.50** |
+    | GloVe+ViCo(linear,100)[paper] | 0.65 | 0.48 |
 
 
 ### What if you want to compare other embeddings?
@@ -313,41 +363,52 @@ This saves plots in `./symlinks/exp/multi_sense_cooccur/analysis/supervised_part
     |Embedding | V-Measure | ARI | Accuracy |
     |:---------|:---------:|:---:|:-------:|
     |GloVe | 0.70 | 0.47 | 0.64 |
-    |ViCo(linear,100) | 0.74 | 0.54 | 0.67 |
-    |GloVe+ViCo(linear,100) | 0.74 | 0.53 | 0.68 |
+    |ViCo(linear,100) | 0.76 | 0.59 | 0.71 |
+    |GloVe+ViCo(linear,100) | 0.74 | 0.52 | 0.67 |
+    |GloVe+ViCo(linear,100)[paper] | **0.78** | **0.61** | **0.72** |
+
 
 - Partitioning performance on coarse categories
 
     |Embedding | V-Measure | ARI | Accuracy |
     |:---------|:---------:|:---:|:-------:|
     |GloVe | 0.77 | 0.74 | 0.84 |
-    |ViCo(linear,100) | 0.76 | 0.74 | 0.84 |
-    |GloVe+ViCo(linear,100) | 0.77 | 0.75 | 0.85 |
+    |ViCo(linear,100) | 0.77 | 0.74 | 0.85 |
+    |GloVe+ViCo(linear,100) | 0.79 | 0.77 | 0.86 |
+    |GloVe+ViCo(linear,100)[paper] | **0.81** | **0.78** | **0.87** |
 
 ## Zero-Shot Analysis
 
 Zero shot analysis is performed on ViCo concatenated with 100 dim. GloVe (instead of 300 dim.). This is because we would essentially be learning a function to regress classifiers from word vectors using less than 100 classes as training data. Learning the function from more than 100 dimensional embeddings is already ill-constrained and prone to overfitting.
 
-So first, let us concatenate vico with glove 100 using the following:
+So first, let us concatenate ViCo with GloVe 100 using the following:
 ```
 python -m exp.multi_sense_cooccur.run --exp exp_concat_with_glove --embed_dim 100 --xform linear --glove_dim 100
 ```
 
 To launch the zero-shot analysis (a.k.a visual generalization analysis) for ViCo(linear,100), run:
 ```
-bash exp/cifar100/scripts/run.sh <num_held_out_classes> <gpu_id> <run>
+bash exp/cifar100/scripts/run.sh <num_held_out_classes> <gpu_id> <run_id>
 ```
-where `num_held_out_classes` is one of {20,40,60,80}, `gpu_id` refers to the GPU on which to run the evaluation, and `run` is a number like {0,1,2,3,...} which is used to keep track of different runs. 
+where `num_held_out_classes` is one of {20,40,60,80}, `gpu_id` refers to the GPU on which to run the evaluation, and `run_id` is a number like {0,1,2,3,...} which is used to keep track of different runs. 
 
 Results for different embeddings and runs can be aggregated using 
 ```
 python -m exp.cifar100.run --exp exp_agg_results
 ```
 
-| Embeddings | Run 0 | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | Run 6 | Run 7 | Mean | Std |
-|:-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| GloVe | 18.20 | 20.0 | 20.50 | 22.65 | 22.15 | 19.80 | 22.65 | 18.90 | 20.61 | 1.60 |
-| GloVe+ViCo(linear,100) | 22.75 | 24.20 | 18.15 | 20.30 | 22.80 | 24.45 | 21.45 | 22.20 | 22.04 | 1.94 |
-| GloVe+ViCo(select,200) | **28.40** | **27.00** | **25.90** | **28.80** | **28.10** | **27.60** | **28.85** | **31.25** | **28.24** | 1.47 |
 
 [Back to Contents](#contents)
+
+## Discriminative Attributes Task
+
+To evaluate GloVe+ViCo(linear,100) on this task simply run:
+```
+bash exp/semeval_2018_10/scripts/svm_glove_vico.sh train_eval <run_id>
+```
+
+To evaluate GloVe only run the following:
+```
+bash exp/semeval_2018_10/scripts/svm_glove.sh train_eval <run_id>
+```
+
