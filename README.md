@@ -1,7 +1,13 @@
 # ViCo: Word Embeddings from Visual Co-occurrences
+By [Tanmay Gupta](http://tanmaygupta.info), [Alexander Schwing](http://alexander-schwing.de), and [Derek Hoiem](http://dhoiem.cs.illinois.edu)
+
+<p align="center">
+    <img src="imgs/teaser.png">
+</p>
 
 # Contents
 - [Just give me pretrained ViCo](#just-give-me-pretrained-vico)
+- [Install Dependencies](#install-dependencies)
 - [Setup](#setup)
 - [Code Structure](#code-structure)
     - [Directories](#directories)
@@ -69,6 +75,26 @@ if word in visual_words:
 else:
     print('Word is not in the visual word vocabulary. word_embed_vico is set to average ViCo embedding computed across visual words')
 ```
+
+# Install Dependencies
+
+We provide a conda `environment.yml` file that lists all dependencies which can easily be installed using a single command
+```
+conda env create -f environment.yml
+```
+
+Once the installation is completed, launch the conda environment using 
+```
+conda activate vico_env
+```
+
+While the `environment.yml` file lists a lot of dependencies, they were all installed automatically as dependencies of the core packages listed in `install.sh`. So you could also install these using 
+```
+bash install.sh
+```
+However, this might try to install the latest packages which might have different version numbers than those in the `environment.yml` file which was used to test this repository.
+
+
 # Setup 
 
 We will assume we are currently in the root directory (which contains the `README.md`). All `bash` or `python` scripts described below will be executed from the root directory.
@@ -397,7 +423,6 @@ Results for different embeddings and runs can be aggregated using
 python -m exp.cifar100.run --exp exp_agg_results
 ```
 
-
 [Back to Contents](#contents)
 
 ## Discriminative Attributes Task
@@ -412,3 +437,4 @@ To evaluate GloVe only run the following:
 bash exp/semeval_2018_10/scripts/svm_glove.sh train_eval <run_id>
 ```
 
+[Back to Contents](#contents)
