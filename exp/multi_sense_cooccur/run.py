@@ -408,6 +408,13 @@ def exp_unsupervised_clustering():
             'both', # Concatenated
             vico_dim=100,
             glove_dim=300), 
+        # 'GloVe+ViCo(linear,100)[paper]': SimpleEmbedInfo(
+        #     os.path.join(
+        #         os.getcwd(),
+        #         'symlinks/exp/multi_sense_cooccur/paper/linear_100/visual_word_vecs_idx.json'),
+        #     os.path.join(
+        #         os.getcwd(),
+        #         'symlinks/exp/multi_sense_cooccur/paper/linear_100/visual_word_vecs.h5py'))
     }
     
     exp_const.fine = True
@@ -465,6 +472,13 @@ def exp_supervised_partitioning():
             'both', # Concatenated
             vico_dim=100,
             glove_dim=300),
+        # 'GloVe+ViCo(linear,100)[paper]': SimpleEmbedInfo(
+        #     os.path.join(
+        #         os.getcwd(),
+        #         'symlinks/exp/multi_sense_cooccur/paper/linear_100/visual_word_vecs_idx.json'),
+        #     os.path.join(
+        #         os.getcwd(),
+        #         'symlinks/exp/multi_sense_cooccur/paper/linear_100/visual_word_vecs.h5py'))
     }
     
     exp_const.fine = True
