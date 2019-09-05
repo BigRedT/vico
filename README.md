@@ -6,6 +6,7 @@ By [Tanmay Gupta](http://tanmaygupta.info), [Alexander Schwing](http://alexander
 </p>
 
 # Contents
+- [Overview](#overview)
 - [Just give me pretrained ViCo](#just-give-me-pretrained-vico)
 - [Install Dependencies](#install-dependencies)
 - [Setup](#setup)
@@ -30,8 +31,25 @@ By [Tanmay Gupta](http://tanmaygupta.info), [Alexander Schwing](http://alexander
     - [Zero-Shot Analysis](#zero-shot-analysis)
     - [Discriminative Attributes Task](#discriminative-attributes-task)
 
+# Overview
+Welcome to the official code base for ViCo - multi-sense word embeddings learned from different types of visual cooccurrences.
+
+**Available on Arxiv**: [https://arxiv.org/abs/1908.08527](https://arxiv.org/abs/1908.08527)
+
+**Project Page**: [http://tanmaygupta.info/vico/](http://tanmaygupta.info/vico/)
+
+**BibTex**:
+```
+@inproceedings{gupta2019vico,
+  title={ViCo: Word Embeddings from Visual Co-occurrences},
+  author={Gupta, Tanmay and Schwing, Alexander and Hoiem, Derek},
+  booktitle={ICCV},
+  year={2019}
+}
+```
+
 # Just give me pretrained ViCo
-In a hurry? Download pretrained embeddings [here](https://drive.google.com/file/d/1WI2yQki4v2H_b-Ik1Xu7URKWxGML-Wv3/view?usp=sharing).
+In a hurry? Download pretrained embeddings [here](https://drive.google.com/file/d/1WI2yQki4v2H_b-Ik1Xu7URKWxGML-Wv3/view?usp=sharing). Cooccurrences used to train these embeddings can be downloaded [here](https://drive.google.com/file/d/1RHsjy6BB8XTrYOB7QlKpSbnOvA7Tzh3G/view?usp=sharing).
 
 Untar the downloaded directory and you will see the following directories:
 - `glove_300_vico_linear_50:` GloVe + ViCo(linear,50)
